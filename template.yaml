@@ -1,0 +1,607 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  demo-sam-app
+
+  Sample SAM Template for demo-sam-app
+
+Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Description: Asserts that lambdas are signed when deployed.
+    Default: "none"
+
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+
+  Environment:
+    Description: "The name of the environment to deploy to"
+    Type: "String"
+
+Conditions:
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+
+  # We are using this condition since we don't have a domain for each environment.
+  # Normally this condition won't be required.
+  UseCertificate:
+    Fn::Equals:
+      - !Ref Environment
+      - "build"
+
+Mappings:
+  APIDomainNames:
+    build:
+      DomainName: "build.demoapp.platform.sandpit.account.gov.uk"
+    staging:
+      DomainName: "staging.demoapp.platform.sandpit.account.gov.uk"
+    integration:
+      DomainName: "integration.demoapp.platform.sandpit.account.gov.uk"
+    prod:
+      DomainName: "prod.demoapp.platform.sandpit.account.gov.uk"
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Timeout: 20
+
+Resources:
+  APIGatewayAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+      KmsKeyId: !GetAtt HelloWorldKmsKey.Arn
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: APIGatewayAccessLogGroup
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  # Setup to validate we can use pipelines to set CSLS as the destination: https://github.com/alphagov/centralised-security-logging-service
+  CSLSFirehoseSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+      FilterPattern: ""
+      LogGroupName: !Ref APIGatewayAccessLogGroup
+
+  HelloWorldRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      AccessLogSetting:
+        Format: "$context.requestId $context.httpMethod $context.path"
+        DestinationArn: !GetAtt APIGatewayAccessLogGroup.Arn
+      CacheClusterEnabled: true
+      CacheClusterSize: "0.5"
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ./openapi-spec.yaml
+      TracingEnabled: true
+      Tags:
+        Product: GOV.UK Sign In
+        System: Dev Platform
+        Environment: Demo
+        Service: backend
+        Name: HelloWorldRestApi
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  HelloWorldRestAPIDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Condition: UseCertificate
+    Properties:
+      DomainName: !Sub
+        - "${AWS::StackName}.${DomainName}"
+        - DomainName: !FindInMap
+            - APIDomainNames
+            - !Ref Environment
+            - DomainName
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Ref ApiGatewayCertificate
+      SecurityPolicy: TLS_1_2
+      Tags:
+        - Key: Name
+          Value: ApiGatewayCertificate
+        - Key: Service
+          Value: backend
+        - Key: Source
+          Value: "alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml"
+
+  HelloWorldRestAPIBasePath:
+    Type: AWS::ApiGateway::BasePathMapping
+    Condition: UseCertificate
+    DependsOn: HelloWorldRestAPIDomainName
+    Properties:
+      DomainName: !Sub
+        - "${AWS::StackName}.${DomainName}"
+        - DomainName: !FindInMap
+            - APIDomainNames
+            - !Ref Environment
+            - DomainName
+      RestApiId: !Ref HelloWorldRestApi
+      Stage: !Sub "${HelloWorldRestApi.Stage}"
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
+    Properties:
+      CodeUri: HelloWorldFunction
+      Handler: helloworld.App::handleRequest
+      Runtime: java11
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      KmsKeyArn: !GetAtt HelloWorldKmsKey.Arn
+      Tracing: Active
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref HelloWorldTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref HelloWorldTable
+        - S3ReadPolicy:
+            BucketName: !Ref HelloWorldBucket
+        - S3WritePolicy:
+            BucketName: !Ref HelloWorldBucket
+        - SNSPublishMessagePolicy:
+            TopicName: !Ref HelloWorldTopic
+        - SQSSendMessagePolicy:
+            QueueName: !Ref HelloWorldQueue
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello
+            Method: get
+            RestApiId: !Ref HelloWorldRestApi
+      AutoPublishAlias: HelloWorldFunction
+      DeploymentPreference:
+        Type: Canary10Percent5Minutes
+        Alarms:
+          - !Ref HelloWorldFunctionTooManyRequestsAlarm
+        Hooks:
+          PreTraffic: !Ref PreTrafficHook
+        Role: !GetAtt CodeDeployServiceRole.Arn
+      Tags:
+        Product: GOV.UK Sign In
+        System: Dev Platform
+        Environment: Demo
+        Service: backend
+        Name: HelloWorldFunction
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
+      PermissionsBoundary:
+        !If [
+          UsePermissionsBoundary,
+          !Ref PermissionsBoundary,
+          !Ref AWS::NoValue,
+        ]
+
+  HelloWorldFunction2:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
+    Properties:
+      CodeUri: HelloWorldFunction2
+      Handler: helloworld2.App2::handleRequest
+      Runtime: java11
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      KmsKeyArn: !GetAtt HelloWorldKmsKey.Arn
+      Tracing: PassThrough
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello2
+            Method: get
+            RestApiId: !Ref HelloWorldRestApi
+      Tags:
+        Product: GOV.UK Sign In
+        System: Dev Platform
+        Environment: Demo
+        Service: backend
+        Name: HelloWorldFunction
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  PreTrafficHook:
+    Type: AWS::Serverless::Function
+    # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
+    Properties:
+      FunctionName: !Join
+        - "_"
+        - - "CodeDeployHook"
+          - !Ref AWS::StackName
+          - "PreTrafficHook"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - /
+                          - Ref: AWS::StackId
+      Handler: preTrafficHook.handler
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "codedeploy:PutLifecycleEventHookExecutionStatus"
+              Resource: !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${ServerlessDeploymentApplication}/*"
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "lambda:InvokeFunction"
+              Resource: !Ref HelloWorldFunction.Version
+      Runtime: nodejs14.x
+      KmsKeyArn: !GetAtt HelloWorldKmsKey.Arn
+      Environment:
+        Variables:
+          NewVersion: !Ref HelloWorldFunction.Version
+      Tags:
+        Product: GOV.UK Sign In
+        System: Dev Platform
+        Environment: Demo
+        Service: backend
+        Name: PreTrafficHook
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  HelloWorldTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: "Id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "Id"
+          KeyType: "HASH"
+      SSESpecification:
+        KMSMasterKeyId: !Ref HelloWorldKmsKey
+        SSEEnabled: true
+        SSEType: "KMS"
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: HelloWorldTable
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  AccessLogsBucket:
+    # checkov:skip=CKV_AWS_18: This is the accesslogs bucket, so it doesn't need access logging enabled.
+    # checkov:skip=CKV_AWS_21: Versioning should not be enabled on your accesslogs bucket.
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - "accesslogsbucket"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - /
+                          - Ref: AWS::StackId
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      # This cannot be implemented as this, as the target account needs permissions before the bucket name is know, but it permissions based on the bucketName.
+      # NotificationConfiguration:
+      #   QueueConfigurations:
+      #     - Event: "s3:ObjectCreated:*"
+      #       Queue: "arn:aws:sqs:eu-west-2:885513274347:cyber-security-s3-to-splunk-prodpython"
+      #     - Event: "s3:ObjectRestore:*"
+      #       Queue: "arn:aws:sqs:eu-west-2:885513274347:cyber-security-s3-to-splunk-prodpython"
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+        - Key: CheckovRulesToSkip
+          Value: "CKV_AWS_18.CKV_AWS_21"
+
+  # AccessLogsBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref AccessLogsBucket
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: "Allow"
+  #           Resource:
+  #             - !Sub "AccessLogsBucket.Arn"
+  #             - !Sub "${AccessLogsBucket.Arn}/*"
+  #           Principal:
+  #             AWS: arn:aws:logs:eu-west-2:885513274347:root #CSLS account - can limit this further if we know the specific lambda role arn
+  #             # Lambda role ARN: arn:aws:iam::885513274347:role/csls_prodpython/csls_process_s3_logs_lambda_prodpython
+  #           Action:
+  #             - "s3:Get*"
+  #             - "s3:List*"
+
+  HelloWorldBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - "helloworldbucket"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - /
+                          - Ref: AWS::StackId
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLogsBucket
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: HelloWorldBucket
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  HelloWorldKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource: "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: HelloWorldKmsKey
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  HelloWorldTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: !Ref HelloWorldKmsKey
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: HelloWorldTopic
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  HelloWorldQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref HelloWorldKmsKey
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: HelloWorldQueue
+        - Key: Source
+          Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  HelloWorldFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: >
+        Test alarm to trigger if the lambda receives many requests.
+      MetricName: Invocations
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref HelloWorldFunction
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  HelloWorldCertificateRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: UseCertificate
+    Properties:
+      Name: !Sub
+        - "${AWS::StackName}.${DomainName}"
+        - DomainName: !FindInMap
+            - APIDomainNames
+            - !Ref Environment
+            - DomainName
+      Type: A
+      HostedZoneId:
+        Fn::ImportValue: PlatformHostedZone
+      AliasTarget:
+        DNSName: !GetAtt HelloWorldRestAPIDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt HelloWorldRestAPIDomainName.RegionalHostedZoneId
+
+  #
+  # Certificates
+  #
+  ApiGatewayCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: UseCertificate
+    Properties:
+      DomainName: !Sub
+        - "${AWS::StackName}.${DomainName}"
+        - DomainName: !FindInMap
+            - APIDomainNames
+            - !Ref Environment
+            - DomainName
+      DomainValidationOptions:
+        - DomainName: !Sub
+            - "${AWS::StackName}.${DomainName}"
+            - DomainName: !FindInMap
+                - APIDomainNames
+                - !Ref Environment
+                - DomainName
+          HostedZoneId:
+            Fn::ImportValue: PlatformHostedZone
+      ValidationMethod: DNS
+      CertificateTransparencyLoggingPreference: DISABLED
+      Tags:
+        - Key: Name
+          Value: ApiGatewayCertificate
+        - Key: Service
+          Value: backend
+        - Key: Source
+          Value: "alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml"
+
+Outputs:
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${HelloWorldRestApi}.execute-api.${AWS::Region}.amazonaws.com/${HelloWorldRestApi.Stage}/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn
+  HelloWorldFunction2:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction2.Arn
+  HelloWorldFunctionIamRole2:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunction2Role.Arn
+  HelloWorldApiDomain:
+    Description: "API Gateway domain"
+    Value: !Sub
+      - "${AWS::StackName}.${DomainName}"
+      - DomainName: !FindInMap
+          - APIDomainNames
+          - !Ref Environment
+          - DomainName
