@@ -543,11 +543,6 @@ Resources:
             - !Ref Environment
             - DomainName
       Type: A
-      HostedZoneId:
-        Fn::ImportValue: PlatformHostedZone
-      AliasTarget:
-        DNSName: !GetAtt HelloWorldRestAPIDomainName.RegionalDomainName
-        HostedZoneId: !GetAtt HelloWorldRestAPIDomainName.RegionalHostedZoneId
 
   #
   # Certificates
