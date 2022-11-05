@@ -115,21 +115,6 @@ Resources:
         Name: HelloWorldRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
-
-  HelloWorldRestAPIBasePath:
-    Type: AWS::ApiGateway::BasePathMapping
-    Condition: UseCertificate
-    DependsOn: HelloWorldRestAPIDomainName
-    Properties:
-      DomainName: !Sub
-        - "${AWS::StackName}.${DomainName}"
-        - DomainName: !FindInMap
-            - APIDomainNames
-            - !Ref Environment
-            - DomainName
-      RestApiId: !Ref HelloWorldRestApi
-      Stage: !Sub "${HelloWorldRestApi.Stage}"
-
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
