@@ -115,28 +115,6 @@ Resources:
         Name: HelloWorldRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
-  HelloWorldRestAPIDomainName:
-    Type: AWS::ApiGateway::DomainName
-    Condition: UseCertificate
-    Properties:
-      DomainName: !Sub
-        - "${AWS::StackName}.${DomainName}"
-        - DomainName: !FindInMap
-            - APIDomainNames
-            - !Ref Environment
-            - DomainName
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      RegionalCertificateArn: !Ref ApiGatewayCertificate
-      SecurityPolicy: TLS_1_2
-      Tags:
-        - Key: Name
-          Value: ApiGatewayCertificate
-        - Key: Service
-          Value: backend
-        - Key: Source
-          Value: "alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml"
 
   HelloWorldRestAPIBasePath:
     Type: AWS::ApiGateway::BasePathMapping
@@ -547,7 +525,6 @@ Resources:
   #
   # Certificates
   #
-  
 
 Outputs:
   HelloWorldApi:
