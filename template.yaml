@@ -564,8 +564,6 @@ Resources:
                 - APIDomainNames
                 - !Ref Environment
                 - DomainName
-          HostedZoneId:
-            Fn::ImportValue: PlatformHostedZone
       ValidationMethod: DNS
       CertificateTransparencyLoggingPreference: DISABLED
       Tags:
