@@ -547,32 +547,7 @@ Resources:
   #
   # Certificates
   #
-  ApiGatewayCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Condition: UseCertificate
-    Properties:
-      DomainName: !Sub
-        - "${AWS::StackName}.${DomainName}"
-        - DomainName: !FindInMap
-            - APIDomainNames
-            - !Ref Environment
-            - DomainName
-      DomainValidationOptions:
-        - DomainName: !Sub
-            - "${AWS::StackName}.${DomainName}"
-            - DomainName: !FindInMap
-                - APIDomainNames
-                - !Ref Environment
-                - DomainName
-      ValidationMethod: DNS
-      CertificateTransparencyLoggingPreference: DISABLED
-      Tags:
-        - Key: Name
-          Value: ApiGatewayCertificate
-        - Key: Service
-          Value: backend
-        - Key: Source
-          Value: "alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml"
+  
 
 Outputs:
   HelloWorldApi:
