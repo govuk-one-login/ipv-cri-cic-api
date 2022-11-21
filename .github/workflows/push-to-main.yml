@@ -1,0 +1,243 @@
+name: Push to Main
+on:
+  # Only run against the mocks and stubs..
+  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  push:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+# Need to confirm where these should be stored
+# env: # Only adding the variables in that are required for 
+#   ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+#   ISSUER: "https://review-b.build.account.gov.uk" # Please parameterise issuer in future ticket.
+#   SESSION_TABLE_NAME: 'lambdafunctions-SessionsTable-RK7J7ZBRN4FK'
+#   AUTH_SESSION_TTL: ${{ secrets.AUTH_SESSION_TTL }}
+#   AUTHORIZATION_CODE_TTL: ${{ secrets.AUTHORIZATION_CODE_TTL }}
+#   CLIENTS: ${{ secrets.CLIENTS }}
+#   REGION: ${{ secrets.REGION }}
+#   ENCRYPTION_KEY_IDS: ${{ secrets.ENCRYPTION_KEY_IDS }}
+#   TXMA_ENABLED: ${{ secrets.TXMA_ENABLED }}
+#   USE_READID: ${{ secrets.USE_READID }}
+#   TEST_CLIENT_ID: "5C584572-9A61-4601-9E78-676713292A4E"
+#   TEST_CLIENT_SIGNING_KEY: ${{ secrets.TEST_CLIENT_SIGNING_KEY }}
+
+
+jobs:
+  testContainer-ecr:
+    name: Test container push to ECR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Build Test container
+        id: build-image-dev
+        env:
+          ECR_REGISTRY_BUILD: ${{ secrets.ECR_REGISTRY_BUILD }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -f Dockerfile.test -t $ECR_REGISTRY_BUILD:$IMAGE_TAG  .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ secrets.ECR_REGISTRY_BUILD }}:latest"
+          format: 'table'
+          output: "results-di-ipv-dca-backend-api-test-container.sarif"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: 'v1.9.0'
+
+      - name: Configure AWS credentials for build environment
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.BACKEND_API_GH_ACTIONS_ROLE_ARN }}
+
+      - name: Login to Amazon ECR Build environment
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: tag, and push image to Amazon ECR Build environment
+        id: push-image-build
+        env:
+          ECR_REGISTRY_BUILD: ${{ secrets.ECR_REGISTRY_BUILD }}
+          IMAGE_TAG: latest
+        run: |
+          docker push $ECR_REGISTRY_BUILD:$IMAGE_TAG
+      - name: Code Sign the Docker image - build environment
+        id: cosign-image-build
+        env:
+          CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
+          ECR_REGISTRY_BUILD: ${{ secrets.ECR_REGISTRY_BUILD }}
+          IMAGE_TAG: latest
+        run: |
+          cosign sign --key awskms:///$CONTAINER_SIGN_KMS_KEY $ECR_REGISTRY_BUILD:$IMAGE_TAG
+
+  # sonar:
+  #   name: SonarQube Dependency Scan
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #       working-directory: lambdafunctions/functions
+  #   steps:
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Setup nodeJS v16
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
+  #     - name: Install yarn
+  #       run: npm -g install yarn
+  #     - name: Get yarn cache directory path
+  #       id: yarn-cache-dir-path
+  #       run: echo "::set-output name=dir::$(yarn cache dir)"
+  #     - uses: actions/cache@v1
+  #       id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+  #       with:
+  #         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+  #         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-yarn-
+  #     - name: Install dependencies
+  #       run: yarn
+  #     - name: SonarCloud Scan
+  #       uses: sonarsource/sonarcloud-github-action@master
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  deploy-sam:
+    name: Validate & Deploy SAM template
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: lambdafunctions/
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.56.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-west-2
+          # Need to confirm dev role config
+          role-to-assume: ${{ secrets.DEV_AWS_ROLE_TO_ASSUME }}
+      - name: Sam Validate
+        run: |
+          sam validate
+      - name: Sam build
+        run: |
+          sam build
+      - name: List all files
+        run: ls -ltrRha
+      - name: Upload Sam Artifact to Github
+        uses: actions/upload-artifact@v3
+        with:
+          name: aws-sam
+          path: lambdafunctions/.aws-sam # Does not use the workingDirectory setting
+          retention-days: 1
+      - name: Sam deploy
+        run: |
+          sam deploy --stack-name lambdafunctions --no-fail-on-empty-changeset --tags SHA=$GITHUB_SHA
+  run-all-tests:
+    name: Lint + e2e Tests
+    runs-on: ubuntu-latest
+    needs: deploy-sam
+    defaults:
+      run:
+        shell: bash
+        working-directory: lambdafunctions/functions
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.DEV_AWS_ROLE_TO_ASSUME }}
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        # Are we using submodules?
+        # with:
+        #   submodules: true
+      - name: Setup nodeJS v16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install yarn
+        run: npm -g install yarn
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Install dependencies
+        run: yarn
+      - name: Run lint
+        run: yarn run lint:check
+      - name: Run Tests
+        run: SELF=https://mncm55rd50.execute-api.eu-west-2.amazonaws.com/dev/ yarn run e2e
+
+
+  upload-sam:
+    needs:
+      - run-all-tests
+      - deploy-sam
+    name: Upload SAM to Build CD Pipeline
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.56.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.BACKEND_API_GH_ACTIONS_ROLE_ARN }}
+      # - uses: actions/download-artifact@v3
+      #   with:
+      #     name: aws-sam
+      #     path: ./lambdafunctions/.aws-sam
+      - name: Sam build
+        run: |
+          sam build
+        working-directory: lambdafunctions
+      - name: Upload SAM into Build Account S3 Bucket
+        uses: alphagov/di-devplatform-upload-action@v2
+        with:
+          artifact-bucket-name: ${{ secrets.BACKEND_API_ARTIFACT_BUCKET_NAME }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+          working-directory: ./lambdafunctions
+          template-file: template.yaml
