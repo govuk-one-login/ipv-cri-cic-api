@@ -42,14 +42,14 @@ jobs:
       - name: Build Test container
         id: build-image-dev
         env:
-          ECR_REGISTRY_BUILD: ${{ secrets.ECR_REGISTRY_BUILD }}
+          ECR_REPOSITORY_BUILD: ${{ secrets.ECR_REPOSITORY_BUILD }}
           IMAGE_TAG: latest
         run: |
-          docker build -f Dockerfile.test -t $ECR_REGISTRY_BUILD:$IMAGE_TAG  .
+          docker build -f Dockerfile.test -t $ECR_REPOSITORY_BUILD:$IMAGE_TAG  .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "${{ secrets.ECR_REGISTRY_BUILD }}:latest"
+          image-ref: "${{ secrets.ECR_REPOSITORY_BUILD }}:latest"
           format: 'table'
           output: "results-di-ipv-dca-backend-api-test-container.sarif"
           exit-code: "1"
@@ -66,7 +66,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: eu-west-2
-          role-to-assume: ${{ secrets.BACKEND_API_GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
 
       - name: Login to Amazon ECR Build environment
         uses: aws-actions/amazon-ecr-login@v1
@@ -74,18 +74,18 @@ jobs:
       - name: tag, and push image to Amazon ECR Build environment
         id: push-image-build
         env:
-          ECR_REGISTRY_BUILD: ${{ secrets.ECR_REGISTRY_BUILD }}
+          ECR_REPOSITORY_BUILD: ${{ secrets.ECR_REPOSITORY_BUILD }}
           IMAGE_TAG: latest
         run: |
-          docker push $ECR_REGISTRY_BUILD:$IMAGE_TAG
+          docker push $ECR_REPOSITORY_BUILD:$IMAGE_TAG
       - name: Code Sign the Docker image - build environment
         id: cosign-image-build
         env:
           CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
-          ECR_REGISTRY_BUILD: ${{ secrets.ECR_REGISTRY_BUILD }}
+          ECR_REPOSITORY_BUILD: ${{ secrets.ECR_REPOSITORY_BUILD }}
           IMAGE_TAG: latest
         run: |
-          cosign sign --key awskms:///$CONTAINER_SIGN_KMS_KEY $ECR_REGISTRY_BUILD:$IMAGE_TAG
+          cosign sign --key awskms:///$CONTAINER_SIGN_KMS_KEY $ECR_REPOSITORY_BUILD:$IMAGE_TAG
 
   # sonar:
   #   name: SonarQube Dependency Scan
@@ -225,7 +225,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: eu-west-2
-          role-to-assume: ${{ secrets.BACKEND_API_GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
       # - uses: actions/download-artifact@v3
       #   with:
       #     name: aws-sam
@@ -237,7 +237,7 @@ jobs:
       - name: Upload SAM into Build Account S3 Bucket
         uses: alphagov/di-devplatform-upload-action@v2
         with:
-          artifact-bucket-name: ${{ secrets.BACKEND_API_ARTIFACT_BUCKET_NAME }}
+          artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
           working-directory: ./lambdafunctions
           template-file: template.yaml
