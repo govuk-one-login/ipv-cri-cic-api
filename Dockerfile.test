@@ -1,7 +1,16 @@
 FROM amazonlinux:2
 
-RUN yum install -y awscli
+RUN yum update -y && yum upgrade -y
 
-COPY run-tests.sh ./
+RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash -
+RUN curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
+
+RUN yum install -y nodejs awscli yarn jq java-1.8.0-openjdk
+
+COPY . /
+WORKDIR /
+RUN chmod +x run-tests.sh
+
+RUN cd /di-ipv-dca-oauth/functions && yarn install
 
 ENTRYPOINT ["/run-tests.sh"]

@@ -100,7 +100,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: ./openapi-spec.yaml
+            Location: hello-world/openapi-spec.yaml
       TracingEnabled: true
       Tags:
         Product: GOV.UK Sign In
@@ -114,9 +114,9 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
     Properties:
-      CodeUri: HelloWorldFunction
-      Handler: helloworld.App::handleRequest
-      Runtime: java11
+      CodeUri: hello-world
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
       Architectures:
         - x86_64
       MemorySize: 512
@@ -181,36 +181,6 @@ Resources:
           !Ref PermissionsBoundary,
           !Ref AWS::NoValue,
         ]
-
-  HelloWorldFunction2:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
-    Properties:
-      CodeUri: HelloWorldFunction2
-      Handler: helloworld2.App2::handleRequest
-      Runtime: java11
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      KmsKeyArn: !GetAtt HelloWorldKmsKey.Arn
-      Tracing: PassThrough
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
-        Variables:
-          PARAM1: VALUE
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /hello2
-            Method: get
-            RestApiId: !Ref HelloWorldRestApi
-      Tags:
-        Product: GOV.UK Sign In
-        System: Dev Platform
-        Environment: Demo
-        Service: backend
-        Name: HelloWorldFunction
-        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
   PreTrafficHook:
     Type: AWS::Serverless::Function
@@ -505,17 +475,11 @@ Outputs:
   HelloWorldFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
-  HelloWorldFunction2:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction2.Arn
-  HelloWorldFunctionIamRole2:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunction2Role.Arn
-  HelloWorldApiDomain:
-    Description: "API Gateway domain"
-    Value: !Sub
-      - "${AWS::StackName}.${DomainName}"
-      - DomainName: !FindInMap
-          - APIDomainNames
-          - !Ref Environment
-          - DomainName
+  # HelloWorldApiDomain:
+  #   Description: "API Gateway domain"
+  #   Value: !Sub
+  #     - "${AWS::StackName}.${DomainName}"
+  #     - DomainName: !FindInMap
+  #         - APIDomainNames
+  #         - !Ref Environment
+  #         - DomainName
