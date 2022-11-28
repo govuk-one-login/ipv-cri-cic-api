@@ -12,9 +12,12 @@
   },
   "scripts": {
     "compile": "tsc",
+    "e2e": "./node_modules/.bin/jest --testPathPattern=tests/e2e",
     "infra": "./node_modules/.bin/jest --testPathPattern=tests/infra --testMatch **/tests/**/*.test-infra.ts",
+    "integration": "./node_modules/.bin/jest --testPathPattern=tests/integration",
     "lint": "./node_modules/.bin/ts-standard --fix",
     "lint:check": "./node_modules/.bin/ts-standard",
+    "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
     "test": "mocha tests/unit/",
     "test:unit": "yarn run compile && yarn run unit",
     "test:infra": "yarn run compile && yarn run infra",
