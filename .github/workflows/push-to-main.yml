@@ -17,7 +17,7 @@ permissions:
 # env: # Only adding the variables in that are required for 
 #   ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
 #   ISSUER: "https://review-b.build.account.gov.uk" # Please parameterise issuer in future ticket.
-#   SESSION_TABLE_NAME: 'lambdafunctions-SessionsTable-RK7J7ZBRN4FK'
+#   SESSION_TABLE_NAME: 'lambda-functions-SessionsTable-RK7J7ZBRN4FK'
 #   AUTH_SESSION_TTL: ${{ secrets.AUTH_SESSION_TTL }}
 #   AUTHORIZATION_CODE_TTL: ${{ secrets.AUTHORIZATION_CODE_TTL }}
 #   CLIENTS: ${{ secrets.CLIENTS }}
@@ -93,7 +93,7 @@ jobs:
   #   defaults:
   #     run:
   #       shell: bash
-  #       working-directory: lambdafunctions/functions
+  #       working-directory: lambda-functions/functions
   #   steps:
   #     - name: Check out repository code
   #       uses: actions/checkout@v3
@@ -129,7 +129,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: lambdafunctions/
+        working-directory: lambda-functions/
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -157,11 +157,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: aws-sam
-          path: lambdafunctions/.aws-sam # Does not use the workingDirectory setting
+          path: lambda-functions/.aws-sam # Does not use the workingDirectory setting
           retention-days: 1
       - name: Sam deploy
         run: |
-          sam deploy --stack-name lambdafunctions --no-fail-on-empty-changeset --tags SHA=$GITHUB_SHA
+          sam deploy --stack-name lambda-functions --no-fail-on-empty-changeset --tags SHA=$GITHUB_SHA
   run-all-tests:
     name: Lint + e2e Tests
     runs-on: ubuntu-latest
@@ -169,7 +169,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: lambdafunctions/functions
+        working-directory: lambda-functions/functions
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -229,15 +229,15 @@ jobs:
       # - uses: actions/download-artifact@v3
       #   with:
       #     name: aws-sam
-      #     path: ./lambdafunctions/.aws-sam
+      #     path: ./lambda-functions/.aws-sam
       - name: Sam build
         run: |
           sam build
-        working-directory: lambdafunctions
+        working-directory: lambda-functions
       - name: Upload SAM into Build Account S3 Bucket
         uses: alphagov/di-devplatform-upload-action@v2
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
-          working-directory: ./lambdafunctions
+          working-directory: ./lambda-functions
           template-file: template.yaml
