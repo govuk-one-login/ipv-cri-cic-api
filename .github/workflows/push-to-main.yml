@@ -240,6 +240,7 @@ jobs:
       - name: Sam Validate
         run: |
           sam validate
+        working-directory: lambda-functions
       - name: Sam build
         run: |
           sam build
