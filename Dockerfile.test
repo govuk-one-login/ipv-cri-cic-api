@@ -11,6 +11,6 @@ COPY . /
 WORKDIR /
 RUN chmod +x run-tests.sh
 
-RUN cd /di-ipv-dca-oauth/functions && yarn install
+RUN cd /lambdafunctions && yarn install
 
 ENTRYPOINT ["/run-tests.sh"]
