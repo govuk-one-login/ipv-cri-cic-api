@@ -160,6 +160,7 @@ Resources:
         Service: backend
         Name: HelloWorldFunction
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+        CheckovRulesToSkip: "CKV_AWS_116"
 
   CodeDeployServiceRole:
     Type: AWS::IAM::Role
