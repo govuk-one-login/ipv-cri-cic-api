@@ -262,6 +262,8 @@ Resources:
     # checkov:skip=CKV_AWS_21: Versioning should not be enabled on your accesslogs bucket.
     Type: "AWS::S3::Bucket"
     Properties:
+      VersioningConfiguration:
+        Status: "Enabled"    
       AccessControl: LogDeliveryWrite
       BucketName: !Join
         - "-"
