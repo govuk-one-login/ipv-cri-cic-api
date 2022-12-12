@@ -20,7 +20,7 @@ sam deploy --stack-name "$stack_name" \
    --parameter-overrides \
    CodeSigningEnabled=false \
    Environment=dev \
-   AuditEventNamePrefix=/common-cri-parameters/CicAuditEventNamePrefix \
-   CriIdentifier=/common-cri-parameters/CicCriIdentifier \
-   CommonStackName=cic-common-cri-api-local \
+   AuditEventNamePrefix=/common-cri-parameters/AuditEventNamePrefix \
+   CriIdentifier=/common-cri-parameters/CriIdentifier \
+   CommonStackName=common-cri-api \
    SecretPrefix=cic-cri-api
