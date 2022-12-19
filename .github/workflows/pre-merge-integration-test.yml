@@ -60,25 +60,25 @@ jobs:
       #       --region ${{ env.AWS_REGION }} \
       #       --capabilities CAPABILITY_IAM
 
-      - name: Run API integration tests
-        env:
-          ENVIRONMENT: dev
-          IPV_CORE_STUB_URL: https://di-ipv-core-stub.london.cloudapps.digital
-          APIGW_API_KEY: ${{ secrets.API_KEY_CRI_DEV }}
-          IPV_CORE_STUB_BASIC_AUTH_USER: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_USER }}
-          IPV_CORE_STUB_BASIC_AUTH_PASSWORD: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_PASSWORD }}
-          IPV_CORE_STUB_CRI_ID: address-cri-dev
-        run: |
-          STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
-          API_GATEWAY_ID_PRIVATE=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PrivateAddressApiGatewayId").OutputValue')
-          API_GATEWAY_ID_PUBLIC=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicAddressApiGatewayId").OutputValue')
-          export API_GATEWAY_ID_PRIVATE=$API_GATEWAY_ID_PRIVATE
-          export API_GATEWAY_ID_PUBLIC=$API_GATEWAY_ID_PUBLIC
+      # - name: Run API integration tests
+      #   env:
+      #     ENVIRONMENT: dev
+      #     IPV_CORE_STUB_URL: https://di-ipv-core-stub.london.cloudapps.digital
+      #     APIGW_API_KEY: ${{ secrets.API_KEY_CRI_DEV }}
+      #     IPV_CORE_STUB_BASIC_AUTH_USER: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_USER }}
+      #     IPV_CORE_STUB_BASIC_AUTH_PASSWORD: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_PASSWORD }}
+      #     IPV_CORE_STUB_CRI_ID: address-cri-dev
+      #   run: |
+      #     STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
+      #     API_GATEWAY_ID_PRIVATE=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PrivateAddressApiGatewayId").OutputValue')
+      #     API_GATEWAY_ID_PUBLIC=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicAddressApiGatewayId").OutputValue')
+      #     export API_GATEWAY_ID_PRIVATE=$API_GATEWAY_ID_PRIVATE
+      #     export API_GATEWAY_ID_PUBLIC=$API_GATEWAY_ID_PUBLIC
 
-          gradle integration-tests:cucumber
+      #     gradle integration-tests:cucumber
 
-      - name: Delete integration test stack
-        if: success()
-        run: |
-          STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
-          aws cloudformation delete-stack --region ${{ env.AWS_REGION }} --stack-name $STACK_NAME
+      # - name: Delete integration test stack
+      #   if: success()
+      #   run: |
+      #     STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
+      #     aws cloudformation delete-stack --region ${{ env.AWS_REGION }} --stack-name $STACK_NAME
