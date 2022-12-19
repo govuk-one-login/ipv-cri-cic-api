@@ -34,11 +34,11 @@ jobs:
       - name: Setup SAM
         uses: aws-actions/setup-sam@v2
 
-      - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+      # - name: Assume temporary AWS role
+      #   uses: aws-actions/configure-aws-credentials@v1-node16
+      #   with:
+      #     role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+      #     aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM build
         run: sam build -t infrastructure/lambda/template.yaml
