@@ -12,6 +12,8 @@ jobs:
   sam-validate:
     name: SAM Validate
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-west-2
     defaults:
       run:
         shell: bash
