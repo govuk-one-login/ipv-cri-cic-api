@@ -52,10 +52,10 @@ jobs:
         with:
           node-version: '16'
       - name: NPM Install
-        working-directory: ./lambdas/${{ matrix.node-function }}
+        working-directory: ./lambda-functions/${{ matrix.node-function }}
         run: npm install
       - name: run Lint
-        working-directory: ./lambdas/${{ matrix.node-function }}
+        working-directory: ./lambda-functions/${{ matrix.node-function }}
         run: npm run lint
 
   run-unit-tests-node:
@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         node-function:
-          - get-addresses
+          - hello-world
     steps:
       - name: Pull Repository
         uses: actions/checkout@v3
@@ -72,10 +72,10 @@ jobs:
         with:
           node-version: '16'
       - name: NPM Install
-        working-directory: ./lambdas/${{ matrix.node-function }}
+        working-directory: ./lambda-functions/${{ matrix.node-function }}
         run: npm install
       - name: run node tests
-        working-directory: ./lambdas/${{ matrix.node-function }}
+        working-directory: ./lambda-functions/${{ matrix.node-function }}
         run: npm run test
 
   # Below is commented out until a Sonar token is provisioned for this repo

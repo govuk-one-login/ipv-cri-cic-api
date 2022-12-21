@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: 'npm'
-    directory: '/lambdas/get-cic'
+    directory: '/lambda-functions/hello-world'
     schedule:
       interval: daily
       time: "03:00"
