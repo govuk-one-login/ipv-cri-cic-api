@@ -189,8 +189,7 @@ Resources:
     Properties:
       FunctionName: !Join
         - "_"
-        - - "CodeDeployHook"
-          - !Ref AWS::StackName
+        - - !Ref AWS::StackName
           - "PreTrafficHook"
           - Fn::Select:
               - 4
