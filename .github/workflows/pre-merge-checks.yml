@@ -41,9 +41,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     strategy:
-      # matrix:
-      #   node-function:
-      #     - get-addresses
+      matrix:
+        node-function:
+          - hello-world
     steps:
       - name: Pull Repository
         uses: actions/checkout@v3
