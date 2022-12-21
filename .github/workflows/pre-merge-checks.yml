@@ -26,11 +26,11 @@ jobs:
         uses: aws-actions/setup-sam@v2
         with:
           version: 1.56.0
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Assume temporary AWS role
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          aws-region: eu-west-2
           role-to-assume: ${{ secrets.GH_VALIDATE_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
       - name: SAM Validate
         run: |
           sam validate
