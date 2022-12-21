@@ -61,9 +61,10 @@ jobs:
   run-unit-tests-node:
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        node-function:
-          - hello-world
+      # Comment out when a function with tests is added
+      # matrix:
+      #   node-function:
+      #     - hello-world
     steps:
       - name: Pull Repository
         uses: actions/checkout@v3
