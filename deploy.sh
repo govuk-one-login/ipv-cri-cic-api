@@ -5,7 +5,7 @@ stack_name="$1"
 
 if [ -z "$stack_name" ]
 then
-echo "😱 stack name expected as first argument, e.g. ./deploy di-ipv-cri-cic"
+echo "😱 stack name expected as first argument, e.g. ./deploy cic-cri-api-v1"
 exit 1
 fi
 
@@ -23,4 +23,4 @@ sam deploy --stack-name "$stack_name" \
    AuditEventNamePrefix=/common-cri-parameters/AuditEventNamePrefix \
    CriIdentifier=/common-cri-parameters/CriIdentifier \
    CommonStackName=common-cri-api \
-   SecretPrefix=cic-cri-api
+   SecretPrefix=cic-cri-api-v1
