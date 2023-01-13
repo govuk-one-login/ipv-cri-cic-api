@@ -5,7 +5,7 @@ stack_name="$1"
 
 if [ -z "$stack_name" ]
 then
-echo "😱 stack name expected as first argument, e.g. ./deploy cic-cri-api-v1"
+echo "😱 stack name expected as first argument, e.g. ./deploy.sh cic-cri-api-v1"
 exit 1
 fi
 
