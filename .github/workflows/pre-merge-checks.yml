@@ -17,10 +17,10 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    defaults:
-      run:
-        shell: bash
-        working-directory: infrastructure/lambda/template.yaml
+    # defaults:
+    #   run:
+    #     shell: bash
+    #     working-directory: infrastructure/lambda/template.yaml
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -38,10 +38,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: SAM Validate
         run: |
-          sam validate 
+          sam validate -t infrastructure/lambda/template.yaml
       - name: SAM Build
         run: |
-          sam build 
+          sam build -t infrastructure/lambda/template.yaml
 
   # Uncomment when a function with tests is added
   # lint:
