@@ -313,13 +313,13 @@ Resources:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PublicCICApi}-public-AccessLogs
       RetentionInDays: 365
 
-  PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref PublicCICApiAccessLogGroup
+  # PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Condition: IsNotDevEnvironment
+  #   Properties:
+  #     DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref PublicCICApiAccessLogGroup
 
   PrivateCICApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
@@ -335,13 +335,13 @@ Resources:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${DevOnlyCICApi}-private-AccessLogs
       RetentionInDays: 30
 
-  PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref PrivateCICApiAccessLogGroup
+  # PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Condition: IsNotDevEnvironment
+  #   Properties:
+  #     DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref PrivateCICApiAccessLogGroup
 
   IssueCredentialFunction:
     Type: AWS::Serverless::Function
