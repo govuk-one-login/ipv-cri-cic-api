@@ -43,25 +43,27 @@ jobs:
         run: |
           sam build
 
-  lint:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-function:
-          - hello-world
-    steps:
-      - name: Pull Repository
-        uses: actions/checkout@v3
-      - name: Set-up Node 16
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - name: NPM Install
-        working-directory: ./lambda-functions/${{ matrix.node-function }}
-        run: npm install
-      - name: run Lint
-        working-directory: ./lambda-functions/${{ matrix.node-function }}
-        run: npm run lint
+  # Uncomment when a function with tests is added
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       node-function:
+  #         - hello-world
+  #   steps:
+  #     - name: Pull Repository
+  #       uses: actions/checkout@v3
+  #     - name: Set-up Node 16
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '16'
+      ## Uncomment when lambda will be added to BE
+      # - name: NPM Install
+      #   working-directory: ./lambda-functions/${{ matrix.node-function }}
+      #   run: npm install
+      # - name: run Lint
+      #   working-directory: ./lambda-functions/${{ matrix.node-function }}
+      #   run: npm run lint
 
   # Uncomment when a function with tests is added
   # run-unit-tests-node:
