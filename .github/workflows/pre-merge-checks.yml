@@ -20,7 +20,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: sam validate -t infrastructure/lambda/template.yaml
+        working-directory: infrastructure/lambda/template.yaml
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -38,10 +38,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: SAM Validate
         run: |
-          sam validate -t infrastructure/lambda/template.yaml
+          sam validate 
       - name: SAM Build
         run: |
-          sam build -t infrastructure/lambda/template.yaml
+          sam build 
 
   # Uncomment when a function with tests is added
   # lint:
