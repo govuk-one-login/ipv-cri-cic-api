@@ -17,10 +17,10 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    defaults:
-      run:
-        shell: bash
-        working-directory: lambda-functions
+    # defaults:
+    #   run:
+    #     shell: bash
+    #     working-directory: lambda-functions
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
