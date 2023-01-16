@@ -343,53 +343,53 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref PrivateCICApiAccessLogGroup
 
-#  IssueCredentialFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
-#      CodeUri: ../../lambdas/issuecredential
-#      Environment:
-#        Variables:
-#          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
-#          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-#      Policies:
-#        - AWSLambdaBasicExecutionRole
-#        - AWSXrayWriteOnlyAccess
-#        - DynamoDBReadPolicy:
-#            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref CICTable
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - "kms:Sign"
-#            Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
-#        - SQSSendMessagePolicy:
-#            QueueName: !ImportValue AuditEventQueueName
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - ssm:GetParameter
-#            Resource:
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - kms:Decrypt
-#              - kms:GenerateDataKey
-#            Resource:
-#              - !ImportValue AuditEventQueueEncryptionKeyArn
-#
-#  IssueCredentialFunctionLogGroup:
-#    Type: AWS::Logs::LogGroup
-#    Properties:
-#      LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
-#      RetentionInDays: 30
+ IssueCredentialFunction:
+   Type: AWS::Serverless::Function
+   Properties:
+     Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
+     CodeUri: ../../lambdas/issuecredential
+     Environment:
+       Variables:
+         POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
+         SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+     Policies:
+       - AWSLambdaBasicExecutionRole
+       - AWSXrayWriteOnlyAccess
+       - DynamoDBReadPolicy:
+           TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+       - DynamoDBReadPolicy:
+           TableName: !Ref CICTable
+       - Statement:
+           Effect: Allow
+           Action:
+             - "kms:Sign"
+           Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
+       - SQSSendMessagePolicy:
+           QueueName: !ImportValue AuditEventQueueName
+       - Statement:
+           Effect: Allow
+           Action:
+             - ssm:GetParameter
+           Resource:
+             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
+             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
+             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
+             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
+             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
+             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
+       - Statement:
+           Effect: Allow
+           Action:
+             - kms:Decrypt
+             - kms:GenerateDataKey
+           Resource:
+             - !ImportValue AuditEventQueueEncryptionKeyArn
+
+ IssueCredentialFunctionLogGroup:
+   Type: AWS::Logs::LogGroup
+   Properties:
+     LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
+     RetentionInDays: 30
 #
 #  IssueCredentialFunctionLogsSubscriptionFilterCSLS:
 #    Type: AWS::Logs::SubscriptionFilter
