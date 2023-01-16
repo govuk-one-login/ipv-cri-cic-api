@@ -28,18 +28,18 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_V1_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: SAM Validate
-        run: sam validate --region ${{ env.AWS_REGION }} -t lambda-functions/template.yaml
-
       - name: Generate code signing config
         id: signing
         uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
         with:
-          template: ./lambda-functions/template.yaml
+          template: ./infrastructure/lambda/template.yaml
           profile: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
 
+      - name: SAM Validate
+        run: sam validate --region ${{ env.AWS_REGION }} -t infrastructure/lambda/template.yaml
+
       - name: SAM build
-        run: sam build -t lambda-functions/template.yaml
+        run: sam build -t infrastructure/lambda/template.yaml
 
       - name: SAM package
         run: |
