@@ -313,20 +313,20 @@ Resources:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PublicCICApi}-public-AccessLogs
       RetentionInDays: 365
 
-  # PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Condition: IsNotDevEnvironment
-  #   Properties:
-  #     DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref PublicCICApiAccessLogGroup
+  PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref PublicCICApiAccessLogGroup
 
-  # PrivateCICApiAccessLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Condition: IsNotDevEnvironment
-  #   Properties:
-  #     LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PrivateCICApi}-private-AccessLogs
-  #     RetentionInDays: 365
+  PrivateCICApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: IsNotDevEnvironment
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PrivateCICApi}-private-AccessLogs
+      RetentionInDays: 365
 
   DevOnlyCICApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
@@ -335,62 +335,62 @@ Resources:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${DevOnlyCICApi}-private-AccessLogs
       RetentionInDays: 30
 
-  # PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Condition: IsNotDevEnvironment
-  #   Properties:
-  #     DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref PrivateCICApiAccessLogGroup
+  PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref PrivateCICApiAccessLogGroup
 
-  # IssueCredentialFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
-  #     CodeUri: ../../lambdas/issuecredential
-  #     Environment:
-  #       Variables:
-  #         POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
-  #         SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-  #     Policies:
-  #       - AWSLambdaBasicExecutionRole
-  #       - AWSXrayWriteOnlyAccess
-  #       - DynamoDBReadPolicy:
-  #           TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-  #       - DynamoDBReadPolicy:
-  #           TableName: !Ref CICTable
-  #       - Statement:
-  #           Effect: Allow
-  #           Action:
-  #             - "kms:Sign"
-  #           Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
-  #       - SQSSendMessagePolicy:
-  #           QueueName: !ImportValue AuditEventQueueName
-  #       - Statement:
-  #           Effect: Allow
-  #           Action:
-  #             - ssm:GetParameter
-  #           Resource:
-  #             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
-  #             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
-  #             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
-  #             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
-  #             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
-  #             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
-  #       - Statement:
-  #           Effect: Allow
-  #           Action:
-  #             - kms:Decrypt
-  #             - kms:GenerateDataKey
-  #           Resource:
-  #             - !ImportValue AuditEventQueueEncryptionKeyArn
-
-  # IssueCredentialFunctionLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
-  #     RetentionInDays: 30
-
+#  IssueCredentialFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
+#      CodeUri: ../../lambdas/issuecredential
+#      Environment:
+#        Variables:
+#          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
+#          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+#      Policies:
+#        - AWSLambdaBasicExecutionRole
+#        - AWSXrayWriteOnlyAccess
+#        - DynamoDBReadPolicy:
+#            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+#        - DynamoDBReadPolicy:
+#            TableName: !Ref CICTable
+#        - Statement:
+#            Effect: Allow
+#            Action:
+#              - "kms:Sign"
+#            Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
+#        - SQSSendMessagePolicy:
+#            QueueName: !ImportValue AuditEventQueueName
+#        - Statement:
+#            Effect: Allow
+#            Action:
+#              - ssm:GetParameter
+#            Resource:
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
+#        - Statement:
+#            Effect: Allow
+#            Action:
+#              - kms:Decrypt
+#              - kms:GenerateDataKey
+#            Resource:
+#              - !ImportValue AuditEventQueueEncryptionKeyArn
+#
+#  IssueCredentialFunctionLogGroup:
+#    Type: AWS::Logs::LogGroup
+#    Properties:
+#      LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
+#      RetentionInDays: 30
+#
 #  IssueCredentialFunctionLogsSubscriptionFilterCSLS:
 #    Type: AWS::Logs::SubscriptionFilter
 #    Condition: IsNotDevEnvironment
