@@ -1,8 +1,8 @@
 import { IsISO8601, IsNotEmpty, IsString } from "class-validator";
 
-export class CICSession {
+export class CicSession {
 
-    constructor(data: CICSession) {
+    constructor(data: CicSession) {
         this.fullName = data.fullName!;
         this.dateOfBirth = data.dateOfBirth!;
         this.documentSelected = data.documentSelected!;

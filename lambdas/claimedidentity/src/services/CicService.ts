@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
-import { CICSession } from "../models/CICSession";
+import { CicSession } from "../models/CicSession";
 import {SessionItem} from "../models/SessionItem";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
-export class CICService {
+export class CicService {
     readonly tableName: string
     private readonly dynamo: DocumentClient;
 
@@ -40,7 +40,7 @@ export class CICService {
         return new SessionItem(session?.Item);
     }
 
-    public async saveCICData(sessionId: string, cicData: CICSession): Promise<void> {
+    public async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
         console.log(sessionId)
         let params: any = {
             TableName: process.env.SESSION_TABLE_NAME!,

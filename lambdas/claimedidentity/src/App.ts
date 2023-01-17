@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { CICService } from "./services/cic-service";
-import {CICSession} from "./models/CICSession";
+import { CicService } from "./services/CicService";
+import { CicSession } from "./models/CicSession";
 import {validateModel} from "./aws/ValidationHelper"
 
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -18,10 +18,10 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         }
 
         if (bodyParsed) {
-            const cicSession: CICSession = new CICSession(bodyParsed);
+            const cicSession: CicSession = new CicSession(bodyParsed);
             await validateModel(cicSession);
             console.log("CIC Session is   *****"+JSON.stringify(cicSession));
-            const cicService = new CICService(process.env.SESSION_TABLE_NAME);
+            const cicService = new CicService(process.env.SESSION_TABLE_NAME);
             const session = await cicService.getSessionById(sessionId);
             console.log("Session is   *****"+JSON.stringify(session));
             session.fullName = cicSession.fullName;
