@@ -328,12 +328,12 @@ Resources:
   #     LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PrivateCICApi}-private-AccessLogs
   #     RetentionInDays: 365
 
-  # DevOnlyCICApiAccessLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Condition: IsDevEnvironment
-  #   Properties:
-  #     LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${DevOnlyCICApi}-private-AccessLogs
-  #     RetentionInDays: 30
+  DevOnlyCICApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: IsDevEnvironment
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${DevOnlyCICApi}-private-AccessLogs
+      RetentionInDays: 30
 
   # PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
   #   Type: AWS::Logs::SubscriptionFilter
