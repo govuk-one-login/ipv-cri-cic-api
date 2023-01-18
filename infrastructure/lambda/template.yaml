@@ -370,6 +370,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../../lambdas/hello-word
+      Runtime: nodejs16.x
       Handler: uk.gov.di.ipv.cri.cic.api.handler.HelloWorldHandler::handleRequest
       Environment:
         Variables:
@@ -380,7 +381,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
         - DynamoDBCrudPolicy:
-            TableName: !Ref AddressTable
+            TableName: !Ref HelloWorldTable
         - Statement:
             - Effect: Allow
               Action:
