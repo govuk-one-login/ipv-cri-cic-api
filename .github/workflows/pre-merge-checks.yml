@@ -29,15 +29,15 @@ jobs:
         # Need to confirm whether submodules can be removed or not
         # with:
         #   submodules: true
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-        with:
-          version: 1.56.0
-      - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_VALIDATE_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+      # - name: Setup SAM CLI
+      #   uses: aws-actions/setup-sam@v2
+      #   with:
+      #     version: 1.56.0
+      # - name: Assume temporary AWS role
+      #   uses: aws-actions/configure-aws-credentials@v1-node16
+      #   with:
+      #     role-to-assume: ${{ secrets.GH_VALIDATE_ROLE_ARN }}
+      #     aws-region: ${{ env.AWS_REGION }}
       # - name: SAM Validate
       #   run: |
       #     sam validate -t infrastructure/lambda/template.yaml
