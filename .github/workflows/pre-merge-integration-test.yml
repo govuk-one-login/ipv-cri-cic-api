@@ -46,7 +46,8 @@ jobs:
         with:
             artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
-            working-directory: ./infrastructure/lambda
+            working-directory: /lambdas
+            template-file: infrastructure/lambda/template.yaml
 
       # - name: SAM deploy integration test stack
       #   run: |
