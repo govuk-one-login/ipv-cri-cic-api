@@ -356,7 +356,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: hello-world/openapi-spec.yaml
+            Location: ../../lambdas/hello-world/openapi-spec.yaml
       TracingEnabled: true
       Tags:
         Product: GOV.UK Sign In
