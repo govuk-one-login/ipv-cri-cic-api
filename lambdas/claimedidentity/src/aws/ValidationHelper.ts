@@ -1,5 +1,5 @@
-import {validateOrReject} from "class-validator";
-import {AppError} from "./AppError";
+import { validateOrReject } from "class-validator";
+import { AppError } from "./AppError";
 import { StatusCodes }from 'http-status-codes';
 
   export async function validateModel(model: object) {
