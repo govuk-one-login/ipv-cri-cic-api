@@ -378,19 +378,20 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
-        - DynamoDBCrudPolicy:
-            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref HelloWorldTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParameter
-              Resource:
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/AddressTableName"
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTtl"
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
+        # hello world is not using any dynamo table
+        # - DynamoDBCrudPolicy:
+        #     TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+        # - DynamoDBCrudPolicy:
+        #     TableName: !Ref HelloWorldTable
+        # - Statement:
+        #     - Effect: Allow
+        #       Action:
+        #         - ssm:GetParameter
+        #       Resource:
+        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/AddressTableName"
+        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
+        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTtl"
+        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
         - Statement:
             - Effect: Allow
               Action:
