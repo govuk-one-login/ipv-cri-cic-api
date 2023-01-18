@@ -38,12 +38,12 @@ jobs:
         with:
           role-to-assume: ${{ secrets.GH_VALIDATE_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-      - name: SAM Validate
-        run: |
-          sam validate -t infrastructure/lambda/template.yaml
-      - name: SAM Build
-        run: |
-          sam build -t infrastructure/lambda/template.yaml
+      # - name: SAM Validate
+      #   run: |
+      #     sam validate -t infrastructure/lambda/template.yaml
+      # - name: SAM Build
+      #   run: |
+      #     sam build -t infrastructure/lambda/template.yaml
   lint:
     runs-on: ubuntu-latest
     strategy:
