@@ -343,6 +343,51 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref PrivateCICApiAccessLogGroup
 
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../lambdas/hello-word
+      Handler: uk.gov.di.ipv.cri.cic.api.handler.HelloWorldHandler::handleRequest
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-cic"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AddressTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/AddressTableName"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTtl"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/clients/*"
+
+  HelloWorldFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${HelloWorldFunction}"
+      RetentionInDays: 30
+
+  HelloWorldFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref HelloWorldFunctionLogGroup
+
 #  IssueCredentialFunction:
 #    Type: AWS::Serverless::Function
 #    Properties:
@@ -462,6 +507,13 @@ Resources:
       Type: String
       Value: !FindInMap [ JwtTtlUnitMapping, Environment, !Ref Environment ]
       Description: The unit for the time-to-live for an JWT e.g. (MONTHS)
+
+  HelloWorldFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HelloWorldFunction.Alias
+      Principal: apigateway.amazonaws.com
 
 #  IssueCredentialFunctionPermission:
 #    Type: AWS::Lambda::Permission
