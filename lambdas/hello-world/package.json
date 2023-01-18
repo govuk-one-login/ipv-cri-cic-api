@@ -1,0 +1,30 @@
+{
+    "name": "hello_world",
+    "version": "1.0.0",
+    "description": "hello world sample for NodeJS",
+    "main": "app.ts",
+    "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
+    "author": "SAM CLI",
+    "license": "MIT",
+    "dependencies": {
+      "aws-sdk": "^2.1259.0",
+      "axios": ">=0.21.1"
+    },
+    "scripts": {
+      "compile": "tsc",
+      "lint": "./node_modules/.bin/ts-standard --fix",
+      "lint:check": "./node_modules/.bin/ts-standard",
+      "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
+      "test": "mocha tests/unit/",
+      "test:unit": "yarn run compile && yarn run unit",
+      "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit"
+    },
+    "devDependencies": {
+      "@types/aws-lambda": "^8.10.108",
+      "@types/node": "^18.11.9",
+      "chai": "^4.2.0",
+      "mocha": "^9.1.4",
+      "ts-standard": "^11.0.0",
+      "typescript": "^4.9.3"
+    }
+  }
