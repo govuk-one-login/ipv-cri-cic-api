@@ -21,6 +21,8 @@ jobs:
     #   run:
     #     shell: bash
     #     working-directory: infrastructure/lambda/template.yaml
+  style-checks:
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -42,26 +44,26 @@ jobs:
       - name: SAM Build
         run: |
           sam build -t infrastructure/lambda/template.yaml
-    lint:
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          node-function:
-            - hello-world
-      steps:
-        - name: Pull Repository
-          uses: actions/checkout@v3
-        - name: Set-up Node 16
-          uses: actions/setup-node@v3
-          with:
-            node-version: '16'
-        # Uncomment when lambda will be added to BE
-        - name: NPM Install
-          working-directory: ./lambdas/${{ matrix.node-function }}
-          run: npm install
-        - name: run Lint
-          working-directory: ./lambdas/${{ matrix.node-function }}
-          run: npm run lint
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-function:
+          - hello-world
+    steps:
+      - name: Pull Repository
+        uses: actions/checkout@v3
+      - name: Set-up Node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      # Uncomment when lambda will be added to BE
+      - name: NPM Install
+        working-directory: ./lambdas/${{ matrix.node-function }}
+        run: npm install
+      - name: run Lint
+        working-directory: ./lambdas/${{ matrix.node-function }}
+        run: npm run lint
 
   # Uncomment when a function with tests is added
   # run-unit-tests-node:
