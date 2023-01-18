@@ -343,6 +343,29 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref PrivateCICApiAccessLogGroup
 
+  HelloWorldRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      AccessLogSetting:
+        Format: "$context.requestId $context.httpMethod $context.path"
+        DestinationArn: !GetAtt APIGatewayAccessLogGroup.Arn
+      CacheClusterEnabled: true
+      CacheClusterSize: "0.5"
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: hello-world/openapi-spec.yaml
+      TracingEnabled: true
+      Tags:
+        Product: GOV.UK Sign In
+        System: Dev Platform
+        Environment: Demo
+        Service: backend
+        Name: HelloWorldRestApi
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -654,3 +677,7 @@ Outputs:
     Value: !If [IsNotDevEnvironment, !Ref PrivateCICApi, !Ref DevOnlyCICApi]
     Export:
       Name: !Sub ${AWS::StackName}-PrivateCICApiGatewayId
+
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${HelloWorldRestApi}.execute-api.${AWS::Region}.amazonaws.com/${HelloWorldRestApi.Stage}
