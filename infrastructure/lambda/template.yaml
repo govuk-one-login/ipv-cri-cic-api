@@ -369,7 +369,7 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../../lambdas/hello-word
+      CodeUri: ../../lambdas/hello-world
       Runtime: nodejs16.x
       Handler: uk.gov.di.ipv.cri.cic.api.handler.HelloWorldHandler::handleRequest
       Environment:
