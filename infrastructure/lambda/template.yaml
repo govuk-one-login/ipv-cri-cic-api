@@ -342,6 +342,25 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref PrivateCICApiAccessLogGroup
+# commented out propertise for codebuld to pass
+  APIGatewayAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      # RetentionInDays: 7
+      # KmsKeyId: !GetAtt HelloWorldKmsKey.Arn
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: APIGatewayAccessLogGroup
+        # - Key: Source
+        #   Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
   HelloWorldRestApi:
     Type: AWS::Serverless::Api
