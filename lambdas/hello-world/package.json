@@ -16,7 +16,7 @@
       "lint:check": "./node_modules/.bin/ts-standard",
       "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
       "test": "mocha tests/unit/",
-      "test:unit": "yarn run compile && yarn run unit",
+      "test:unit": "npm run compile && npm run unit",
       "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit"
     },
     "devDependencies": {
