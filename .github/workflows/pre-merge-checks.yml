@@ -37,6 +37,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-function:
+          - hello-world
     steps:
       # - name: Check out repository code
       #   uses: actions/checkout@v3
