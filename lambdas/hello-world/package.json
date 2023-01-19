@@ -11,10 +11,13 @@
       "axios": ">=0.21.1"
     },
     "scripts": {
-      "unit": "jest --config=jest.config.ts",
-      "lint": "prettier --check src tests && eslint .",
       "compile": "tsc",
-      "test": "npm run compile && npm run unit"
+      "lint": "./node_modules/.bin/ts-standard --fix",
+      "lint:check": "./node_modules/.bin/ts-standard",
+      "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
+      "test": "mocha tests/unit/",
+      "test:unit": "yarn run compile && yarn run unit",
+      "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit"
     },
     "devDependencies": {
       "@types/aws-lambda": "^8.10.108",
