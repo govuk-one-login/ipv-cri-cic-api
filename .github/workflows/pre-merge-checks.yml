@@ -40,6 +40,10 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
+      - name: compile
+        working-directory: ./lambdas/${{ matrix.node-function }}
+        run: npm run compile
+
 
 # comment out when unit test is added
   # run-unit-tests:
