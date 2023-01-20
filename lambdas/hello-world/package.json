@@ -16,9 +16,8 @@
       "lint": "./node_modules/.bin/ts-standard --fix",
       "lint:check": "./node_modules/.bin/ts-standard",
       "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
-      "test": "mocha tests/unit/",
-      "test:unit": "npm run compile && npm run unit",
-      "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit"
+      "test": "npm run compile && npm run unit",
+      "unit": "jest --config=jest.config.ts"
     },
     "devDependencies": {
       "@types/aws-lambda": "^8.10.108",
