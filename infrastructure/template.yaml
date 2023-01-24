@@ -194,7 +194,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: '../spec/public-api.yaml'
+            Location: './spec/public-api.yaml'
       OpenApiVersion: 3.0.1
       EndpointConfiguration:
         Type: REGIONAL
@@ -239,7 +239,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: '../spec/private-api.yaml'
+            Location: './spec/private-api.yaml'
       OpenApiVersion: 3.0.1
       EndpointConfiguration:
         Type: PRIVATE
@@ -302,7 +302,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: '../spec/private-api.yaml'
+            Location: './spec/private-api.yaml'
       OpenApiVersion: 3.0.1
       EndpointConfiguration:
         Type: REGIONAL
@@ -375,7 +375,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: '../spec/private-api.yaml'
+            Location: './spec/private-api.yaml'
       TracingEnabled: true
       Tags:
         Product: GOV.UK Sign In
