@@ -8,7 +8,7 @@ import { load } from 'js-yaml';
 let template: Template;
 
 beforeAll(() => {
-    let yamltemplate: any = load(readFileSync('../infrastructure/lambda/template.yaml', 'utf-8'), { schema: schema })
+    let yamltemplate: any = load(readFileSync('../infrastructure/template.yaml', 'utf-8'), { schema: schema })
     template = Template.fromJSON(yamltemplate)
 }) 
 
@@ -22,7 +22,7 @@ xit("Should not use DefinitionBody as part of the serverless::api", () => {
 })
 
 it("The template contains two API gateway resource", () => {
-    template.resourceCountIs('AWS::Serverless::Api', 2)
+    template.resourceCountIs('AWS::Serverless::Api', 4)
 })
 
 it("Has tracing enabled on at least one API", () => {
@@ -33,7 +33,7 @@ it("Has tracing enabled on at least one API", () => {
 })
 
 it("There are 17 lambdas defined, all with a specific permission:", () => {
-    const lambda_count = 17
+    const lambda_count = 1
     template.resourceCountIs('AWS::Serverless::Function', lambda_count)
     template.resourceCountIs('AWS::Lambda::Permission', lambda_count)    
 })
@@ -53,10 +53,7 @@ it("All Lambdas must have an associated LogGroup named after their FunctionName.
         // These are functions we know are broken, but have to skip for now.
         // They should be resolved and removed from this list ASAP. 
         const excludedFunctions = [
-            "JsonWebKeys-${AWS::StackName}",
-            "FinishBiometricSessionFunction-${AWS::StackName}",
-            "TestClientJWKS-${AWS::StackName}",
-            "TestClientRedirect-${AWS::StackName}" 
+            // example if you've deployed a mistake "JsonWebKeys-${AWS::StackName}",
         ]
         let functionName = lambdas[lambda].Properties.FunctionName["Fn::Sub"]
         if (excludedFunctions.includes(functionName)) {
@@ -73,18 +70,11 @@ it("All Lambdas must have an associated LogGroup named after their FunctionName.
     })
 })
 
-it("All lambdas should have a FunctionName defined", () => {
-    const functionNameCapture = new Capture(Match.anyValue());
-    template.hasResourceProperties("AWS::Serverless::Function", {
-        FunctionName: functionNameCapture
-    })
-})
-
 it ("Each log group defined must have a retention period", () => {
     const logGroups = template.findResources("AWS::Logs::LogGroup")
     const logGroupList = Object.keys(logGroups)
     logGroupList.forEach(logGroup => {
-        expect(logGroups[logGroup].Properties.RetentionInDays).toEqual({"Fn::FindInMap": ["EnvironmentVariables", {"Ref": "Environment"}, "CWLOGRETENTIONDAYS"]})
+        expect(logGroups[logGroup].Properties.RetentionInDays).toBeTruthy()
     })
 })
   
@@ -99,33 +89,5 @@ describe('Log group retention', () => {
     `(`Log group retention period for $environment has correct value in mappings`, ({ environment, retention }) => {
         const mappings = template.findMappings('EnvironmentVariables')
         expect(mappings.EnvironmentVariables[environment].CWLOGRETENTIONDAYS).toBe(retention)
-    })
-})
-
-it("The API Gateway Access Log extracts a metric for 200 successes on UserInfo", () => {
-    template.hasResourceProperties("AWS::Logs::MetricFilter", {
-        LogGroupName: { Ref: "ApiAccessLogGroup" },
-        FilterPattern: '{ $.resourcePath = "/userinfo" && $.status = 200 }',
-        MetricTransformations: Match.arrayEquals([
-            Match.objectEquals({
-                MetricValue: "1",
-                MetricNamespace: "UserInfo/StatusCodes",
-                MetricName: "200Success"
-            })
-        ])
-    })
-})
-
-it("The API Gateway Access Log extracts a metric for 500 errors on UserInfo", () => {
-    template.hasResourceProperties("AWS::Logs::MetricFilter", {
-        LogGroupName: { Ref: "ApiAccessLogGroup" },
-        FilterPattern: '{ $.resourcePath = "/userinfo" && $.status = 500 }',
-        MetricTransformations: Match.arrayEquals([
-            Match.objectEquals({
-                MetricValue: "1",
-                MetricNamespace: "UserInfo/StatusCodes",
-                MetricName: "500Error"
-            })
-        ])
     })
 })

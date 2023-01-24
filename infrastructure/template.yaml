@@ -310,7 +310,7 @@ Resources:
   PublicCICApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PublicCICApi}-public-AccessLogs
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-public-AccessLogs
       RetentionInDays: 365
 
   PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
@@ -325,14 +325,14 @@ Resources:
     Type: AWS::Logs::LogGroup
     Condition: IsNotDevEnvironment
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${PrivateCICApi}-private-AccessLogs
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-private-AccessLogs
       RetentionInDays: 365
 
   DevOnlyCICApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Condition: IsDevEnvironment
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-${DevOnlyCICApi}-private-AccessLogs
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-devonly-private-AccessLogs
       RetentionInDays: 30
 
   PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
