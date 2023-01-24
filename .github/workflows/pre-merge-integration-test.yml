@@ -35,7 +35,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM build
-        run: sam build -t infrastructure/lambda/template.yaml
+        run: sam build -t infrastructure/template.yaml
 
       - name: Set short SHA
         id: vars
