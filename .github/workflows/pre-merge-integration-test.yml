@@ -35,7 +35,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM build
-        run: sam build -t infrastructure/template.yaml
+        run: sam build -t infrastructure/lambda/template.yaml
 
       - name: Set short SHA
         id: vars
@@ -46,7 +46,7 @@ jobs:
         with:
             artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
-            working-directory: infrastructure
+            working-directory: infrastructure/lambda
             template-file: template.yaml
 
       # - name: SAM deploy integration test stack
