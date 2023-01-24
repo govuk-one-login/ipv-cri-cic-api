@@ -1,12 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { CicService } from "./services/CicService";
 import { CicSession } from "./models/CicSession";
-import { validateModel } from "./aws/ValidationHelper"
+import { ValidationHelper } from "./utils/ValidationHelper"
 import { Logger } from '@aws-lambda-powertools/logger';
 import { Metrics, MetricUnits } from '@aws-lambda-powertools/metrics';
-import { Response } from "./aws/Response";
+import { Response } from "./utils/Response";
 import { StatusCodes }from 'http-status-codes';
 import { randomUUID } from 'crypto'
+import {RequestProcessor} from "./services/RequestProcessor";
 
 const logger = new Logger({
     logLevel: 'DEBUG',
@@ -14,46 +15,20 @@ const logger = new Logger({
 });
 const metrics = new Metrics({ namespace: 'CIC' });
 
+
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     let response: APIGatewayProxyResult;
     try {
         logger.debug("Body is "+event.body as string)
-        const bodyParsed = JSON.parse(event.body as string);
         const sessionId = event.headers["session_id"] as string;
         if (!sessionId) {
             return new Response(StatusCodes.BAD_REQUEST,"Missing header: session_id is required");
         }
 
         let cicSession: CicSession
-        if (bodyParsed) {
-            try {
-                cicSession = new CicSession(bodyParsed);
-                await validateModel(cicSession);
-                logger.debug("CIC Session is   *****"+JSON.stringify(cicSession));
-            } catch (error){
-                return new Response(StatusCodes.BAD_REQUEST,"Missing mandatory fields in the request payload");
-            }
+        if (event.body) {
 
-            const cicService = new CicService(process.env.SESSION_TABLE_NAME, logger);
-            const session = await cicService.getSessionById(sessionId);
-
-            if(session){
-                logger.info('found session', JSON.stringify(session));
-                metrics.addMetric('found session', MetricUnits.Count, 1);
-                logger.debug("Session is   *****"+JSON.stringify(session));
-                await cicService.saveCICData(sessionId, cicSession);
-                const authCode = randomUUID();
-                await cicService.createAuthorizationCode(sessionId, authCode)
-                const resp = {
-                    authorizationCode: authCode,
-                    redirectUri: session?.redirectUri,
-                    state: session?.state
-                }
-                return new Response(StatusCodes.NO_CONTENT,JSON.stringify(resp));
-            } else{
-                return new Response(StatusCodes.NOT_FOUND,`No session found with the session id: ${sessionId}`);
-            }
-
+            return RequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
 
         }else {
             return new Response(StatusCodes.BAD_REQUEST,"Empty payload");

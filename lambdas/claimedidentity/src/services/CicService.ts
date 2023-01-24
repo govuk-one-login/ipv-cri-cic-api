@@ -3,13 +3,15 @@ import { CicSession } from "../models/CicSession";
 import {SessionItem} from "../models/SessionItem";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { Logger } from '@aws-lambda-powertools/logger';
-import { AppError } from "../aws/AppError";
+import { AppError } from "../utils/AppError";
 import { StatusCodes } from "http-status-codes";
+import {Metrics} from "@aws-lambda-powertools/metrics";
 
 export class CicService {
     readonly tableName: string
     private readonly dynamo: DocumentClient;
     readonly logger: Logger;
+    private static instance: CicService;
 
     constructor(tableName: any, logger: Logger ) {
         //throw error if tableName iss null
@@ -18,7 +20,14 @@ export class CicService {
         this.logger = logger;
     }
 
-    async getSessionById (sessionId: string ): Promise<SessionItem | undefined> {
+    static getInstance(tableName: string, logger: Logger): CicService {
+        if (!CicService.instance) {
+            CicService.instance = new CicService( tableName, logger);
+        }
+        return CicService.instance;
+    }
+
+    public async getSessionById (sessionId: string ): Promise<SessionItem | undefined> {
         let session
         this.logger.debug("Table name "+this.tableName)
         this.logger.debug("Sesssion id "+sessionId)

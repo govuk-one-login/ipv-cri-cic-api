@@ -7,7 +7,6 @@ export class CicSession {
         this.dateOfBirth = data.dateOfBirth!;
         this.documentSelected = data.documentSelected!;
         this.dateOfExpiry = data.dateOfExpiry!;
-        this.typeName = "CICSession"
     }
 
     @IsString()
@@ -25,7 +24,5 @@ export class CicSession {
     @IsISO8601()
     @IsNotEmpty()
     dateOfExpiry: string;
-
-    typeName: string;
 
 }
