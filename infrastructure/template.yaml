@@ -389,7 +389,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.lambdaHandler
-      CodeUri: ../../lambdas/hello-world
+      CodeUri: ../lambdas/hello-world
       Runtime: nodejs16.x
       Environment:
         Variables:
