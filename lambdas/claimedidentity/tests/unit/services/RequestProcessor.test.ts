@@ -1,76 +1,60 @@
-import {RequestProcessor} from "../../../src/services/RequestProcessor";
-import {Metrics} from "@aws-lambda-powertools/metrics";
-import { mock } from 'jest-mock-extended';
-import {Logger} from "@aws-lambda-powertools/logger";
-import {event} from "../data/events";
-import {CicService} from "../../../src/services/CicService";
-import {SessionItem} from "../../../src/models/SessionItem";
-import {Response} from "../../../src/utils/Response";
-import {CicResponse} from "../../../src/utils/CicResponse";
+import { RequestProcessor } from "../../../src/services/RequestProcessor";
+import { Metrics } from "@aws-lambda-powertools/metrics";
+import { mock } from "jest-mock-extended";
+import { Logger } from "@aws-lambda-powertools/logger";
+import { event } from "../data/events";
+import { CicService } from "../../../src/services/CicService";
+import { SessionItem } from "../../../src/models/SessionItem";
+import { Response } from "../../../src/utils/Response";
+import { CicResponse } from "../../../src/utils/CicResponse";
 
 let requestProcessorTest: RequestProcessor;
+const mockCicService = mock<CicService>();
 
-export const mockCicService = mock<CicService>();
-//mockCicService.getInstance = () => mockCicService
-// jest.mock('../../../src/services/CicService', () => {
-//     return {
-//         CicService: jest.fn(() => mockCicService)
-//     }
-// });
-
-
-// jest.mock('../../../src/services/CicService', () => {
-//     return jest.fn().mockImplementation(() => {
-//         return {getSessionById: () => {
-//                 return ''
-//             }};
-//     });
-// });
 const logger = new Logger({
-    logLevel: 'DEBUG',
-    serviceName: 'CIC'
+	logLevel: "DEBUG",
+	serviceName: "CIC",
 });
-const metrics = new Metrics({ namespace: 'CIC' });
-
-beforeAll(() => {
-    //CicService.getInstance = jest.fn().mockReturnValue(mockCicService);
-
-    // mockCicService.fn().mockImplementation(() => {
-    //     getSessionById: () => {
-    //         return ''
-    //     }
-    // })
-    //mockCicService.getSessionById
-    requestProcessorTest = new RequestProcessor(logger,metrics);
-    requestProcessorTest.cicService = mockCicService
-
-})
-
-beforeEach(() => {
-    jest.clearAllMocks();
-})
+const metrics = new Metrics({ namespace: "CIC" });
 
 describe("RequestProcessor", () => {
+	beforeAll(() => {
+		requestProcessorTest = new RequestProcessor(logger, metrics);
+		requestProcessorTest.cicService = mockCicService;
+	});
 
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
 
-        it("PreLinkEvent should be successful for Home, sampledId ending 0-7", async () => {
+	it("Return successful response with 200 OK when session is found", async () => {
+		const sess: SessionItem = new SessionItem();
+		sess.redirectUri = "http";
+		mockCicService.getSessionById.mockResolvedValue(sess);
 
-            const sess:SessionItem  = new SessionItem()
-            sess.redirectUri="http"
-            mockCicService.getSessionById.mockResolvedValue(sess);
+		const out: Response = await requestProcessorTest.processRequest(event, "1234");
 
-            const out: Response = await requestProcessorTest.processRequest(event, "1234");
+		const cicResp = new CicResponse(JSON.parse(out.body));
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 
-            console.log(out.body)
+		expect(out.body).toEqual(JSON.stringify({
+			authorizationCode: `${cicResp.authorizationCode}`,
+			redirectUri: "http",
+		}));
+		expect(out.statusCode).toBe(200);
+	});
 
-            const cicResp = new CicResponse(JSON.parse(out.body));
-            console.log(cicResp.authorizationCode)
+	it("Return 404 when session with that session id not found in the DB", async () => {
+		const sess: SessionItem = new SessionItem();
+		sess.redirectUri = "http";
+		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-            expect(mockCicService.getSessionById).toBeCalledTimes(1);
-            expect(out).toContain({
-                statusCode: 204,
-                body: {"authorizationCode":`${cicResp.authorizationCode}`,"redirectUri":"http"}
-            })
-            //expect(awsService.sendSQSMessage).toHaveBeenLastCalledWith(expect.any(SQSMessage), 'VALIDATION_SQS_URL')
-        });
-    });
+		const out: Response = await requestProcessorTest.processRequest(event, "1234");
+
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(out.body).toBe("No session found with the session id: 1234");
+		expect(out.statusCode).toBe(404);
+	});
+});
