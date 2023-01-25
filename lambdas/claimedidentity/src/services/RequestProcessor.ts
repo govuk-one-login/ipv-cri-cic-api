@@ -7,6 +7,7 @@ import {randomUUID} from "crypto";
 import {APIGatewayProxyEvent} from "aws-lambda";
 import { Logger } from '@aws-lambda-powertools/logger';
 import {ValidationHelper} from "../utils/ValidationHelper";
+import {CicResponse} from "../utils/CicResponse";
 
 
 export class RequestProcessor {
@@ -50,12 +51,17 @@ export class RequestProcessor {
             await this.cicService.saveCICData(sessionId, cicSession);
             const authCode = randomUUID();
             await this.cicService.createAuthorizationCode(sessionId, authCode)
-            const resp = {
+            const cicResp = new CicResponse({
                 authorizationCode: authCode,
                 redirectUri: session?.redirectUri,
                 state: session?.state
-            }
-            return new Response(StatusCodes.NO_CONTENT,JSON.stringify(resp));
+            });
+            // const resp = {
+            //     authorizationCode: authCode,
+            //     redirectUri: session?.redirectUri,
+            //     state: session?.state
+            // }
+            return new Response(StatusCodes.NO_CONTENT,JSON.stringify(cicResp));
         } else{
             return new Response(StatusCodes.NOT_FOUND,`No session found with the session id: ${sessionId}`);
         }
