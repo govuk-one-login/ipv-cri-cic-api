@@ -32,26 +32,26 @@ export class CicService {
   async getSessionById(sessionId: string): Promise<SessionItem | undefined> {
   	let session;
   	this.logger.debug("Table name " + this.tableName);
-  	this.logger.debug("Sesssion id " + sessionId);
+  	this.logger.debug("Session id " + sessionId);
+  	const params = {
+  		TableName: this.tableName,
+  		Key: {
+  			sessionId,
+  		},
+  	};
   	try {
-  		const params = {
-  			TableName: this.tableName,
-  			Key: {
-  				sessionId,
-  			},
-  		};
   		session = await this.dynamo.get(params).promise();
-  		if (session) {
-  			return new SessionItem(session?.Item);
-  		} else {
-  			this.logger.debug("no session found");
-  		}
-  	} catch (error) {
-  		this.logger.error("Got error", error as Error);
-  		throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Error getting session from database: " + error);
-
-  		// throw new DatabaseConnectionError('Error getting session from database')
+  	} catch (e: any) {
+  		this.logger.error("getSessionById - failed executing get from dynamodb: " + e);
+  		throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Error retrieving Session");
   	}
+
+  	if (!session?.Item) {
+  		this.logger.error("no session found");
+  		throw new AppError(StatusCodes.NOT_FOUND, "Session was not found");
+  	}
+  	return new SessionItem(session.Item);
+
   }
 
   async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
@@ -85,7 +85,7 @@ export class CicService {
   	this.logger.debug(sessionId);
 
   	const params: any = {
-  		TableName: process.env.SESSION_TABLE_NAME!,
+  		TableName: this.tableName,
   		Key: {
   			sessionId,
   		},

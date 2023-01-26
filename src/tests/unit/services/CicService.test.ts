@@ -1,12 +1,15 @@
-import { CicService } from "../../../src/services/CicService";
+import { CicService } from "../../../services/CicService";
 
 import { GetItemInput, GetItemOutput, UpdateItemInput, UpdateItemOutput } from "aws-sdk/clients/dynamodb";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
 import AWS from "aws-sdk";
 import { StatusCodes } from "http-status-codes";
-import { CicSession } from "../../../src/models/CicSession";
+import { CicSession } from "../../../models/CicSession";
 import { randomUUID } from "crypto";
+import { lambdaHandler } from "../../../App";
+import { UNSUPPORTED_CLAIMEDID } from "../data/events";
+import { Response } from "../../../utils/Response";
 
 const logger = new Logger({
 	logLevel: "DEBUG",
@@ -64,14 +67,13 @@ describe("Cic Service", () => {
 	});
 	it("Should return a session item when passed a valid session Id", async () => {
 		const result = await cicService.getSessionById(sessionId);
-		console.log(result);
 		expect(result).toEqual({ sessionId: "SESSID" });
 	});
 
 	it("Should not throw an error and return undefined when session doesn't exist", async () => {
-		const result = await cicService.getSessionById("1234");
-		console.log(result);
-		expect(result).toBeUndefined();
+		return expect(cicService.getSessionById("1234")).rejects.toThrow(expect.objectContaining({
+			statusCode: StatusCodes.NOT_FOUND,
+		}));
 	});
 
 	it("should throw 500 if request fails", async () => {

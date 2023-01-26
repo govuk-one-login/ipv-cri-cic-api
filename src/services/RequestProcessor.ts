@@ -8,6 +8,9 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { CicResponse } from "../utils/CicResponse";
+import { AppError } from "../utils/AppError";
+
+const SESSION_TABLE = process.env.SESSION_TABLE;
 
 export class RequestProcessor {
   private static instance: RequestProcessor;
@@ -18,13 +21,17 @@ export class RequestProcessor {
 
   private readonly validationHelper: ValidationHelper;
 
-  cicService: CicService;
+  private readonly cicService: CicService;
 
   constructor(logger: Logger, metrics: Metrics) {
+	  if (!SESSION_TABLE) {
+		  logger.error("Environment variable SESSION_TABLE is not configured");
+		  throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Service incorrectly configured");
+	  }
   	this.logger = logger;
   	this.validationHelper = new ValidationHelper();
   	this.metrics = metrics;
-  	this.cicService = CicService.getInstance(process.env.SESSION_TABLE_NAME as string, this.logger);
+  	this.cicService = CicService.getInstance(SESSION_TABLE, this.logger);
   }
 
   static getInstance(logger: Logger, metrics: Metrics): RequestProcessor {
@@ -40,7 +47,7 @@ export class RequestProcessor {
   		const bodyParsed = JSON.parse(event.body as string);
   		cicSession = new CicSession(bodyParsed);
   		await this.validationHelper.validateModel(cicSession, this.logger);
-  		this.logger.debug("CIC Session is   *****" + JSON.stringify(cicSession));
+  		this.logger.debug("CIC Session is  " + JSON.stringify(cicSession));
   	} catch (error) {
   		return new Response(StatusCodes.BAD_REQUEST, "Missing mandatory fields in the request payload");
   	}
@@ -50,7 +57,7 @@ export class RequestProcessor {
   	if (session != null) {
   		this.logger.info("found session", JSON.stringify(session));
   		this.metrics.addMetric("found session", MetricUnits.Count, 1);
-  		this.logger.debug("Session is   *****" + JSON.stringify(session));
+  		this.logger.debug("Session is " + JSON.stringify(session));
   		await this.cicService.saveCICData(sessionId, cicSession);
   		const authCode = randomUUID();
   		await this.cicService.setAuthorizationCode(sessionId, authCode);

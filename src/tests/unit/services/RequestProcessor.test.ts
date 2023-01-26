@@ -1,12 +1,12 @@
-import { RequestProcessor } from "../../../src/services/RequestProcessor";
+import { RequestProcessor } from "../../../services/RequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { event } from "../data/events";
-import { CicService } from "../../../src/services/CicService";
-import { SessionItem } from "../../../src/models/SessionItem";
-import { Response } from "../../../src/utils/Response";
-import { CicResponse } from "../../../src/utils/CicResponse";
+import { VALID_CLAIMEDID } from "../data/events";
+import { CicService } from "../../../services/CicService";
+import { SessionItem } from "../../../models/SessionItem";
+import { Response } from "../../../utils/Response";
+import { CicResponse } from "../../../utils/CicResponse";
 
 let requestProcessorTest: RequestProcessor;
 const mockCicService = mock<CicService>();
@@ -20,6 +20,7 @@ const metrics = new Metrics({ namespace: "CIC" });
 describe("RequestProcessor", () => {
 	beforeAll(() => {
 		requestProcessorTest = new RequestProcessor(logger, metrics);
+		// @ts-ignore
 		requestProcessorTest.cicService = mockCicService;
 	});
 
@@ -32,7 +33,7 @@ describe("RequestProcessor", () => {
 		sess.redirectUri = "http";
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
-		const out: Response = await requestProcessorTest.processRequest(event, "1234");
+		const out: Response = await requestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		const cicResp = new CicResponse(JSON.parse(out.body));
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -50,7 +51,7 @@ describe("RequestProcessor", () => {
 		sess.redirectUri = "http";
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await requestProcessorTest.processRequest(event, "1234");
+		const out: Response = await requestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);

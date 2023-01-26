@@ -1,5 +1,5 @@
-import { ValidationHelper } from "../../../src/utils/ValidationHelper";
-import { CicSession } from "../../../src/models/CicSession";
+import { ValidationHelper } from "../../../utils/ValidationHelper";
+import { CicSession } from "../../../models/CicSession";
 import { Logger } from "@aws-lambda-powertools/logger";
 
 const logger = new Logger({

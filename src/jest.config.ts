@@ -13,4 +13,7 @@ export default {
     coverageProvider: "v8",
     coveragePathIgnorePatterns: ["config.ts", "node_modules/"],
     testMatch: ["**/tests/**/*.test.ts"],
+    setupFiles: [
+        "./jest.setup.ts"
+    ]
 };
