@@ -29,10 +29,10 @@ jobs:
         with:
           node-version: '16'
       - name: NPM Install
-        working-directory: ./lambdas/${{ matrix.node-function }}
+        working-directory: ./lambdas/
         run: npm install
       - name: run Lint
-        working-directory: ./lambdas/${{ matrix.node-function }}
+        working-directory: ./lambdas/
         run: npm run lint
 
   build:
