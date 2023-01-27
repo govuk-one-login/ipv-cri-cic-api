@@ -14,7 +14,7 @@
     },
     "scripts": {
         "compile": "tsc",
-        "build": "./node_modules/.bin/esbuild --bundle src/app.ts --outdir=dist --minify --sourcemap",
+        "build": "./node_modules/.bin/esbuild --bundle app.ts --outdir=dist --minify --sourcemap",
         "lint": "./node_modules/.bin/ts-standard --fix",
         "lint:check": "./node_modules/.bin/ts-standard",
         "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
