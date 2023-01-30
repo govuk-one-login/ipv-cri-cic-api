@@ -28,12 +28,12 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_V1_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Generate code signing config
-        id: signing
-        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
-        with:
-          template: ./infrastructure/template.yaml
-          profile: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
+      # - name: Generate code signing config
+      #   id: signing
+      #   uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+      #   with:
+      #     template: ./infrastructure/template.yaml
+      #     profile: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
 
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t infrastructure/template.yaml
@@ -41,17 +41,25 @@ jobs:
       - name: SAM build
         run: sam build -t infrastructure/template.yaml
 
-      - name: SAM package
-        run: |
-          sam package \
-            ${{ steps.signing.outputs.signing_config }} \
-            --s3-bucket ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }} \
-            --region ${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
+      - name: Deploy SAM app
+        uses: alphagov/di-devplatform-upload-action@v3
+        with:
+            artifact-bucket-name: ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+            signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
+            working-directory: infrastructure
+            template-file: template.yaml
+      
+      # - name: SAM package
+      #   run: |
+      #     sam package \
+      #       ${{ steps.signing.outputs.signing_config }} \
+      #       --s3-bucket ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }} \
+      #       --region ${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
 
-      - name: Zip the CloudFormation template
-        run: zip template.zip cf-template.yaml
+      # - name: Zip the CloudFormation template
+      #   run: zip template.zip cf-template.yaml
 
-      - name: Upload zipped CloudFormation artifact to S3
-        env:
-          DEV_ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: aws s3 cp template.zip "s3://$DEV_ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
+      # - name: Upload zipped CloudFormation artifact to S3
+      #   env:
+      #     DEV_ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+      #   run: aws s3 cp template.zip "s3://$DEV_ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
