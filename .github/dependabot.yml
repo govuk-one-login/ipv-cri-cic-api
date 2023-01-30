@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: 'npm'
-    directory: '/lambda-functions/hello-world'
+    directory: '/'
     schedule:
       interval: daily
       time: "03:00"
