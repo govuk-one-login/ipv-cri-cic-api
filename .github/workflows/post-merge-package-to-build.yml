@@ -41,17 +41,25 @@ jobs:
       - name: SAM build
         run: sam build -t infrastructure/template.yaml
 
-      - name: SAM package
-        run: |
-          sam package \
-            ${{ steps.signing.outputs.signing_config }} \
-            --s3-bucket ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }} \
-            --region ${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
+      - name: Deploy SAM app
+        uses: alphagov/di-devplatform-upload-action@v3
+        with:
+            artifact-bucket-name: ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+            signing-profile-name: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
+            working-directory: infrastructure
+            template-file: template.yaml
 
-      - name: Zip the CloudFormation template
-        run: zip template.zip cf-template.yaml
+      # - name: SAM package
+      #   run: |
+      #     sam package \
+      #       ${{ steps.signing.outputs.signing_config }} \
+      #       --s3-bucket ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }} \
+      #       --region ${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
 
-      - name: Upload zipped CloudFormation artifact to S3
-        env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
+      # - name: Zip the CloudFormation template
+      #   run: zip template.zip cf-template.yaml
+
+      # - name: Upload zipped CloudFormation artifact to S3
+      #   env:
+      #     ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+      #   run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
