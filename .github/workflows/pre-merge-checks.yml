@@ -20,19 +20,19 @@ jobs:
     strategy:
       matrix:
         node-function:
-          - hello-world
+          - claimedidentity
     steps:
       - name: Pull Repository
         uses: actions/checkout@v3
-      - name: Set-up Node 16
+      - name: Set-up Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
       - name: NPM Install
-        working-directory: ./lambdas/
+        working-directory: ./src/
         run: npm install
       - name: Run Lint
-        working-directory: ./lambdas/
+        working-directory: ./src/
         run: npm run lint
       - name: Run Tests
         run: npm run test:unit  
@@ -44,7 +44,7 @@ jobs:
     strategy:
       matrix:
         node-function:
-          - hello-world
+          - claimedidentity
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
