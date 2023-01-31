@@ -395,7 +395,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: uk.gov.di.ipv.cri.claimedidentity.api.handler.ClaimedIdentityHandler::handleRequest
-      CodeUri: ../src/build/
+      CodeUri: ../src
       Runtime: nodejs18.x
       Environment:
         Variables:
