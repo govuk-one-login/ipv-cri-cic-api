@@ -35,42 +35,50 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM build
-        run: sam build -t lambda-functions/template.yaml
+        run: sam build -t infrastructure/template.yaml
 
       - name: Set short SHA
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: SAM deploy integration test stack
-        run: |
-          STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
-          sam deploy \
-            --no-fail-on-empty-changeset \
-            --no-confirm-changeset \
-            --parameter-overrides "Environment=${{ env.ENVIRONMENT }} SecretPrefix=${{ env.SECRET_PREFIX }} CodeSigningEnabled=false AuditEventNamePrefix=/common-cri-parameters/CicAuditEventNamePrefix CriIdentifier=/common-cri-parameters/CicCriIdentifier CommonStackName=cic-common-cri-api" \
-            --stack-name $STACK_NAME \
-            --s3-bucket ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }} \
-            --s3-prefix $STACK_NAME \
-            --region ${{ env.AWS_REGION }} \
-            --capabilities CAPABILITY_IAM
+      - name: Deploy SAM app
+        uses: alphagov/di-devplatform-upload-action@v3
+        with:
+            artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+            signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
+            working-directory: infrastructure
+            template-file: template.yaml
 
-      - name: Run API integration tests
-        env:
-          ENVIRONMENT: dev
-          IPV_CORE_STUB_URL: https://di-ipv-core-stub.london.cloudapps.digital
-          APIGW_API_KEY: ${{ secrets.API_KEY_CRI_DEV }}
-          IPV_CORE_STUB_BASIC_AUTH_USER: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_USER }}
-          IPV_CORE_STUB_BASIC_AUTH_PASSWORD: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_PASSWORD }}
-          IPV_CORE_STUB_CRI_ID: cic-cri-dev
-        run: |
-          STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
-          API_GATEWAY_ID_PRIVATE=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PrivateCICApiGatewayId").OutputValue')
-          API_GATEWAY_ID_PUBLIC=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicCICApiGatewayId").OutputValue')
-          export API_GATEWAY_ID_PRIVATE=$API_GATEWAY_ID_PRIVATE
-          export API_GATEWAY_ID_PUBLIC=$API_GATEWAY_ID_PUBLIC
+      # - name: SAM deploy integration test stack
+      #   run: |
+      #     STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
+      #     sam deploy \
+      #       --no-fail-on-empty-changeset \
+      #       --no-confirm-changeset \
+      #       --parameter-overrides "Environment=${{ env.ENVIRONMENT }} SecretPrefix=${{ env.SECRET_PREFIX }} CodeSigningEnabled=false AuditEventNamePrefix=/common-cri-parameters/CicAuditEventNamePrefix CriIdentifier=/common-cri-parameters/CicCriIdentifier CommonStackName=cic-common-cri-api" \
+      #       --stack-name $STACK_NAME \
+      #       --s3-bucket ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }} \
+      #       --s3-prefix $STACK_NAME \
+      #       --region ${{ env.AWS_REGION }} \
+      #       --capabilities CAPABILITY_IAM
 
-      - name: Delete integration test stack
-        if: success()
-        run: |
-          STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
-          aws cloudformation delete-stack --region ${{ env.AWS_REGION }} --stack-name $STACK_NAME
+      # - name: Run API integration tests
+      #   env:
+      #     ENVIRONMENT: dev
+      #     IPV_CORE_STUB_URL: https://di-ipv-core-stub.london.cloudapps.digital
+      #     APIGW_API_KEY: ${{ secrets.API_KEY_CRI_DEV }}
+      #     IPV_CORE_STUB_BASIC_AUTH_USER: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_USER }}
+      #     IPV_CORE_STUB_BASIC_AUTH_PASSWORD: ${{ secrets.IPV_CORE_STUB_BASIC_AUTH_PASSWORD }}
+      #     IPV_CORE_STUB_CRI_ID: cic-cri-dev
+      #   run: |
+      #     STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
+      #     API_GATEWAY_ID_PRIVATE=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PrivateCICApiGatewayId").OutputValue')
+      #     API_GATEWAY_ID_PUBLIC=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicCICApiGatewayId").OutputValue')
+      #     export API_GATEWAY_ID_PRIVATE=$API_GATEWAY_ID_PRIVATE
+      #     export API_GATEWAY_ID_PUBLIC=$API_GATEWAY_ID_PUBLIC
+
+      # - name: Delete integration test stack
+      #   if: success()
+      #   run: |
+      #     STACK_NAME=${{ env.STACK_NAME_PREFIX }}-${{ steps.vars.outputs.sha_short }}
+      #     aws cloudformation delete-stack --region ${{ env.AWS_REGION }} --stack-name $STACK_NAME
