@@ -35,6 +35,7 @@ jobs:
         working-directory: ./src/
         run: npm run lint
       - name: Run Tests
+        working-directory: ./src/
         run: npm run test:unit  
       - name: Run Infra checks
         run: npm run test:infra
