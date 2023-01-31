@@ -114,6 +114,60 @@ paths:
         contentHandling: "CONVERT_TO_TEXT"
         type: "aws_proxy"
 
+  /claimed-identity:
+    put:
+      parameters:
+        - in: header
+          name: "session_id"
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimedIdentity"
+        required: true
+      responses:
+        200:
+          description: "Identity saved successfully"
+        201:
+          description: "Identity saved and credential issued"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizationResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-amazon-apigateway-request-validator: "Validate body" ## todo this validator doesn't exist
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClaimedIdentityFunction.Arn}:live/invocations
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+
 components:
   parameters:
     SessionHeader:
@@ -172,7 +226,12 @@ components:
       type: "array"
       items:
         $ref: "#/components/schemas/HelloWorld"
-
+    ClaimedIdentity:
+      title: "Claimedidentity Lookup Response"
+      type: "array"
+      minItems: 1
+      items:
+        $ref: "#/components/schemas/ClaimedIdentity"
 
 x-amazon-apigateway-request-validators:
   Validate both:
