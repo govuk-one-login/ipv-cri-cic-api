@@ -409,14 +409,14 @@ Resources:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
         - DynamoDBReadPolicy:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/PersonIdentityTableName}}"
-        - DynamoDBWritePolicy:
-            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/PersonIdentityTableName}}"
-          - Sid: ReadParametersPolicy
-            Effect: Allow
-            Action:
-              - ssm:GetParameter
-            Resource:
-              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/LookupTableName"
+        # - DynamoDBWritePolicy:
+        #     TableName: !Sub "{{resolve:ssm:/${CommonStackName}/PersonIdentityTableName}}"
+        #   - Sid: ReadParametersPolicy
+        #     Effect: Allow
+        #     Action:
+        #       - ssm:GetParameter
+        #     Resource:
+        #       - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/LookupTableName"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
