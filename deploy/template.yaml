@@ -3,9 +3,6 @@ Transform: "AWS::Serverless-2016-10-31"
 Description: "Digital Identity IPV CRI CIC API"
 
 Parameters:
-  CodeSigningEnabled:
-    Type: "String"
-    Default: "true"
   CodeSigningConfigArn:
     Type: String
     Default: "none"
@@ -20,7 +17,7 @@ Parameters:
       - "staging"
       - "integration"
       - "production"
-    ConstraintDescription: must be dev, build, staging, integration or production
+    ConstraintDescription: Please ensure that your Environment variable is set to either dev, build, staging, integration or production.
   PermissionsBoundary:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
@@ -42,21 +39,39 @@ Parameters:
     Type: String
     Default: "common-cri-api"
 
+Mappings:
+  EnvironmentConfiguration: # This is where you store per-environment settings.
+    dev:  
+      logretentionindays: 3
+      apiTracingEnabled: true
+    build:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    staging:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    integration:
+      logretentionindays: 30
+      apiTracingEnabled: false
+    production:
+      logretentionindays: 30
+      apiTracingEnabled: false
+  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
+    dev:
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    build: 
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    staging: 
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    integration: 
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    production: 
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+
 Conditions:
-  EnforceCodeSigning: !Equals
-    - !Ref  CodeSigningEnabled
-    - true
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
-  IsProdEnvironment: !Equals
-    - !Ref Environment
-    - production
-  IsStubEnvironment: !Or
-    - !Equals [ !Ref Environment, dev]
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
-    - !Equals [ !Ref Environment, integration ]
   IsProdLikeEnvironment: !Or
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
@@ -66,20 +81,16 @@ Conditions:
     - dev
   IsNotDevEnvironment: !Not
     - Condition: IsDevEnvironment
-  # UsePermissionsBoundary:
-  #   Fn::Not:
-  #     - Fn::Equals:
-  #         - !Ref PermissionsBoundary
-  #         - "none"
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
   UseSecretPrefix:
     Fn::Not:
       - Fn::Equals:
           - !Ref SecretPrefix
           - "none"
-  AddProvisionedConcurrency: !Not
-    - !Equals
-      - !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
-      - 0
 
 Globals:
   Function:
@@ -88,13 +99,13 @@ Globals:
         - !ImportValue cri-vpc-LambdaSecurityGroup
       SubnetIds: !Split [ ",", !ImportValue cri-vpc-PrivateSubnets ]
     PermissionsBoundary: !If
-      - PermissionsBoundary
+      - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
     CodeSigningConfigArn: !If
-      - EnforceCodeSigning
-      - !Ref CodeSigningConfigArn
+      - CreateDevResources
       - !Ref AWS::NoValue
+      - !Ref CodeSigningConfigArn
     Timeout: 30 # seconds
     Tracing: Active
     MemorySize: 1024
@@ -111,55 +122,18 @@ Globals:
         SQS_AUDIT_EVENT_PREFIX: !Ref AuditEventNamePrefix # The prefix to add to TxMA event messages
     AutoPublishAlias: live
     
-    # Start ProvisionedConcurrency Block     
-    # This should not be a global setting, as this is set per-lambda.
-    # It should never be needed for Typescript lambdas.
-    ProvisionedConcurrencyConfig:
-      !If
-      - AddProvisionedConcurrency
-      - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
-      - !Ref AWS::NoValue
+    # # Start ProvisionedConcurrency Block     
+    # # This should not be a global setting, as this is set per-lambda.
+    # # It should never be needed for Typescript lambdas.
+    # ProvisionedConcurrencyConfig:
+    #   !If
+    #   - AddProvisionedConcurrency
+    #   - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref Environment,  ]
+    #   - !Ref AWS::NoValue
 
-    # End ProvisionedConcurrency Block 
+    # # End ProvisionedConcurrency Block 
 
-Mappings:
 
-  EnvironmentConfiguration: # This is where you store per-environment settings.
-    dev:  
-      logretentionindays: 3
-    build:
-      logretentionindays: 3
-    staging:
-      logretentionindays: 3
-    integration:
-      logretentionindays: 30
-    production:
-      logretentionindays: 30
-    
-
-  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
-    dev:
-    build: 
-    staging: 
-    integration: 
-    production: 
-
-  MaxJwtTtlMapping:
-    Environment:
-      dev: 2
-      build: 2
-      staging: 2
-      integration: 2
-      production: 2
-
-  # Permitted values: SECONDS,MINUTES,HOURS,DAYS,MONTHS,YEARS
-  JwtTtlUnitMapping:
-    Environment:
-      dev: HOURS
-      build: HOURS
-      staging: HOURS
-      integration: HOURS
-      production: HOURS
 
 Resources:
   PublicCICApi:
@@ -171,7 +145,7 @@ Resources:
           ResourcePath: '/*'
           HttpMethod: '*'
           # Disable data trace in production to avoid logging customer sensitive information
-          DataTraceEnabled: !If [IsProdEnvironment, false, true]
+          DataTraceEnabled: !FindInMap [ EnvironmentConfiguration, !Ref Environment, apiTracingEnabled]
           MetricsEnabled: true
           ThrottlingRateLimit: 5
           ThrottlingBurstLimit: 10
@@ -216,7 +190,7 @@ Resources:
           ResourcePath: '/*'
           HttpMethod: '*'
           # Disable data trace in production to avoid logging customer sensitive information
-          DataTraceEnabled: !If [IsProdEnvironment, false, true]
+          DataTraceEnabled: !FindInMap [ EnvironmentConfiguration, !Ref Environment, apiTracingEnabled ]
           MetricsEnabled: true
           ThrottlingRateLimit: 5
           ThrottlingBurstLimit: 10
@@ -279,7 +253,7 @@ Resources:
         - LoggingLevel: INFO
           ResourcePath: '/*'
           HttpMethod: '*'
-          DataTraceEnabled: !If [IsProdEnvironment, false, true]
+          DataTraceEnabled: !FindInMap [ EnvironmentConfiguration, !Ref Environment, apiTracingEnabled]
           MetricsEnabled: true
           ThrottlingRateLimit: 5
           ThrottlingBurstLimit: 10
@@ -620,7 +594,6 @@ Resources:
       OKActions:
         - !ImportValue core-infrastructure-AlarmTopic
       InsufficientDataActions: []
-      Dimensions: []
       DatapointsToAlarm: 3
       EvaluationPeriods: 3
       Threshold: 1
@@ -664,7 +637,6 @@ Resources:
       OKActions:
         - !ImportValue core-infrastructure-AlarmTopic
       InsufficientDataActions: []
-      Dimensions: []
       DatapointsToAlarm: 3
       EvaluationPeriods: 3
       Threshold: 2
