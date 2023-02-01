@@ -311,14 +311,6 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
         - app.ts  
-    # Added this block to allow the sam local start-api command to work.
-    Events:
-      APILink:
-        Type: Api
-        Properties:
-          Path: /hello
-          Method: get
-          RestApiId: !Ref CICRestApi
 
   CICHelloFunctionLogGroup:
     Type: AWS::Logs::LogGroup
