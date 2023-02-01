@@ -87,52 +87,62 @@ Globals:
       SecurityGroupIds:
         - !ImportValue cri-vpc-LambdaSecurityGroup
       SubnetIds: !Split [ ",", !ImportValue cri-vpc-PrivateSubnets ]
-    PermissionsBoundary: !Ref PermissionsBoundary
+    PermissionsBoundary: !If
+      - PermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
     CodeSigningConfigArn: !If
       - EnforceCodeSigning
       - !Ref CodeSigningConfigArn
       - !Ref AWS::NoValue
     Timeout: 30 # seconds
     Tracing: Active
-    MemorySize: !FindInMap [ MemorySizeMapping, Environment, !Ref 'Environment' ]
+    MemorySize: 1024
     Architectures:
       - arm64
     Environment:
       Variables:
-        AWS_STACK_NAME: !Sub ${AWS::StackName}
-        SECRET_PREFIX: !If [UseSecretPrefix, !Ref SecretPrefix , !Ref AWS::StackName]
-        POWERTOOLS_LOG_LEVEL: INFO
-        SQS_AUDIT_EVENT_PREFIX: !Ref AuditEventNamePrefix
-        POWERTOOLS_METRICS_NAMESPACE: !Ref CriIdentifier
-        COMMON_PARAMETER_NAME_PREFIX: !Ref CommonStackName
+        # These should always be alphabetically organised.
+        AWS_STACK_NAME: !Sub ${AWS::StackName}  # The AWS Stack Name, as passed into the template.
+        COMMON_PARAMETER_NAME_PREFIX: !Ref CommonStackName  # What is this? @TODO
+        POWERTOOLS_LOG_LEVEL: INFO  # The LogLevel for the AWS PowerTools LogHelper
+        POWERTOOLS_METRICS_NAMESPACE: !Ref CriIdentifier # The Metric Namespace for the AWS PowerTools MetricHelper
+        SECRET_PREFIX: !If [UseSecretPrefix, !Ref SecretPrefix , !Ref AWS::StackName]  # What is this? @TODO
+        SQS_AUDIT_EVENT_PREFIX: !Ref AuditEventNamePrefix # The prefix to add to TxMA event messages
     AutoPublishAlias: live
+    
+    # Start ProvisionedConcurrency Block     
+    # This should not be a global setting, as this is set per-lambda.
+    # It should never be needed for Typescript lambdas.
     ProvisionedConcurrencyConfig:
       !If
       - AddProvisionedConcurrency
       - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
       - !Ref AWS::NoValue
 
+    # End ProvisionedConcurrency Block 
+
 Mappings:
 
-  MemorySizeMapping:
-    Environment:
-      dev: 512
-      build: 1024
-      staging: 1024
-      integration: 1024
-      production: 2048
-
-  EnvironmentConfiguration:
-    dev:
-      provisionedConcurrency: 0
+  EnvironmentConfiguration: # This is where you store per-environment settings.
+    dev:  
+      logretentionindays: 3
     build:
-      provisionedConcurrency: 1
+      logretentionindays: 3
     staging:
-      provisionedConcurrency: 0
+      logretentionindays: 3
     integration:
-      provisionedConcurrency: 0
+      logretentionindays: 30
     production:
-      provisionedConcurrency: 1
+      logretentionindays: 30
+    
+
+  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
+    dev:
+    build: 
+    staging: 
+    integration: 
+    production: 
 
   MaxJwtTtlMapping:
     Environment:
@@ -308,7 +318,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-public-AccessLogs
-      RetentionInDays: 365
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
 
   PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
@@ -323,14 +333,14 @@ Resources:
     Condition: IsNotDevEnvironment
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-private-AccessLogs
-      RetentionInDays: 365
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
 
   DevOnlyCICApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Condition: IsDevEnvironment
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-devonly-private-AccessLogs
-      RetentionInDays: 30
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
 
   PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
@@ -343,7 +353,7 @@ Resources:
   APIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      # RetentionInDays: 7
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
       # KmsKeyId: !GetAtt HelloWorldKmsKey.Arn
       Tags:
         - Key: Product
@@ -376,8 +386,8 @@ Resources:
       TracingEnabled: true
       Tags:
         Product: GOV.UK Sign In
-        System: Dev Platform
-        Environment: Demo
+        System: F2F
+        Environment: !Ref Environment
         Service: backend
         Name: HelloWorldRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
@@ -385,8 +395,9 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "HelloWorld-${AWS::StackName}"
       Handler: app.lambdaHandler
-      CodeUri: ../lambdas/
+      CodeUri: ../src/
       Runtime: nodejs16.x
       Environment:
         Variables:
@@ -422,12 +433,19 @@ Resources:
         Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
         - app.ts  
+    Events:
+      APILink:
+        Type: Api
+        Properties:
+          Path: /hello
+          Method: get
+          RestApiId: !Ref HelloWorldRestApi
 
   HelloWorldFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${HelloWorldFunction}"
-      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/HelloWorld-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
 
   HelloWorldFunctionLogsSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
@@ -546,7 +564,7 @@ Resources:
     Properties:
       Name: !Sub "/${AWS::StackName}/MaxJwtTtl"
       Type: String
-      Value: !FindInMap [MaxJwtTtlMapping, Environment, !Ref Environment]
+      Value: 2
       Description: default time to live for an JWT in (seconds)
 
   JwtTtlUnitParameter:
@@ -554,7 +572,7 @@ Resources:
     Properties:
       Name: !Sub "/${AWS::StackName}/JwtTtlUnit"
       Type: String
-      Value: !FindInMap [ JwtTtlUnitMapping, Environment, !Ref Environment ]
+      Value: HOURS
       Description: The unit for the time-to-live for an JWT e.g. (MONTHS)
 
   HelloWorldFunctionPermission:

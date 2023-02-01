@@ -17,10 +17,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-function:
-          - hello-world
     steps:
       - name: Pull Repository
         uses: actions/checkout@v3
@@ -29,15 +25,17 @@ jobs:
         with:
           node-version: '16'
       - name: NPM Install
-        working-directory: ./lambdas/
+        working-directory: ./src/
         run: npm install
       - name: Run Lint
-        working-directory: ./lambdas/
+        working-directory: ./src/
         run: npm run lint
       - name: Run Tests
         run: npm run test:unit  
+        working-directory: ./src/
       - name: Run Infra checks
         run: npm run test:infra
+        working-directory: ./src/
 
   build:
     runs-on: ubuntu-latest

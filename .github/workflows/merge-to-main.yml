@@ -1,4 +1,4 @@
-name: Package for Build
+name: Merge to main
 on:
   push:
     branches:
