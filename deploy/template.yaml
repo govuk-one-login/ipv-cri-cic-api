@@ -142,7 +142,7 @@ Resources:
   CICRestApi:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: Prod
+      StageName: !Ref Environment
       AccessLogSetting:
         Format: "$context.requestId $context.httpMethod $context.path"
         DestinationArn: !GetAtt CICAPIGatewayAccessLogGroup.Arn
@@ -158,7 +158,7 @@ Resources:
           /hello:
             get:
               parameters:
-                - in: header
+                - in: query
                   name: "session_id"
                   schema:
                     type: string
@@ -353,6 +353,6 @@ Outputs:
       Name: !Sub ${AWS::StackName}-CICApiGatewayId
 
   HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${CICRestApi}.execute-api.${AWS::Region}.amazonaws.com/${CICRestApi.Stage}/hello"
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${CICRestApi}.execute-api.${AWS::Region}.amazonaws.com/${CICRestApi.Stage}"
 
