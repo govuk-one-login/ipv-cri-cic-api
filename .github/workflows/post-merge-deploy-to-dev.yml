@@ -28,6 +28,7 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_V1_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # This step is now performed by SAM Deploy step provided by Dev Platform
       # - name: Generate code signing config
       #   id: signing
       #   uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
