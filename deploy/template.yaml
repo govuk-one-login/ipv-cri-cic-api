@@ -3,9 +3,6 @@ Transform: "AWS::Serverless-2016-10-31"
 Description: "Digital Identity IPV CRI CIC API"
 
 Parameters:
-  CodeSigningEnabled:
-    Type: "String"
-    Default: "true"
   CodeSigningConfigArn:
     Type: String
     Default: "none"
@@ -20,7 +17,7 @@ Parameters:
       - "staging"
       - "integration"
       - "production"
-    ConstraintDescription: must be dev, build, staging, integration or production
+    ConstraintDescription: Ensure environment variable is set to one of dev, build, staging, integration or production.
   PermissionsBoundary:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
@@ -29,322 +26,219 @@ Parameters:
     Type: String
     Default: "none"
     Description: Secrets name prefix
-  AuditEventNamePrefix:
-    Description: "The audit event name prefix"
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: "/common-cri-parameters/AuditEventNamePrefix"
-  CriIdentifier:
-    Description: "The unique credential issuer identifier"
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: "/common-cri-parameters/CriIdentifier"
+  VpcStackName:
+    Type: String
+    Default: "vpc-cri"
+    Description: The name of the VPC stack deployed.
   CommonStackName:
     Description: "The name of the stack containing the common CRI lambdas/infra"
     Type: String
     Default: "common-cri-api"
 
+Mappings:
+  EnvironmentConfiguration: # This is where you store per-environment settings.
+    dev:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    build:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    staging:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    integration:
+      logretentionindays: 30
+      apiTracingEnabled: false
+    production:
+      logretentionindays: 30
+      apiTracingEnabled: false
+  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
+    dev:
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    build:
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    staging:
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    integration:
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+    production:
+      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+
 Conditions:
-  EnforceCodeSigning: !Equals
-    - !Ref  CodeSigningEnabled
-    - true
-  CreateDevResources: !Equals
-    - !Ref Environment
-    - dev
-  IsProdEnvironment: !Equals
-    - !Ref Environment
-    - production
-  IsStubEnvironment: !Or
-    - !Equals [ !Ref Environment, dev]
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
-    - !Equals [ !Ref Environment, integration ]
   IsProdLikeEnvironment: !Or
-    - !Equals [ !Ref Environment, staging ]
-    - !Equals [ !Ref Environment, integration ]
-    - !Equals [ !Ref Environment, production ]
-  IsDevEnvironment: !Equals
-    - !Ref Environment
-    - dev
-  IsNotDevEnvironment: !Not
-    - Condition: IsDevEnvironment
-  # UsePermissionsBoundary:
-  #   Fn::Not:
-  #     - Fn::Equals:
-  #         - !Ref PermissionsBoundary
-  #         - "none"
+    - !Equals [!Ref Environment, staging]
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
   UseSecretPrefix:
     Fn::Not:
       - Fn::Equals:
           - !Ref SecretPrefix
           - "none"
-  AddProvisionedConcurrency: !Not
-    - !Equals
-      - !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
-      - 0
-
 
 Globals:
   Function:
+    Runtime: nodejs18.x
     VpcConfig:
       SecurityGroupIds:
-        - !ImportValue cri-vpc-LambdaSecurityGroup
-      SubnetIds: !Split [ ",", !ImportValue cri-vpc-PrivateSubnets ]
-    PermissionsBoundary: !Ref PermissionsBoundary
+        - !GetAtt LambdaEgressSecurityGroup.GroupId
+      SubnetIds:
+        - Fn::ImportValue:
+            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdA"
+        - Fn::ImportValue:
+            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdB"
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
     CodeSigningConfigArn: !If
-      - EnforceCodeSigning
+      - UseCodeSigning
       - !Ref CodeSigningConfigArn
       - !Ref AWS::NoValue
     Timeout: 30 # seconds
     Tracing: Active
-    MemorySize: !FindInMap [ MemorySizeMapping, Environment, !Ref 'Environment' ]
+    MemorySize: 1024
     Architectures:
       - arm64
     Environment:
       Variables:
-        AWS_STACK_NAME: !Sub ${AWS::StackName}
-        SECRET_PREFIX: !If [UseSecretPrefix, !Ref SecretPrefix , !Ref AWS::StackName]
-        POWERTOOLS_LOG_LEVEL: INFO
-        SQS_AUDIT_EVENT_PREFIX: !Ref AuditEventNamePrefix
-        POWERTOOLS_METRICS_NAMESPACE: !Ref CriIdentifier
-        COMMON_PARAMETER_NAME_PREFIX: !Ref CommonStackName
+        # These should always be alphabetically organised.
+        AWS_STACK_NAME: !Sub ${AWS::StackName} # The AWS Stack Name, as passed into the template.
+        COMMON_PARAMETER_NAME_PREFIX: !Ref CommonStackName # What is this? @TODO
+        POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
+        POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
+        SECRET_PREFIX: !If [
+            UseSecretPrefix,
+            !Ref SecretPrefix,
+            !Ref AWS::StackName,
+          ] # What is this? @TODO
+        SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
-    ProvisionedConcurrencyConfig:
-      !If
-      - AddProvisionedConcurrency
-      - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
-      - !Ref AWS::NoValue
-
-Mappings:
-
-  MemorySizeMapping:
-    Environment:
-      dev: 512
-      build: 1024
-      staging: 1024
-      integration: 1024
-      production: 2048
-
-  EnvironmentConfiguration:
-    dev:
-      provisionedConcurrency: 0
-    build:
-      provisionedConcurrency: 0
-    staging:
-      provisionedConcurrency: 0
-    integration:
-      provisionedConcurrency: 0
-    production:
-      provisionedConcurrency: 1
-
-  MaxJwtTtlMapping:
-    Environment:
-      dev: 2
-      build: 2
-      staging: 2
-      integration: 2
-      production: 2
-
-  # Permitted values: SECONDS,MINUTES,HOURS,DAYS,MONTHS,YEARS
-  JwtTtlUnitMapping:
-    Environment:
-      dev: HOURS
-      build: HOURS
-      staging: HOURS
-      integration: HOURS
-      production: HOURS
 
 Resources:
-  PublicCICApi:
+  LambdaEgressSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: >-
+        Permits outbound on port 443 from within the VPC to the internet.
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow to the wider internet on port 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId:
+        Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
+
+  ### Start of API Gateway definition.
+
+  CICRestApi:
     Type: AWS::Serverless::Api
     Properties:
-      Description: Public CIC CRI API
-      MethodSettings:
-        - LoggingLevel: INFO
-          ResourcePath: '/*'
-          HttpMethod: '*'
-          # Disable data trace in production to avoid logging customer sensitive information
-          DataTraceEnabled: !If [IsProdEnvironment, false, true]
-          MetricsEnabled: true
-          ThrottlingRateLimit: 5
-          ThrottlingBurstLimit: 10
-      AccessLogSetting:
-        DestinationArn: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${PublicCICApiAccessLogGroup}'
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
-      TracingEnabled: true
-      Name: !Sub "${AWS::StackName}-PublicCICApi"
       StageName: !Ref Environment
-      DefinitionBody:
-        openapi: "3.0.1" # workaround to get `sam validate` to work
-        paths: # workaround to get `sam validate` to work
-          /never-created:
-            options: { } # workaround to get `sam validate` to work
-        Fn::Transform:
-          Name: AWS::Include
-          Parameters:
-            Location: './spec/public-api.yaml'
       OpenApiVersion: 3.0.1
+      AccessLogSetting:
+        Format: "$context.requestId $context.httpMethod $context.path"
+        DestinationArn: !GetAtt CICAPIGatewayAccessLogGroup.Arn
       EndpointConfiguration:
         Type: REGIONAL
-
-  PrivateCICApi:
-    Type: AWS::Serverless::Api
-    Condition: IsNotDevEnvironment
-    Properties:
-      Description: Private CIC CRI API
-      MethodSettings:
-        - LoggingLevel: INFO
-          ResourcePath: '/*'
-          HttpMethod: '*'
-          # Disable data trace in production to avoid logging customer sensitive information
-          DataTraceEnabled: !If [IsProdEnvironment, false, true]
-          MetricsEnabled: true
-          ThrottlingRateLimit: 5
-          ThrottlingBurstLimit: 10
-      AccessLogSetting:
-        DestinationArn: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${PrivateCICApiAccessLogGroup}'
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
-      TracingEnabled: true
-      Name: !Sub "${AWS::StackName}-PrivateCICApi"
-      StageName: !Ref Environment
       DefinitionBody:
-        openapi: "3.0.1" # workaround to get `sam validate` to work
-        paths: # workaround to get `sam validate` to work
-          /never-created:
-            options: { } # workaround to get `sam validate` to work
-        Fn::Transform:
-          Name: AWS::Include
-          Parameters:
-            Location: './spec/private-api.yaml'
-      OpenApiVersion: 3.0.1
-      EndpointConfiguration:
-        Type: PRIVATE
-      Auth:
-        ResourcePolicy:
-          CustomStatements:
-            - Action: 'execute-api:Invoke'
-              Effect: Allow
-              Principal: '*'
-              Resource:
-                - 'execute-api:/*'
-            - Action: 'execute-api:Invoke'
-              Effect: Deny
-              Principal: '*'
-              Resource:
-                - 'execute-api:/*'
-              Condition:
-                StringNotEquals:
-                  aws:SourceVpce: !If
-                    - CreateDevResources
-                    - vpce-082cab7c78139eb54
-                    - !ImportValue cri-vpc-ApiGatewayVpcEndpointId
+        openapi: "3.0.1"
+        info:
+          version: "0.2"
+          title: !Sub "${AWS::StackName} - CIC Credential Issuer Private API"
 
-  DevOnlyCICApi:
-    Type: AWS::Serverless::Api
-    Condition: IsDevEnvironment
-    Properties:
-      Description: Dev Only Private CIC CRI API
-      MethodSettings:
-        - LoggingLevel: INFO
-          ResourcePath: '/*'
-          HttpMethod: '*'
-          DataTraceEnabled: !If [IsProdEnvironment, false, true]
-          MetricsEnabled: true
-          ThrottlingRateLimit: 5
-          ThrottlingBurstLimit: 10
-      AccessLogSetting:
-        DestinationArn: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${DevOnlyCICApiAccessLogGroup}'
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
+        paths:
+          /claimedIdentity:
+            post:
+              parameters:
+                - in: header
+                  name: "session_id"
+                  schema:
+                    type: string
+                  required: true
+              responses:
+                "400":
+                  description: "400 response"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/Error"
+                "500":
+                  description: "500 response"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/Error"
+                "200":
+                  description: "200 response"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/SessionId"
+              x-amazon-apigateway-request-validator: "both"
+              x-amazon-apigateway-integration:
+                httpMethod: "POST"
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClaimedIdentityFunction.Arn}:live/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+
+        components:
+          schemas:
+            Error:
+              title: "Error Schema"
+              type: "object"
+              properties:
+                message:
+                  type: "string"
+            SessionId:
+              in: header
+              name: x-govuk-signin-session-id
+              schema:
+                type: string
+                format: uuid
+              example: 44444444-4444-4444-4444-444444444444
+              description: >-
+                `sessionId` as returned by `POST /session` endpoint
+              required: true
+
+        x-amazon-apigateway-request-validators:
+          both:
+            validateRequestBody: true
+            validateRequestParameters: true
+
       TracingEnabled: true
-      Name: !Sub "${AWS::StackName}-PrivateCICApi"
-      StageName: !Ref Environment
-      DefinitionBody:
-        openapi: "3.0.1" # workaround to get `sam validate` to work
-        paths: # workaround to get `sam validate` to work
-          /never-created:
-            options: { } # workaround to get `sam validate` to work
-        Fn::Transform:
-          Name: AWS::Include
-          Parameters:
-            Location: './spec/private-api.yaml'
-      OpenApiVersion: 3.0.1
-      EndpointConfiguration:
-        Type: REGIONAL
+      Tags:
+        Product: GOV.UK Sign In
+        System: F2F
+        Environment: !Ref Environment
+        Service: backend
+        Name: CICRestApi
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
-  PublicCICApiAccessLogGroup:
+  CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-public-AccessLogs
-      RetentionInDays: 365
-
-  PublicCICApiAccessLogGroupSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref PublicCICApiAccessLogGroup
-
-  PrivateCICApiAccessLogGroup:
-    Type: AWS::Logs::LogGroup
-    Condition: IsNotDevEnvironment
-    Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-private-AccessLogs
-      RetentionInDays: 365
-
-  DevOnlyCICApiAccessLogGroup:
-    Type: AWS::Logs::LogGroup
-    Condition: IsDevEnvironment
-    Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-devonly-private-AccessLogs
-      RetentionInDays: 30
-
-  PrivateCICApiAccessLogGroupSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref PrivateCICApiAccessLogGroup
-# commented out propertise for codebuld to pass
-  APIGatewayAccessLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      # RetentionInDays: 7
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
       # KmsKeyId: !GetAtt HelloWorldKmsKey.Arn
       Tags:
         - Key: Product
@@ -357,358 +251,76 @@ Resources:
           Value: backend
         - Key: Name
           Value: APIGatewayAccessLogGroup
-        # - Key: Source
-        #   Value: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
-  HelloWorldRestApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      AccessLogSetting:
-        Format: "$context.requestId $context.httpMethod $context.path"
-        DestinationArn: !GetAtt APIGatewayAccessLogGroup.Arn
-      CacheClusterEnabled: true
-      CacheClusterSize: "0.5"
-      DefinitionBody:
-        Fn::Transform:
-          Name: AWS::Include
-          Parameters:
-            Location: './spec/private-api.yaml'
-      TracingEnabled: true
-      Tags:
-        Product: GOV.UK Sign In
-        System: Dev Platform
-        Environment: Demo
-        Service: backend
-        Name: HelloWorldRestApi
-        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+  ### End of API Gateway definition.
 
-  HelloWorldFunction:
+  ### Function Definition
+
+  # ClaimedIdentity
+  ClaimedIdentityFunction:
     Type: AWS::Serverless::Function
+    DependsOn: ClaimedIdentityFunctionLogGroup
     Properties:
-      Handler: HelloWorldHandler.lambdaHandler
+      FunctionName: !Sub "CIC-ClaimedIdentity-${AWS::StackName}"
+      Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
-      Runtime: nodejs16.x
       Environment:
         Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-cic"
+          POWERTOOLS_SERVICE_NAME: F2F CRI
+          SESSION_TABLE: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+          EXAMPLE: !FindInMap [EnvironmentVariables, !Ref Environment, EXAMPLE]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
-        # hello world is not using any dynamo table
-        # - DynamoDBCrudPolicy:
-        #     TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-        # - DynamoDBCrudPolicy:
-        #     TableName: !Ref HelloWorldTable
-        # - Statement:
-        #     - Effect: Allow
-        #       Action:
-        #         - ssm:GetParameter
-        #       Resource:
-        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/AddressTableName"
-        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
-        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTtl"
-        #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParametersByPath
-              Resource:
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/clients/*"
+        - DynamoDBWritePolicy:
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+        - DynamoDBReadPolicy:
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+      Events:
+        claimedIdentity:
+          Type: Api
+          Properties:
+            Path: /claimedIdentity
+            Method: post
+            RestApiId: !Ref CICRestApi
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
         Target: "es2020"
-        Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
-        - app.ts  
+          - ClaimedIdentityHandler.ts
 
-  HelloWorldFunctionLogGroup:
+  ClaimedIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${HelloWorldFunction}"
-      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/CIC-ClaimedIdentity-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
 
-  HelloWorldFunctionLogsSubscriptionFilterCSLS:
+  ClaimedIdentityFunctionLogsSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
+    Condition: IsProdLikeEnvironment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
-      LogGroupName: !Ref HelloWorldFunctionLogGroup
+      LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
 
-#  IssueCredentialFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
-#      CodeUri: ../../lambdas/issuecredential
-#      Environment:
-#        Variables:
-#          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
-#          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-#      Policies:
-#        - AWSLambdaBasicExecutionRole
-#        - AWSXrayWriteOnlyAccess
-#        - DynamoDBReadPolicy:
-#            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref CICTable
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - "kms:Sign"
-#            Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
-#        - SQSSendMessagePolicy:
-#            QueueName: !ImportValue AuditEventQueueName
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - ssm:GetParameter
-#            Resource:
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
-#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - kms:Decrypt
-#              - kms:GenerateDataKey
-#            Resource:
-#              - !ImportValue AuditEventQueueEncryptionKeyArn
-#
-#  IssueCredentialFunctionLogGroup:
-#    Type: AWS::Logs::LogGroup
-#    Properties:
-#      LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
-#      RetentionInDays: 30
-#
-#  IssueCredentialFunctionLogsSubscriptionFilterCSLS:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsNotDevEnvironment
-#    Properties:
-#      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-#      FilterPattern: ""
-#      LogGroupName: !Ref IssueCredentialFunctionLogGroup
-
-  PublicCICApiUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Condition: IsNotDevEnvironment
-    DependsOn:
-      - PublicCICApiStage
-    Properties:
-      ApiStages:
-        - ApiId: !Ref PublicCICApi
-          Stage: !Ref Environment
-      Quota:
-        Limit: 500000
-        Period: DAY
-      Throttle:
-        BurstLimit: 100 # requests the API can handle concurrently
-        RateLimit: 50 # allowed requests per second
-
-  PrivateCICApiUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Condition: IsNotDevEnvironment
-    DependsOn:
-      - PrivateCICApiStage
-    Properties:
-      ApiStages:
-        - ApiId: !Ref PrivateCICApi
-          Stage: !Ref Environment
-      Quota:
-        Limit: 500000
-        Period: DAY
-      Throttle:
-        BurstLimit: 100 # requests the API can handle concurrently
-        RateLimit: 50 # allowed requests per second
-
-  LinkUsagePlanApiKey1:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Condition: IsNotDevEnvironment
-    Properties:
-      KeyId: !ImportValue core-infrastructure-ApiKey1
-      KeyType: API_KEY
-      UsagePlanId: !Ref PublicCICApiUsagePlan
-
-  LinkUsagePlanApiKey2:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Condition: IsNotDevEnvironment
-    Properties:
-      KeyId: !ImportValue core-infrastructure-ApiKey2
-      KeyType: API_KEY
-      UsagePlanId: !Ref PublicCICApiUsagePlan
-
-  MaxJwtTtlParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${AWS::StackName}/MaxJwtTtl"
-      Type: String
-      Value: !FindInMap [MaxJwtTtlMapping, Environment, !Ref Environment]
-      Description: default time to live for an JWT in (seconds)
-
-  JwtTtlUnitParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${AWS::StackName}/JwtTtlUnit"
-      Type: String
-      Value: !FindInMap [ JwtTtlUnitMapping, Environment, !Ref Environment ]
-      Description: The unit for the time-to-live for an JWT e.g. (MONTHS)
-
-  HelloWorldFunctionPermission:
+  ClaimedIdentityFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref HelloWorldFunction.Alias
+      FunctionName: !Ref ClaimedIdentityFunction
       Principal: apigateway.amazonaws.com
 
-#  IssueCredentialFunctionPermission:
-#    Type: AWS::Lambda::Permission
-#    Properties:
-#      Action: lambda:InvokeFunction
-#      FunctionName: !Ref IssueCredentialFunction.Alias
-#      Principal: apigateway.amazonaws.com
-
-  CICLambdaErrors:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: !Sub CIC ${Environment} lambda errors
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue core-infrastructure-AlarmTopic
-      OKActions:
-        - !ImportValue core-infrastructure-AlarmTopic
-      InsufficientDataActions: []
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Dimensions: []
-      Period: 300
-      DatapointsToAlarm: 3
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-
-  CICAPIGW5XXErrors:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: !Sub CIC ${Environment} API Gateway 5XX errors
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue core-infrastructure-AlarmTopic
-      OKActions:
-        - !ImportValue core-infrastructure-AlarmTopic
-      InsufficientDataActions: []
-      Dimensions: []
-      DatapointsToAlarm: 3
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      Metrics:
-        - Id: e1
-          Label: Expression1
-          ReturnData: true
-          Expression: SUM(METRICS())
-        - Id: m1
-          ReturnData: false
-          MetricStat:
-            Metric:
-              Namespace: AWS/ApiGateway
-              MetricName: 5XXError
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub "${AWS::StackName}-PublicCICApi"
-            Period: 300
-            Stat: Sum
-        - Id: m2
-          ReturnData: false
-          MetricStat:
-            Metric:
-              Namespace: AWS/ApiGateway
-              MetricName: 5XXError
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub "${AWS::StackName}-PrivateCICApi"
-            Period: 300
-            Stat: Sum
-
-  CICAPIGW4XXErrors:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: !Sub CIC ${Environment} API Gateway 4XX errors
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue core-infrastructure-AlarmTopic
-      OKActions:
-        - !ImportValue core-infrastructure-AlarmTopic
-      InsufficientDataActions: []
-      Dimensions: []
-      DatapointsToAlarm: 3
-      EvaluationPeriods: 3
-      Threshold: 2
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      Metrics:
-        - Id: e1
-          Label: Expression1
-          ReturnData: true
-          Expression: SUM(METRICS())
-        - Id: m1
-          ReturnData: false
-          MetricStat:
-            Metric:
-              Namespace: AWS/ApiGateway
-              MetricName: 4XXError
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub "${AWS::StackName}-PublicCICApi"
-            Period: 300
-            Stat: Sum
-        - Id: m2
-          ReturnData: false
-          MetricStat:
-            Metric:
-              Namespace: AWS/ApiGateway
-              MetricName: 4XXError
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub "${AWS::StackName}-PrivateCICApi"
-            Period: 300
-            Stat: Sum
-
 Outputs:
-
-  StackName:
-    Description: "CloudFormation stack name"
-    Value: !Sub "${AWS::StackName}"
-
   CICApiGatewayId:
     Description: "API GatewayID of the CIC CRI API"
-    Value: !Sub "${PublicCICApi}"
+    Value: !Sub "${CICRestApi}"
     Export:
       Name: !Sub ${AWS::StackName}-CICApiGatewayId
-
-  PublicCICApiGatewayId:
-    Description: "API GatewayID of the public CIC CRI API"
-    Value: !Sub "${PublicCICApi}"
-    Export:
-      Name: !Sub ${AWS::StackName}-PublicCICApiGatewayId
-
-  PrivateCICApiGatewayId:
-    Description: "API GatewayID of the private CIC CRI API"
-    Value: !If [IsNotDevEnvironment, !Ref PrivateCICApi, !Ref DevOnlyCICApi]
-    Export:
-      Name: !Sub ${AWS::StackName}-PrivateCICApiGatewayId
-
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${HelloWorldRestApi}.execute-api.${AWS::Region}.amazonaws.com/${HelloWorldRestApi.Stage}/hello"
-
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
