@@ -1,0 +1,12 @@
+version = 0.1
+[dev]
+[dev.deploy]
+[dev.deploy.parameters]
+stack_name = "andy-test-cic"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8qhe1payfv0l"
+s3_prefix = "andy-test-cic"
+region = "eu-west-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"platform-vpc\" CommonStackName=\"common-cri-api\""
+image_repositories = []
