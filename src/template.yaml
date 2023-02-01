@@ -16,13 +16,13 @@ Resources:
     Properties:
       CodeUri: ./build
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
 #      Architectures:
 #        - x86_64
       Environment:
         Variables:
           REGION: 'eu-west-2'
-          SESSION_TABLE: 'session-cic-common-cri-api-local'
+          SESSION_TABLE: 'session-common-cri-api'
       Events:
         claimedidentity:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

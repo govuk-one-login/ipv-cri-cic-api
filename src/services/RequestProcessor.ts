@@ -26,7 +26,7 @@ export class RequestProcessor {
   constructor(logger: Logger, metrics: Metrics) {
 	  if (!SESSION_TABLE) {
 		  logger.error("Environment variable SESSION_TABLE is not configured");
-		  throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Service incorrectly configured");
+		  throw new AppError( "Service incorrectly configured", 500);
 	  }
   	this.logger = logger;
   	this.validationHelper = new ValidationHelper();
@@ -44,6 +44,7 @@ export class RequestProcessor {
   async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<Response> {
   	let cicSession;
   	try {
+		  this.logger.debug("IN processRequest");
   		const bodyParsed = JSON.parse(event.body as string);
   		cicSession = new CicSession(bodyParsed);
   		await this.validationHelper.validateModel(cicSession, this.logger);

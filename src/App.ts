@@ -20,8 +20,12 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 				try {
 					logger.debug("Body is " + event.body);
 					const sessionId = event.headers.session_id as string;
+					logger.debug("Session id " + sessionId);
+					logger.debug("event.headers " + !event.headers);
+					logger.debug("not session id " + !sessionId);
 					if (!event.headers || !sessionId) {
-						return new Response(StatusCodes.BAD_REQUEST, "Missing header: session_id is required");
+						logger.debug("Returning response");
+						return new Response(400, "Missing header: session_id is required");
 					}
 
 					if (event.body) {
@@ -66,7 +70,7 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 			return new Response(StatusCodes.NOT_FOUND, "");
 
 		default:
-			throw new AppError(StatusCodes.NOT_FOUND, "Requested resource does not exist", { resource: event.resource });
+			throw new AppError("Requested resource does not exist" + { resource: event.resource }, 404);
 
 	}
 
