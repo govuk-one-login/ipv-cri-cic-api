@@ -15,7 +15,7 @@
     },
     "scripts": {
         "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit",
-        "test:unit": "yarn run compile && yarn run unit",
+        "test:unit": "npm run compile && npm run unit",
         "lint": "eslint --output-file ./reports/eslint/reportFile.html --format html -c .eslintrc.js --ext .ts ./",
         "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c .eslintrc.js --ext .ts .",
         "compile": "./node_modules/.bin/tsc"
@@ -46,8 +46,7 @@
         "ts-jest": "^29.0.5",
         "ts-node": "^10.9.1",
         "ts-standard": "^12.0.2",
-        "typescript": "^4.9.4",
-        "yarn": "^1.22.18"
+        "typescript": "^4.9.4"
     },
     "engines": {
         "node": "18.0.0"
