@@ -1,1 +1,1 @@
-process.env.SESSION_TABLE = 'MYTABLE'
+process.env.SESSION_TABLE ="MYTABLE"

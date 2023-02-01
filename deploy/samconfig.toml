@@ -1,0 +1,11 @@
+version = 0.1
+[dev]
+[dev.deploy]
+[dev.deploy.parameters]
+stack_name = "backend-ddunford"
+s3_prefix = "backend-ddunford"
+region = "eu-west-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"backend-vpc\" CommonStackName=\"common-cri-api\""
+image_repositories = []

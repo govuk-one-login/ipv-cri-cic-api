@@ -1,95 +1,80 @@
-# demo-package
+# F2F CRI 
 
-This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders. Test
+## Installation
 
-- HelloWorldFunction/src/main - Code for the application's Lambda function.
-- events - Invocation events that you can use to invoke the function.
-- HelloWorldFunction/src/test - Unit tests for the application code.
-- template.yaml - A template that defines the application's AWS resources.
+Recommended global installed packages: 
 
-The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+- nodejs
+- nvm
+- python3
+- pre-commit (installed via pip3)
 
-## Deploy the sample application
+## Dependencies
 
-The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
+Pull in the dependencies for the project by navigating to the `src` dir, and running `npm install`.
 
-To use the SAM CLI, you need the following tools.
+We use npm to manage dependencies, and please _do_ commit the package-lock.json file, and ensure it's up to date where possible with `npm audit`.
 
-* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* Java 11 - [Install the Java 11](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html)
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
+If you do find an outdated/vulnerable dependency, please
+- raise a JIRA ticket for the delta
+- open a new branch against main,
+- run `npm audit --fix`
+- commit and push the changed package-lock.json file
+- open a PR and raise it with the Face2Face tech lead.
 
-To build your application for the first time, run the following in your shell:
+## AWS SAM & CloudFormation
 
-```bash
-sam build
+AWS Serverless Application Model is a framework for developing, testing and deploying your solution on AWS.
+
+Please read up on https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html for 
+
+ - Authoring
+ - Building
+ - Testing & Debugging
+ - Deploying
+ - Monitoring
+
+## Example scripts
+
+The following scripts are how to get yourself up and running
+
+### Local development
+
+Test a function
+
+`cd deploy; sam local invoke 'FunctionName'`
+
+```
+➜  deploy git:(fix/tidy-up) ✗ sam local invoke HelloWorldFunction
+Invoking app.lambdaHandler (nodejs16.x)
+Skip pulling image and use local one: public.ecr.aws/sam/emulation-nodejs16.x:rapid-1.70.0-arm64.
+
+Mounting /Users/aloughran/Code/GDS/f2f/di-ipv-cri-cic-api/deploy/.aws-sam/build/HelloWorldFunction as /var/task:ro,delegated inside runtime container
+START RequestId: 78d928d0-15a8-4054-93aa-0764268927e0 Version: $LATEST
+2023-02-01T18:16:37.994Z        78d928d0-15a8-4054-93aa-0764268927e0    INFO    Hello world!
+END RequestId: 78d928d0-15a8-4054-93aa-0764268927e0
+REPORT RequestId: 78d928d0-15a8-4054-93aa-0764268927e0  Init Duration: 0.05 ms  Duration: 206.69 ms     Billed Duration: 207 ms Memory Size: 1024 MB    Max Memory Used: 1024 MB
+{"statusCode":200,"body":"Hello world"}%    
 ```
 
-For information about deployment, see the examples in the
-`routine-pipeline-module` directory.
+Run a local api
 
-## Use the SAM CLI to build and test locally
+`sam local start-api`
 
-Build your application with the `sam build` command.
+➜  deploy git:(fix/tidy-up) ✗ sam local start-api 
+Mounting HelloWorldFunction at http://127.0.0.1:3000/hello [GET]
+You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. If you used sam build before running local commands, you will need to re-run sam build for the changes to be picked up. You only need to restart SAM CLI if you update your AWS SAM template
+2023-02-01 18:27:39  * Running on http://127.0.0.1:3000/ (Press CTRL+C to quit)
 
-```bash
-demo-package$ sam build
+This will then allow you to hit the API with something like curl:
+
+```
+➜  deploy git:(fix/tidy-up) ✗ curl http://127.0.0.1:3000/hello
+Hello world%
 ```
 
-The SAM CLI installs dependencies defined in `HelloWorldFunction/build.gradle`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+### Tests
 
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
-
-Run functions locally and invoke them with the `sam local invoke` command.
-
-```bash
-demo-package$ sam local invoke HelloWorldFunction --event events/event.json
-```
-
-The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
-
-```bash
-demo-package$ sam local start-api
-demo-package$ curl http://localhost:3000/
-```
-
-The SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
-
-```yaml
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /hello
-            Method: get
-```
-
-## Add a resource to your application
-The application template uses AWS Serverless Application Model (AWS SAM) to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
-
-## Fetch, tail, and filter Lambda function logs
-
-To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs generated by your deployed Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
-
-`NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
-
-```bash
-demo-package$ sam logs -n HelloWorldFunction --stack-name demo-package --tail
-```
-
-You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
-
-## Unit tests
-
-Tests are defined in the `HelloWorldFunction/src/test` folder in this project.
-
-```bash
-demo-package$ cd HelloWorldFunction
-HelloWorldFunction$ gradle test
-```
-
-## Resources
-
-See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
-
-Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
+Unit Tests:  `npm run test:unit`
+Infrastructure Unit Tests: `npm run test:infra`
+Run tests against a CloudFormation stack deployed into AWS: `STACK_NAME=cic-backend-api npm run test:e2e` (Work in progress)
