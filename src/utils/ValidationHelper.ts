@@ -13,7 +13,7 @@ export class ValidationHelper {
 			console.log(`${model.constructor.name}`);
 			console.log("**** Error validating " + `${model.constructor.name}` + "   " + JSON.stringify(errorDetails));
 			console.log(`Failed to validate data - ${model.constructor.name}`, "ValidationHelper", StatusCodes.UNPROCESSABLE_ENTITY, errorDetails);
-			throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `Failed to Validate - ${model.constructor.name}`, errorDetails);
+			throw new AppError(`Failed to Validate - ${model.constructor.name}`, errorDetails, 422);
 		}
 	}
 
