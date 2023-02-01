@@ -66,11 +66,11 @@ Conditions:
     - dev
   IsNotDevEnvironment: !Not
     - Condition: IsDevEnvironment
-  UsePermissionsBoundary:
-    Fn::Not:
-      - Fn::Equals:
-          - !Ref PermissionsBoundary
-          - "none"
+  # UsePermissionsBoundary:
+  #   Fn::Not:
+  #     - Fn::Equals:
+  #         - !Ref PermissionsBoundary
+  #         - "none"
   UseSecretPrefix:
     Fn::Not:
       - Fn::Equals:
@@ -87,10 +87,7 @@ Globals:
       SecurityGroupIds:
         - !ImportValue cri-vpc-LambdaSecurityGroup
       SubnetIds: !Split [ ",", !ImportValue cri-vpc-PrivateSubnets ]
-    PermissionsBoundary: !If
-      - UsePermissionsBoundary
-      - !Ref PermissionsBoundary
-      - !Ref AWS::NoValue
+    PermissionsBoundary: !Ref PermissionsBoundary
     CodeSigningConfigArn: !If
       - EnforceCodeSigning
       - !Ref CodeSigningConfigArn
