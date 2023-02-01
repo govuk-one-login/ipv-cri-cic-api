@@ -15,15 +15,30 @@ beforeAll(() => {
   template = Template.fromJSON(yamltemplate);
 });
 
-it("Should not use DefinitionBody as part of the serverless::api", () => {
+it("Should define a DefinitionBody as part of the serverless::api", () => {
   // N.B this only passes as we currently delete it on line 14 in the test setup step.
-  template.hasResource("AWS::Serverless::Api", {
-    DefinitionBody: Match.absent(),
+  template.hasResourceProperties("AWS::Serverless::Api", {
+    DefinitionBody: Match.anyValue(),
+  });
+});
+
+it("API specification in the spec folder should match the DefinitionBody", () => {
+  const api_definition: any = load(readFileSync("../deploy/spec/cic-definition.yaml", "utf-8"), { schema: schema})
+  template.hasResourceProperties("AWS::Serverless::Api", {
+    DefinitionBody: Match.objectEquals(api_definition),
+  });
+
+})
+
+it("Should not define a Events section as part of the serverless::function", () => {
+  // N.B this only passes as we currently delete it on line 14 in the test setup step.
+  template.hasResourceProperties("AWS::Serverless::Function", {
+    Events: Match.absent(),
   });
 });
 
 it("The template contains two API gateway resource", () => {
-  template.resourceCountIs("AWS::Serverless::Api", 4);
+  template.resourceCountIs("AWS::Serverless::Api", 1);
 });
 
 it("Has tracing enabled on at least one API", () => {

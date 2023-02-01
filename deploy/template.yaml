@@ -158,7 +158,7 @@ Resources:
           /hello:
             get:
               parameters:
-                - in: query
+                - in: header
                   name: "session_id"
                   schema:
                     type: string
