@@ -23,7 +23,7 @@
         "test:infra": "./node_modules/.bin/jest --testMatch '**/?(*.)infra-test.ts'"
     },
     "devDependencies": {
-        "@aws-cdk/assertions": "^1.172.0",
+        "@aws-cdk/assertions": "^1.191.0",
         "@aws-cdk/yaml-cfn": "^1.172.0",
         "@types/aws-lambda": "^8.10.108",
         "@types/jest": "^29.4.0",
