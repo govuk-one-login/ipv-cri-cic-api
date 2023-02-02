@@ -1,74 +1,97 @@
-import { IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, IsUUID } from "class-validator";
 
 export class SessionItem {
-	constructor(data: Partial<SessionItem> = { }) {
+	constructor(data: Partial<SessionItem> = {}) {
 		this.sessionId = data.sessionId!;
-		this.expiryDate = data.expiryDate;
-		this.createdDate = data.createdDate;
-		this.clientId = data.clientId;
-		this.state = data.state;
-		this.redirectUri = data.redirectUri;
-		this.authorizationCode = data.authorizationCode;
-		this.authorizationCodeExpiryDate = data.authorizationCodeExpiryDate;
-		this.accessToken = data.accessToken;
-		this.accessTokenExpiryDate = data.accessTokenExpiryDate;
-		this.subject = data.subject;
-		this.persistentSessionId = data.persistentSessionId;
-		this.clientSessionId = data.clientSessionId;
-		this.clientIpAddress = data.clientIpAddress;
-		this.attemptCount = data.attemptCount;
-		this.fullName = data.fullName!;
-		this.dateOfBirth = data.dateOfBirth!;
-		this.documentSelected = data.documentSelected!;
-		this.dateOfExpiry = data.dateOfExpiry!;
+		this.clientId = data.clientId!;
+		this.clientSessionId = data.clientSessionId!;
+		this.redirectUri = data.redirectUri!;
+		this.authorizationCodeExpiryDate = data.authorizationCodeExpiryDate!;
+		this.accessToken = data.accessToken!;
+		this.accessTokenExpiryDate = data.accessTokenExpiryDate!;
+		this.expiryDate = data.expiryDate!;
+		this.createdDate = data.createdDate!;
+		this.state = data.state!;
+		this.authorizationCode = data.authorizationCode!;
+		this.subject = data.subject!;
+		this.persistentSessionId = data.persistentSessionId!;
+		this.clientIpAddress = data.clientIpAddress!;
+		this.attemptCount = data.attemptCount!;
+		this.fullName = data.fullName;
+		this.dateOfBirth = data.dateOfBirth;
+		this.documentSelected = data.documentSelected;
+		this.dateOfExpiry = data.dateOfExpiry;
 	}
 
-  @IsString()
-  @IsNotEmpty()
-  @IsUUID()
-  sessionId: string;
+    @IsString()
+    @IsNotEmpty()
+    @IsUUID()
+    sessionId: string;
 
-  expiryDate?: number;
+    @IsString()
+    @IsNotEmpty()
+    clientId: string;
 
-  createdDate?: number;
+    @IsString()
+    @IsNotEmpty()
+    clientSessionId: string;
 
-  clientId?: string;
+    @IsUUID()
+    authorizationCode?: string;
 
-  state?: string;
+    @IsNumber()
+    @IsNotEmpty()
+    authorizationCodeExpiryDate: number;
 
-  redirectUri?: string;
+    @IsString()
+    @IsNotEmpty()
+    redirectUri: string;
 
-  authorizationCode?: string;
+    @IsString()
+    @IsNotEmpty()
+    accessToken: string;
 
-  authorizationCodeExpiryDate?: number;
+    @IsNumber()
+    @IsNotEmpty()
+    accessTokenExpiryDate: number;
 
-  accessToken?: string;
+    @IsNumber()
+    @IsNotEmpty()
+    expiryDate: number;
 
-  accessTokenExpiryDate?: number;
+    @IsNumber()
+    @IsNotEmpty()
+    createdDate: number;
 
-  subject?: string;
+    @IsString()
+    @IsNotEmpty()
+    state: string;
 
-  persistentSessionId?: string;
+    @IsString()
+    @IsNotEmpty()
+    subject: string;
 
-  clientSessionId?: string;
+    @IsString()
+    @IsNotEmpty()
+    persistentSessionId: string;
 
-  clientIpAddress?: string;
+    @IsString()
+    @IsNotEmpty()
+    clientIpAddress: string;
 
-  attemptCount?: number;
+    @IsNumber()
+    @IsNotEmpty()
+    attemptCount: number;
 
-  @IsString()
-  // @IsNotEmpty()
-  fullName?: string;
+    @IsString()
+    fullName?: string;
 
-  @IsString()
-  // @IsNotEmpty()
-  dateOfBirth?: string;
+    @IsString()
+    dateOfBirth?: string;
 
-  @IsString()
-  // @IsNotEmpty()
-  documentSelected?: string;
+    @IsString()
+    documentSelected?: string;
 
-  @IsString()
-  // @IsNotEmpty()
-  dateOfExpiry?: string;
+    @IsString()
+    dateOfExpiry?: string;
 }

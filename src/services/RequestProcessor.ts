@@ -1,6 +1,5 @@
 import { CicSession } from "../models/CicSession";
 import { Response } from "../utils/Response";
-import { StatusCodes } from "http-status-codes";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { randomUUID } from "crypto";
@@ -9,6 +8,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { CicResponse } from "../utils/CicResponse";
 import { AppError } from "../utils/AppError";
+import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 
@@ -50,7 +50,7 @@ export class RequestProcessor {
 			await this.validationHelper.validateModel(cicSession, this.logger);
 			this.logger.debug("CIC Session is  " + JSON.stringify(cicSession));
 		} catch (error) {
-			return new Response(StatusCodes.BAD_REQUEST, "Missing mandatory fields in the request payload");
+			return new Response(HttpCodesEnum.BAD_REQUEST, "Missing mandatory fields in the request payload");
 		}
 
 		const session = await this.cicService.getSessionById(sessionId);
@@ -68,9 +68,9 @@ export class RequestProcessor {
 				state: session?.state,
 			});
 
-			return new Response(StatusCodes.OK, JSON.stringify(cicResp));
+			return new Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
 		} else {
-			return new Response(StatusCodes.NOT_FOUND, `No session found with the session id: ${sessionId}`);
+			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
 	}
 }
