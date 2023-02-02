@@ -2,10 +2,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
-import { StatusCodes } from "http-status-codes";
 import { RequestProcessor } from "./services/RequestProcessor";
 import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
+import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 
 const logger = new Logger({
 	logLevel: "DEBUG",
@@ -25,13 +25,13 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 					logger.debug("not session id " + !sessionId);
 					if (!event.headers || !sessionId) {
 						logger.debug("Returning response");
-						return new Response(400, "Missing header: session_id is required");
+						return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session_id is required");
 					}
 
 					if (event.body) {
 						return await RequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
 					} else {
-						return new Response(StatusCodes.BAD_REQUEST, "Empty payload");
+						return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 					}
 
 					// if (bodyParsed) {
@@ -53,10 +53,10 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 					// return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, "");
 				} catch (err) {
 					logger.error("An error has occurred. " + err);
-					return new Response(StatusCodes.INTERNAL_SERVER_ERROR, "An error has occurred");
+					return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 				}
 			}
-			return new Response(StatusCodes.NOT_FOUND, "");
+			return new Response(HttpCodesEnum.NOT_FOUND, "");
 
 		case ResourcesEnum.USERINFO:
 			if (event.httpMethod === "POST") {
@@ -67,10 +67,10 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 					body: `Queries: ${queries}`,
 				};
 			}
-			return new Response(StatusCodes.NOT_FOUND, "");
+			return new Response(HttpCodesEnum.NOT_FOUND, "");
 
 		default:
-			throw new AppError("Requested resource does not exist" + { resource: event.resource }, 404);
+			throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
 
 	}
 

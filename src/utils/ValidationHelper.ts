@@ -1,7 +1,7 @@
 import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
-import { StatusCodes } from "http-status-codes";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { HttpCodesEnum } from "./HttpCodesEnum";
 
 export class ValidationHelper {
 
@@ -12,8 +12,8 @@ export class ValidationHelper {
 			const errorDetails = this.getErrors(errors);
 			console.log(`${model.constructor.name}`);
 			console.log("**** Error validating " + `${model.constructor.name}` + "   " + JSON.stringify(errorDetails));
-			console.log(`Failed to validate data - ${model.constructor.name}`, "ValidationHelper", StatusCodes.UNPROCESSABLE_ENTITY, errorDetails);
-			throw new AppError(`Failed to Validate - ${model.constructor.name}`, errorDetails, 422);
+			console.log(`Failed to validate data - ${model.constructor.name}`, "ValidationHelper", HttpCodesEnum.UNPROCESSABLE_ENTITY, errorDetails);
+			throw new AppError(`Failed to Validate - ${model.constructor.name}`, errorDetails, HttpCodesEnum.UNPROCESSABLE_ENTITY);
 		}
 	}
 
@@ -28,4 +28,3 @@ export class ValidationHelper {
 		});
 	}
 }
-// export const validationHelperUtils = new ValidationHelper();
