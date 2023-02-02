@@ -1,18 +1,77 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { Logger } from "@aws-lambda-powertools/logger";
+import { Metrics } from "@aws-lambda-powertools/metrics";
+import { Response } from "./utils/Response";
+import { StatusCodes } from "http-status-codes";
+import { RequestProcessor } from "./services/RequestProcessor";
+import { ResourcesEnum } from "./models/enums/ResourcesEnum";
+import { AppError } from "./utils/AppError";
 
-class AccessTokenLambda implements LambdaInterface {
-  public async handler(
-    event: APIGatewayProxyEvent,
-    context: any,
-  ): Promise<APIGatewayProxyResult> {
-    console.log("Hello world!");
-    return {
-      statusCode: 200,
-      body: "Hello world",
-    };
-  }
-}
+const logger = new Logger({
+	logLevel: "DEBUG",
+	serviceName: "CIC",
+});
+const metrics = new Metrics({ namespace: "CIC" });
 
-const handlerClass = new AccessTokenLambda();
-export const lambdaHandler = handlerClass.handler.bind(handlerClass);
+export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+	switch (event.resource) {
+		case ResourcesEnum.CLAIMEDIDENTITY:
+			if (event.httpMethod === "POST") {
+				try {
+					logger.debug("Body is " + event.body);
+					const sessionId = event.headers.session_id as string;
+					logger.debug("Session id " + sessionId);
+					logger.debug("event.headers " + !event.headers);
+					logger.debug("not session id " + !sessionId);
+					if (!event.headers || !sessionId) {
+						logger.debug("Returning response");
+						return new Response(400, "Missing header: session_id is required");
+					}
+
+					if (event.body) {
+						return await RequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+					} else {
+						return new Response(StatusCodes.BAD_REQUEST, "Empty payload");
+					}
+
+					// if (bodyParsed) {
+					// SessionItem session = sessionService.validateSessionId(sessionId);
+					// eventProbe.log(Level.INFO, "found session");
+
+					// Save our addresses to the address table
+					// c.saveAddresses(UUID.fromString(sessionId), addresses);
+
+					// Now we've saved our address, we need to create an authorization code for the
+					// session
+					// sessionService.createAuthorizationCode(session);
+
+					// eventProbe.counterMetric(LAMBDA_NAME);
+					// return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.NO_CONTENT, "");
+					// }
+
+					// If we don't have at least one address, do not save
+					// return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, "");
+				} catch (err) {
+					logger.error("An error has occurred. " + err);
+					return new Response(StatusCodes.INTERNAL_SERVER_ERROR, "An error has occurred");
+				}
+			}
+			return new Response(StatusCodes.NOT_FOUND, "");
+
+		case ResourcesEnum.USERINFO:
+			if (event.httpMethod === "POST") {
+				logger.info("Got userinfo request");
+				const queries = JSON.stringify(event.queryStringParameters);
+				return {
+					statusCode: 200,
+					body: `Queries: ${queries}`,
+				};
+			}
+			return new Response(StatusCodes.NOT_FOUND, "");
+
+		default:
+			throw new AppError("Requested resource does not exist" + { resource: event.resource }, 404);
+
+	}
+
+};

@@ -95,8 +95,8 @@ Globals:
             "Fn::Sub": "${VpcStackName}-PrivateSubnetIdA"
         - Fn::ImportValue:
             "Fn::Sub": "${VpcStackName}-PrivateSubnetIdB"
-        - Fn::ImportValue: 
-            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdC"
+#        - Fn::ImportValue:
+#            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdC"
     PermissionsBoundary: !If
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
@@ -152,11 +152,11 @@ Resources:
         openapi: "3.0.1"
         info:
           version: "0.2"
-          title: "CIC Credential Issuer Private API"
+          title: !Sub "${AWS::StackName} - CIC Credential Issuer Private API"
 
         paths:
-          /hello:
-            get:
+          /claimedIdentity:
+            post:
               parameters:
                 - in: header
                   name: "session_id"
@@ -295,7 +295,7 @@ Resources:
       FunctionName: !Sub "CIC-Hello-${AWS::StackName}"
       Handler: app.lambdaHandler
       CodeUri: ../src/
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: F2F CRI
@@ -303,6 +303,13 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+      Events:
+        claimedIdentity:
+          Type: Api
+          Properties:
+            Path: /claimedIdentity
+            Method: post
+            RestApiId: !Ref CICRestApi
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -330,12 +337,9 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt CICHelloFunction.Arn
+      FunctionName: !Ref CICHelloFunction
       Principal: apigateway.amazonaws.com
-      SourceAccount: !Sub "${AWS::AccountId}"
-      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${CICRestApi}/*/*/*"
 
-  ### Function Definition
 Outputs:
 
   CICApiGatewayId:
