@@ -385,18 +385,18 @@ Resources:
         Name: HelloWorldRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
 
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: app.lambdaHandler
-      CodeUri: ../lambdas/
-      Runtime: nodejs16.x
-      Environment:
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-cic"
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - AWSXrayWriteOnlyAccess
+  # HelloWorldFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: app.lambdaHandler
+  #     CodeUri: ../lambdas/
+  #     Runtime: nodejs16.x
+  #     Environment:
+  #       Variables:
+  #         POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-cic"
+  #     Policies:
+  #       - AWSLambdaBasicExecutionRole
+  #       - AWSXrayWriteOnlyAccess
         # hello world is not using any dynamo table
         # - DynamoDBCrudPolicy:
         #     TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
@@ -411,34 +411,34 @@ Resources:
         #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
         #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTtl"
         #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParametersByPath
-              Resource:
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/clients/*"
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
-        EntryPoints:
-        - app.ts  
+  #       - Statement:
+  #           - Effect: Allow
+  #             Action:
+  #               - ssm:GetParametersByPath
+  #             Resource:
+  #               - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/clients/*"
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: "es2020"
+  #       Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+  #       EntryPoints:
+  #       - app.ts  
 
-  HelloWorldFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/${HelloWorldFunction}"
-      RetentionInDays: 30
+  # HelloWorldFunctionLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: !Sub "/aws/lambda/${HelloWorldFunction}"
+  #     RetentionInDays: 30
 
-  HelloWorldFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref HelloWorldFunctionLogGroup
+  # HelloWorldFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Condition: IsNotDevEnvironment
+  #   Properties:
+  #     DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref HelloWorldFunctionLogGroup
 
  ####################################################################
 #                                                                  #
@@ -449,13 +449,12 @@ Resources:
  ClaimedIdentityFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: uk.gov.di.ipv.cri.claimedidentity.api.handler.ClaimedIdentityHandler::handleRequest
+      Handler: app.lambdaHandler
       CodeUri: ../src/claimed-identity/
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
       Environment:
         Variables:
-          SESSION_TABLE: 'session-common-cri-api'
-          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-claimed-identity"
+          SESSION_TABLE: !Ref SessionTable
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -467,12 +466,12 @@ Resources:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/PersonIdentityTableName}}"
         - DynamoDBWritePolicy:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/PersonIdentityTableName}}"
-          - Sid: ReadParametersPolicy
-            Effect: Allow
-            Action:
-              - ssm:GetParameter
-            Resource:
-              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/LookupTableName"
+          # - Sid: ReadParametersPolicy
+          #   Effect: Allow
+          #   Action:
+          #     - ssm:GetParameter
+          #   Resource:
+          #     - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/LookupTableName"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -488,13 +487,14 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${ClaimedIdentityFunction}"
       RetentionInDays: 30
 
-  ClaimedIdentityFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
+# To be uncommented once Splunk integration is done in Dev and Build env
+  # ClaimedIdentityFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Condition: IsNotDevEnvironment
+  #   Properties:
+  #     DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
 
 
 #  IssueCredentialFunction:
@@ -617,12 +617,12 @@ Resources:
       Value: !FindInMap [ JwtTtlUnitMapping, Environment, !Ref Environment ]
       Description: The unit for the time-to-live for an JWT e.g. (MONTHS)
 
-  HelloWorldFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref HelloWorldFunction.Alias
-      Principal: apigateway.amazonaws.com
+  # HelloWorldFunctionPermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !Ref HelloWorldFunction.Alias
+  #     Principal: apigateway.amazonaws.com
 
   ClaimedIdentityFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -771,10 +771,17 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-PrivateCICApiGatewayId
 
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${HelloWorldRestApi}.execute-api.${AWS::Region}.amazonaws.com/${HelloWorldRestApi.Stage}/hello"
+  ClaimedIdentityFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ClaimedIdentityFunction.Alias
+      Principal: apigateway.amazonaws.com
+  
+  # HelloWorldApi:
+  #   Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+  #   Value: !Sub "https://${HelloWorldRestApi}.execute-api.${AWS::Region}.amazonaws.com/${HelloWorldRestApi.Stage}/hello"
 
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
+  # HelloWorldFunction:
+  #   Description: "Hello World Lambda Function ARN"
+  #   Value: !GetAtt HelloWorldFunction.Arn
