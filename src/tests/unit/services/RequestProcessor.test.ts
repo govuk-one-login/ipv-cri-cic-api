@@ -7,6 +7,7 @@ import { CicService } from "../../../services/CicService";
 import { SessionItem } from "../../../models/SessionItem";
 import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
+import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 
 let requestProcessorTest: RequestProcessor;
 const mockCicService = mock<CicService>();
@@ -43,7 +44,7 @@ describe("RequestProcessor", () => {
 			authorizationCode: `${cicResp.authorizationCode}`,
 			redirectUri: "http",
 		}));
-		expect(out.statusCode).toBe(200);
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 
 	it("Return 404 when session with that session id not found in the DB", async () => {
@@ -56,6 +57,6 @@ describe("RequestProcessor", () => {
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: 1234");
-		expect(out.statusCode).toBe(404);
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 	});
 });
