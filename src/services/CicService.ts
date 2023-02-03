@@ -6,7 +6,7 @@ import { AppError, SessionNotFoundError } from "../utils/AppError";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ExternalCode } from "../vendor/ExternalCode";
-import {HttpCodesEnum} from "../utils/HttpCodesEnum";
+import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 
 
 export class CicService {
@@ -36,11 +36,11 @@ export class CicService {
     }
 
     async getSessionById(sessionId: string): Promise<SessionItem | undefined> {
-    	this.logger.debug("Table name "+ this.tableName);
+    	this.logger.debug("Table name " + this.tableName);
     	const getSessionCommand = new GetCommand({
     		TableName: this.tableName,
     		Key: {
-    			sessionId
+    			sessionId,
     		},
     	});
 
@@ -53,7 +53,7 @@ export class CicService {
     	}
 
     	if (session.Item) {
-			return new SessionItem(session.Item);
+    		return new SessionItem(session.Item);
     	}
 
     }
@@ -107,25 +107,25 @@ export class CicService {
     	}
     }
 
-	async getSessionByAccessToken (accessToken: string ): Promise<SessionItem | undefined> {
-		let session;
+    async getSessionByAccessToken(accessToken: string ): Promise<SessionItem | undefined> {
+    	let session;
 
-		const getSessionCommand = new GetCommand({
-			TableName: this.tableName,
-			Key: {
-				accessToken
-			},
-		});
+    	const getSessionCommand = new GetCommand({
+    		TableName: this.tableName,
+    		Key: {
+    			accessToken,
+    		},
+    	});
 
-		try {
-			session = await this.dynamo.send(getSessionCommand);
-		} catch (e: any) {
-			this.logger.error("getSessionByAccessToken - failed executing get from dynamodb: " + e);
-			throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
-		}
+    	try {
+    		session = await this.dynamo.send(getSessionCommand);
+    	} catch (e: any) {
+    		this.logger.error("getSessionByAccessToken - failed executing get from dynamodb: " + e);
+    		throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
+    	}
 
-		if (session.Item) {
-			return new SessionItem(session.Item);
-		}
-	}
+    	if (session.Item) {
+    		return new SessionItem(session.Item);
+    	}
+    }
 }
