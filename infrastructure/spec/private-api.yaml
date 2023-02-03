@@ -228,7 +228,7 @@ components:
         $ref: "#/components/schemas/HelloWorld"
     ClaimedIdentity:
       title: "Claimedidentity Lookup Response"
-      type: "array"
+      type: "object"
       minItems: 1
       items:
         $ref: "#/components/schemas/ClaimedIdentity"
