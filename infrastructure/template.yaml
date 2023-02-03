@@ -81,6 +81,7 @@ Conditions:
       - !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
       - 0
 
+
 Globals:
   Function:
     VpcConfig:
