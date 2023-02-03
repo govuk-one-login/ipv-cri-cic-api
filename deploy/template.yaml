@@ -155,6 +155,96 @@ Resources:
           title: !Sub "${AWS::StackName} - CIC Credential Issuer Private API"
 
         paths:
+          /userInfo:
+            post:
+              operationId: postUserInfo
+              summary: Retrieve the JWT contained the Verified Credential(s) for a given Auth Session.
+              description: >-
+                Returns a JWT containing the user information and associated verified credentials as supplied by the
+                biometrics vendor. Requires an access token as issued by `POST /token`, and can only be called once.
+              tags:
+                - Backend - CI CRI specific
+              parameters:
+                - $ref: '#/components/parameters/Authorization'
+              responses:
+                "200":
+                  description: >-
+                    OK - Signed Verified Credential returned as a JWT
+                  headers:
+                    Cache-Control:
+                      schema:
+                        type: "string"
+                    Content-Type:
+                      schema:
+                        type: "string"
+                    Strict-Transport-Security:
+                      schema:
+                        type: "string"
+                    X-Content-Type-Options:
+                      schema:
+                        type: "string"
+                    X-Frame-Options:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/UserInfoJwt"
+                "401":
+                  description: Unauthorized
+                  headers:
+                    Cache-Control:
+                      schema:
+                        type: "string"
+                    Content-Type:
+                      schema:
+                        type: "string"
+                    Strict-Transport-Security:
+                      schema:
+                        type: "string"
+                    X-Content-Type-Options:
+                      schema:
+                        type: "string"
+                    X-Frame-Options:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/OAuthErrorResponse"
+                "500":
+                  description: Internal Server Error
+                  headers:
+                    Cache-Control:
+                      schema:
+                        type: "string"
+                    Content-Type:
+                      schema:
+                        type: "string"
+                    Strict-Transport-Security:
+                      schema:
+                        type: "string"
+                    X-Content-Type-Options:
+                      schema:
+                        type: "string"
+                    X-Frame-Options:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/OAuthErrorResponse"
+              x-amazon-apigateway-request-validator: "both"
+              x-amazon-apigateway-integration:
+                httpMethod: "POST"
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserInfoFunction.Arn}:live/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
           /claimedIdentity:
             post:
               parameters:
@@ -204,6 +294,58 @@ Resources:
               schema:
                 type: string
           schemas:
+            OAuthErrorResponse:
+              type: object
+              additionalProperties: true
+              required:
+                - error
+              properties:
+                error:
+                  type: string
+                  enum:
+                    - access_denied
+                    - invalid_request
+                    - invalid_client
+                    - invalid_grant
+                    - unauthorized_client
+                    - unsupported_grant_type
+                    - invalid_scope
+                    - server_error
+                    - temporarily_unavailable
+                    - unsupported_response_type
+                    - authorization_pending
+                  example: access_denied
+                  description: >-
+                    A single ASCII [USASCII] error code from the following
+                error_description:
+                  type: string
+                  example: Access was denied as auth code was not recognised
+                  description: >-
+                    Human-readable ASCII [USASCII] text providing additional information, used to assist the
+                    client developer in understanding the error that occurred.
+                error_uri:
+                  type: string
+                  example: https://example.com/error1.html
+                  description: >-
+                    A URI identifying a human-readable web page with information about the error, used to
+                    provide the client developer with additional information about the error.
+            UserInfoJwt:
+              type: object
+              additionalProperties: true
+              required:
+                - sub
+                - 'https://vocab.account.gov.uk/v1/credentialJWT'
+              properties:
+                sub:
+                  type: string
+                  format: uuid
+                  description: >-
+                    `sub` value - this should be the same as encoded in the signed JWT
+                  example: 22222222-2222-2222-2222-222222222222
+                'https://vocab.account.gov.uk/v1/credentialJWT':
+                  type: string
+                  description: >-
+                    Signed JWT response with user credentials including the outcome from the biometric checks
             Authorization:
               required:
                 - "client_id"
@@ -289,11 +431,69 @@ Resources:
 
   ### Function Definition
 
+  ## UserInfo
+  UserInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "User-Info-${AWS::StackName}"
+      Handler: UserInfoHandler.lambdaHandler
+      CodeUri: ../src/
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: F2F CRI
+          SESSION_TABLE: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+          EXAMPLE: !FindInMap [ EnvironmentVariables, !Ref Environment, EXAMPLE ]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+        - DynamoDBReadPolicy:
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+      Events:
+        userInfo:
+          Type: Api
+          Properties:
+            Path: /userInfo
+            Method: post
+            RestApiId: !Ref CICRestApi
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - UserInfoHandler.ts
+
+  UserInfoFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/User-Info-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  UserInfoFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref UserInfoFunctionLogGroup
+
+  UserInfoFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref UserInfoFunction
+      Principal: apigateway.amazonaws.com
+
+  # ClaimedIdentity
   CICHelloFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "CIC-Hello-${AWS::StackName}"
-      Handler: App.lambdaHandler
+      Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
       Runtime: nodejs18.x
       Environment:
@@ -322,7 +522,7 @@ Resources:
         Target: "es2020"
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
-        - App.ts
+        - ClaimedIdentityHandler.ts
 
   CICHelloFunctionLogGroup:
     Type: AWS::Logs::LogGroup

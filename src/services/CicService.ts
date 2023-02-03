@@ -30,7 +30,6 @@ export class CicService {
 
     static getInstance(tableName: string, logger: Logger): CicService {
     	if (!CicService.instance) {
-			logger.debug("creating new instance "+tableName);
     		CicService.instance = new CicService(tableName, logger);
     	}
     	return CicService.instance;
@@ -38,14 +37,13 @@ export class CicService {
 
     async getSessionById(sessionId: string): Promise<SessionItem | undefined> {
     	this.logger.debug("Table name "+ this.tableName);
-		this.logger.debug("Dynamo "+ JSON.stringify(this.dynamo))
     	const getSessionCommand = new GetCommand({
     		TableName: this.tableName,
     		Key: {
     			sessionId
     		},
     	});
-		this.logger.debug("getSessionCommand "+ JSON.stringify(getSessionCommand));
+
     	let session;
     	try {
     		session = await this.dynamo.send(getSessionCommand);
@@ -54,11 +52,10 @@ export class CicService {
     		throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
     	}
 
-		this.logger.debug("Completed get")
-    	if (!session.Item) {
-    		throw new SessionNotFoundError(`Could not find session item with id: ${sessionId}`);
+    	if (session.Item) {
+			return new SessionItem(session.Item);
     	}
-    	return new SessionItem(session.Item);
+
     }
 
     async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
@@ -77,10 +74,10 @@ export class CicService {
     		},
     	});
 
-    	this.logger.info("updateItem - updating CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+    	this.logger.info("updating CIC data in dynamodb" + JSON.stringify(saveCICCommand));
     	try {
     		await this.dynamo.send(saveCICCommand);
-    		this.logger.info("updateItem - updated CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+    		this.logger.info("updated CIC data in dynamodb" + JSON.stringify(saveCICCommand));
     	} catch (error) {
     		this.logger.error("got error " + error);
     		throw new AppError("updateItem - failed ", 500);
@@ -88,7 +85,6 @@ export class CicService {
     }
 
     async setAuthorizationCode(sessionId: string, uuid: string): Promise<void> {
-    	this.logger.debug(sessionId);
 
     	const updateSessionCommand = new UpdateCommand({
     		TableName: this.tableName,
@@ -100,14 +96,36 @@ export class CicService {
     		},
     	});
 
-    	this.logger.debug("updateItem - updating authorizationCode dynamodb" + JSON.stringify(updateSessionCommand));
+    	this.logger.info("updating authorizationCode dynamodb" + JSON.stringify(updateSessionCommand));
 
     	try {
     		await this.dynamo.send(updateSessionCommand);
-    		this.logger.info("updateItem - updated authorizationCode in dynamodb" + JSON.stringify(updateSessionCommand));
+    		this.logger.info("updated authorizationCode in dynamodb" + JSON.stringify(updateSessionCommand));
     	} catch (e: any) {
     		this.logger.error("got error " + e);
     		throw new AppError("updateItem - failed ", 500);
     	}
     }
+
+	async getSessionByAccessToken (accessToken: string ): Promise<SessionItem | undefined> {
+		let session;
+
+		const getSessionCommand = new GetCommand({
+			TableName: this.tableName,
+			Key: {
+				accessToken
+			},
+		});
+
+		try {
+			session = await this.dynamo.send(getSessionCommand);
+		} catch (e: any) {
+			this.logger.error("getSessionByAccessToken - failed executing get from dynamodb: " + e);
+			throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
+		}
+
+		if (session.Item) {
+			return new SessionItem(session.Item);
+		}
+	}
 }

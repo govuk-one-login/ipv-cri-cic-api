@@ -1,0 +1,7 @@
+{
+  "resource": "/userinfo",
+  "httpMethod": "POST",
+  "headers": {
+    "Authorization": "Bearer AbCdEf123456"
+  }
+}

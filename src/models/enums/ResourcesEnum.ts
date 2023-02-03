@@ -3,5 +3,5 @@
  */
 export enum ResourcesEnum {
 	CLAIMEDIDENTITY = "/claimedIdentity",
-	USERINFO = "/userinfo",
+	USERINFO = "/userInfo",
 }

@@ -1,14 +1,14 @@
-import { CicSession } from "../models/CicSession";
-import { Response } from "../utils/Response";
-import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
-import { randomUUID } from "crypto";
-import { APIGatewayProxyEvent } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { ValidationHelper } from "../utils/ValidationHelper";
-import { CicResponse } from "../utils/CicResponse";
-import { AppError } from "../utils/AppError";
-import { HttpCodesEnum } from "../utils/HttpCodesEnum";
+import {CicSession} from "../models/CicSession";
+import {Response} from "../utils/Response";
+import {CicService} from "./CicService";
+import {Metrics, MetricUnits} from "@aws-lambda-powertools/metrics";
+import {randomUUID} from "crypto";
+import {APIGatewayProxyEvent} from "aws-lambda";
+import {Logger} from "@aws-lambda-powertools/logger";
+import {ValidationHelper} from "../utils/ValidationHelper";
+import {CicResponse} from "../utils/CicResponse";
+import {AppError} from "../utils/AppError";
+import {HttpCodesEnum} from "../utils/HttpCodesEnum";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 
@@ -32,7 +32,8 @@ export class RequestProcessor {
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
 
-		logger.debug("Table name in RequestProcessor111  "+ SESSION_TABLE);
+		logger.debug("metrics is  "+ JSON.stringify(this.metrics));
+		this.metrics.addMetric("Called",MetricUnits.Count, 1);
 		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger);
 	}
 

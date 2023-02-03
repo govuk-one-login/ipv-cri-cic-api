@@ -1,4 +1,4 @@
-import { lambdaHandler } from "../../App";
+import { lambdaHandler } from "../../ClaimedIdentityHandler";
 import { mock } from "jest-mock-extended";
 import { VALID_CLAIMEDID, UNSUPPORTED_CLAIMEDID, RESOURCE_NOT_FOUND } from "./data/events";
 import { RequestProcessor } from "../../services/RequestProcessor";
@@ -13,7 +13,7 @@ jest.mock("../../services/RequestProcessor", () => {
 	};
 });
 
-describe("App", () => {
+describe("ClaimedIdentityHandler", () => {
 	it("return success response for claimedidentity", async () => {
 		RequestProcessor.getInstance = jest.fn().mockReturnValue(mockedRequestProcessor);
 
