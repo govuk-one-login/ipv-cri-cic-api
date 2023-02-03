@@ -31,6 +31,8 @@ export class RequestProcessor {
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
+
+		logger.debug("Table name in RequestProcessor111  "+ SESSION_TABLE);
 		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger);
 	}
 

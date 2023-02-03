@@ -12,11 +12,9 @@
         "@aws-sdk/client-dynamodb": "3.150.0",
         "@aws-sdk/credential-providers": "3.245.0",
         "@aws-sdk/lib-dynamodb": "3.150.0",
-        "aws-sdk": "^2.1302.0",
         "axios": ">=0.21.1",
         "class-validator": "0.14.0",
-        "esbuild": "0.14.14",
-        "http-status-codes": "2.2.0"
+        "esbuild": "0.14.14"
     },
     "scripts": {
         "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit",

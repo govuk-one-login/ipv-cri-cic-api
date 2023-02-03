@@ -37,7 +37,7 @@ Parameters:
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
-    dev:  
+    dev:
       logretentionindays: 3
       apiTracingEnabled: true
     build:
@@ -55,13 +55,13 @@ Mappings:
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       EXAMPLE: 1 # Just here as null values not allowed in tempaltes
-    build: 
+    build:
       EXAMPLE: 1 # Just here as null values not allowed in tempaltes
-    staging: 
+    staging:
       EXAMPLE: 1 # Just here as null values not allowed in tempaltes
-    integration: 
+    integration:
       EXAMPLE: 1 # Just here as null values not allowed in tempaltes
-    production: 
+    production:
       EXAMPLE: 1 # Just here as null values not allowed in tempaltes
 
 Conditions:
@@ -90,8 +90,8 @@ Globals:
     VpcConfig:
       SecurityGroupIds:
         - !GetAtt LambdaEgressSecurityGroup.GroupId
-      SubnetIds: 
-        - Fn::ImportValue: 
+      SubnetIds:
+        - Fn::ImportValue:
             "Fn::Sub": "${VpcStackName}-PrivateSubnetIdA"
         - Fn::ImportValue:
             "Fn::Sub": "${VpcStackName}-PrivateSubnetIdB"
@@ -122,7 +122,7 @@ Globals:
     AutoPublishAlias: live
 
 Resources:
-  
+
   LambdaEgressSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -267,7 +267,7 @@ Resources:
         Service: backend
         Name: CICRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
-  
+
   CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -293,16 +293,21 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "CIC-Hello-${AWS::StackName}"
-      Handler: app.lambdaHandler
+      Handler: App.lambdaHandler
       CodeUri: ../src/
       Runtime: nodejs18.x
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: F2F CRI
+          SESSION_TABLE: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
           EXAMPLE: !FindInMap [ EnvironmentVariables, !Ref Environment, EXAMPLE ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+              TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+        - DynamoDBReadPolicy:
+              TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
       Events:
         claimedIdentity:
           Type: Api
@@ -317,7 +322,7 @@ Resources:
         Target: "es2020"
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
-        - app.ts  
+        - App.ts
 
   CICHelloFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -332,7 +337,7 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CICHelloFunctionLogGroup
-  
+
   CICHelloFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:

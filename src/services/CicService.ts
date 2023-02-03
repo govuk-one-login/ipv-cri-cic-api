@@ -6,6 +6,7 @@ import { AppError, SessionNotFoundError } from "../utils/AppError";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ExternalCode } from "../vendor/ExternalCode";
+import {HttpCodesEnum} from "../utils/HttpCodesEnum";
 
 
 export class CicService {
@@ -29,27 +30,31 @@ export class CicService {
 
     static getInstance(tableName: string, logger: Logger): CicService {
     	if (!CicService.instance) {
+			logger.debug("creating new instance "+tableName);
     		CicService.instance = new CicService(tableName, logger);
     	}
     	return CicService.instance;
     }
 
     async getSessionById(sessionId: string): Promise<SessionItem | undefined> {
-    	this.logger.debug("Table name ", this.tableName);
+    	this.logger.debug("Table name "+ this.tableName);
+		this.logger.debug("Dynamo "+ JSON.stringify(this.dynamo))
     	const getSessionCommand = new GetCommand({
     		TableName: this.tableName,
     		Key: {
-    			sessionId,
+    			sessionId
     		},
     	});
+		this.logger.debug("getSessionCommand "+ JSON.stringify(getSessionCommand));
     	let session;
     	try {
     		session = await this.dynamo.send(getSessionCommand);
     	} catch (e: any) {
     		this.logger.error("getSessionById - failed executing get from dynamodb: " + e);
-    		throw new AppError("Error retrieving Session", 500);
+    		throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
     	}
 
+		this.logger.debug("Completed get")
     	if (!session.Item) {
     		throw new SessionNotFoundError(`Could not find session item with id: ${sessionId}`);
     	}
