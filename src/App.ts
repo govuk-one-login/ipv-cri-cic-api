@@ -18,11 +18,9 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 		case ResourcesEnum.CLAIMEDIDENTITY:
 			if (event.httpMethod === "POST") {
 				try {
-					logger.debug("Body is " + event.body);
+					logger.debug("Event received",{event})
 					const sessionId = event.headers.session_id as string;
-					logger.debug("Session id " + sessionId);
-					logger.debug("event.headers " + !event.headers);
-					logger.debug("not session id " + !sessionId);
+					logger.debug("Session id", {sessionId});
 					if (!event.headers || !sessionId) {
 						logger.debug("Returning response");
 						return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session_id is required");
