@@ -113,7 +113,7 @@ export class CicService {
     	const getSessionCommand = new GetCommand({
     		TableName: this.tableName,
     		Key: {
-    			accessToken,
+				accessToken: accessToken,
     		},
     	});
 

@@ -14,7 +14,8 @@ export class VerifiableCredentialService {
     private static instance: VerifiableCredentialService;
     // Retrieve kid value from SSM parameter :verifiableCredentialKmsSigningKeyId, hard coded to value from Dev account
     //private readonly kid = "d5eb194b-cca5-4845-b892-236afc442448";
-    private readonly kid = "arn:aws:kms:eu-west-2:322814139578:key/b7106ddd-ef9f-4a15-97af-096117a1ba56"//di-ipv-cri-dev value
+    private readonly kid = "arn:aws:kms:eu-west-2:060113405249:key/d5eb194b-cca5-4845-b892-236afc442448" // f2f-dev-aws-account value
+    //private readonly kid = "arn:aws:kms:eu-west-2:322814139578:key/b7106ddd-ef9f-4a15-97af-096117a1ba56"//di-ipv-cri-dev value
 
     constructor(tableName: any, logger: Logger ) {
         //throw error if tableName is null
