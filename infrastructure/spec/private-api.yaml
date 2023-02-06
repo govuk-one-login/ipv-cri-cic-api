@@ -75,44 +75,44 @@ paths:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${CommonStackName}-AuthorizationFunction/invocations
         passthroughBehavior: "when_no_match"
 
-  /hello:
-    get:
-      parameters:
-        - in: header
-          name: "session_id"
-          schema:
-            type: string
-          required: true
-      responses:
-        "400":
-          description: "400 response"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: "500 response"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "200":
-          description: "200 response"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HelloWorld"
-      x-amazon-apigateway-request-validator: "Validate both"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}:HelloWorldFunction/invocations
-        responses:
-          default:
-            statusCode: "200"
-        passthroughBehavior: "when_no_match"
-        contentHandling: "CONVERT_TO_TEXT"
-        type: "aws_proxy"
+  # /hello:
+  #   get:
+  #     parameters:
+  #       - in: header
+  #         name: "session_id"
+  #         schema:
+  #           type: string
+  #         required: true
+  #     responses:
+  #       "400":
+  #         description: "400 response"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/Error"
+  #       "500":
+  #         description: "500 response"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/Error"
+  #       "200":
+  #         description: "200 response"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/HelloWorld"
+  #     x-amazon-apigateway-request-validator: "Validate both"
+  #     x-amazon-apigateway-integration:
+  #       httpMethod: "POST"
+  #       uri:
+  #         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}:HelloWorldFunction/invocations
+  #       responses:
+  #         default:
+  #           statusCode: "200"
+  #       passthroughBehavior: "when_no_match"
+  #       contentHandling: "CONVERT_TO_TEXT"
+  #       type: "aws_proxy"
 
   /claimed-identity:
     put:
@@ -221,11 +221,11 @@ components:
       properties:
         session_id:
           type: "string"
-    HelloWorld:
-      title: "Hello world placeholder"
-      type: "array"
-      items:
-        $ref: "#/components/schemas/HelloWorld"
+    # HelloWorld:
+    #   title: "Hello world placeholder"
+    #   type: "array"
+    #   items:
+    #     $ref: "#/components/schemas/HelloWorld"
     ClaimedIdentity:
       title: "Claimedidentity Lookup Response"
       type: "object"

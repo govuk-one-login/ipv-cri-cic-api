@@ -450,32 +450,32 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.lambdaHandler
-      CodeUri: ../src/claimed-identity/
+      CodeUri: ../src
       Runtime: nodejs18.x
-      Environment:
-        Variables:
-          SESSION_TABLE: !Ref SessionTable
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - AWSXrayWriteOnlyAccess
-        - DynamoDBWritePolicy:
-            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-        - DynamoDBReadPolicy:
-            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+      # Environment:
+      #   Variables:
+      #     SESSION_TABLE: !Ref SessionTable
+      # Policies:
+      #   - AWSLambdaBasicExecutionRole
+      #   - AWSXrayWriteOnlyAccess
+      #   - DynamoDBWritePolicy:
+      #       TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+      #   - DynamoDBReadPolicy:
+      #       TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
           # - Sid: ReadParametersPolicy
           #   Effect: Allow
           #   Action:
           #     - ssm:GetParameter
           #   Resource:
           #     - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/LookupTableName"
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
-        EntryPoints:
-        - app.ts
+    # Metadata: # Manage esbuild properties
+    #   BuildMethod: esbuild
+    #   BuildProperties:
+    #     Minify: true
+    #     Target: "es2020"
+    #     Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+    #     EntryPoints:
+    #     - app.ts
 
   ClaimedIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -767,12 +767,12 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-PrivateCICApiGatewayId
 
-  ClaimedIdentityFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref ClaimedIdentityFunction.Alias
-      Principal: apigateway.amazonaws.com
+  # ClaimedIdentityFunctionPermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !Ref ClaimedIdentityFunction.Alias
+  #     Principal: apigateway.amazonaws.com
   
   # HelloWorldApi:
   #   Description: "API Gateway endpoint URL for Prod stage for Hello World function"
