@@ -143,11 +143,12 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Environment
+      OpenApiVersion: 3.0.1
       AccessLogSetting:
         Format: "$context.requestId $context.httpMethod $context.path"
         DestinationArn: !GetAtt CICAPIGatewayAccessLogGroup.Arn
-      CacheClusterEnabled: true
-      CacheClusterSize: "0.5"
+      EndpointConfiguration:
+        Type: REGIONAL
       DefinitionBody:
         openapi: "3.0.1"
         info:
@@ -491,6 +492,7 @@ Resources:
   # ClaimedIdentity
   CICHelloFunction:
     Type: AWS::Serverless::Function
+    DependsOn: CICHelloFunctionLogGroup
     Properties:
       FunctionName: !Sub "CIC-Hello-${AWS::StackName}"
       Handler: ClaimedIdentityHandler.lambdaHandler
