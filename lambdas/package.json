@@ -10,7 +10,7 @@
         "@aws-lambda-powertools/commons": "^1.5.1",
         "aws-sdk": "^2.1259.0",
         "axios": ">=0.21.1",
-        "esbuild": "0.14.14"
+        "esbuild": "0.17.6"
     },
     "scripts": {
         "compile": "tsc",
