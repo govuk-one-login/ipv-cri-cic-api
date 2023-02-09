@@ -5,8 +5,8 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { AppError, SessionNotFoundError } from "../utils/AppError";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { ExternalCode } from "../vendor/ExternalCode";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
+import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 
 
 export class CicService {
@@ -18,15 +18,11 @@ export class CicService {
 
     private static instance: CicService;
 
-    private static externalInstance: ExternalCode;
-
     constructor(tableName: any, logger: Logger) {
     	this.tableName = tableName;
     	this.dynamo = createDynamoDbClient();
     	this.logger = logger;
-    	CicService.externalInstance = new ExternalCode();
     }
-
 
     static getInstance(tableName: string, logger: Logger): CicService {
     	if (!CicService.instance) {
@@ -92,7 +88,7 @@ export class CicService {
     		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry",
     		ExpressionAttributeValues: {
     			":authCode": uuid,
-    			":authCodeExpiry": CicService.externalInstance.getAuthorizationCodeExpirationEpoch(),
+    			":authCodeExpiry": getAuthorizationCodeExpirationEpoch(process.env.AUTHORIZATION_CODE_TTL),
     		},
     	});
 
@@ -113,7 +109,7 @@ export class CicService {
     	const getSessionCommand = new GetCommand({
     		TableName: this.tableName,
     		Key: {
-				accessToken: accessToken,
+    			accessToken,
     		},
     	});
 

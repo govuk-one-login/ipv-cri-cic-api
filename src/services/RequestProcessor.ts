@@ -9,6 +9,7 @@ import { ValidationHelper } from "../utils/ValidationHelper";
 import { CicResponse } from "../utils/CicResponse";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
+import { absoluteTimeNow } from "../utils/DateTimeUtils";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 
@@ -59,6 +60,10 @@ export class RequestProcessor {
 		const session = await this.cicService.getSessionById(sessionId);
 
 		if (session != null) {
+			if (session.expiryDate < absoluteTimeNow()) {
+				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
+			}
+
 			this.logger.info("found session", JSON.stringify(session));
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 			this.logger.debug("Session is " + JSON.stringify(session));
