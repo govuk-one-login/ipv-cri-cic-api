@@ -452,6 +452,13 @@ Resources:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
         - DynamoDBReadPolicy:
             TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+        - Statement:
+            - Sid: KMSSignPolicy
+              Effect: Allow
+              Action:
+                - kms:Sign
+                - kms:Verify
+              Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/{{resolve:ssm:/${CommonStackName}/verifiableCredentialKmsSigningKeyId}}"
       Events:
         userInfo:
           Type: Api
