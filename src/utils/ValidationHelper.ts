@@ -53,7 +53,7 @@ export class ValidationHelper {
 
 	private async validateUserData(data: string | undefined, errmsg: string, logger: Logger): Promise<boolean> {
 		let isValid = true;
-		if (data == null || data === undefined) {
+		if (data == null || data === undefined || data.trim().length === 0) {
 			logger.info("UserInfo missing: ", errmsg);
 			isValid = false;
 		}

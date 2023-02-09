@@ -55,7 +55,8 @@ export class UserInfoRequestProcessor {
             return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: Authorization header value is missing or invalid auth_scheme");
         }
         const token = event.headers["Authorization"] as string;
-        const accessToken = token.replace('Bearer ', '');
+        const accessToken = token.split(' ')[1];
+        this.logger.info("Bearer Access Token:" +accessToken)
 
         // This is the common lib code which is in Java, mocking code to get the SessionItem
         // const sessionItem = this.sessionService.getSessionByAccessToken(accessToken);
@@ -69,7 +70,6 @@ export class UserInfoRequestProcessor {
             return new Response(HttpCodesEnum.NOT_FOUND, `No session found with the accesstoken: ${accessToken}`);
         }
 
-        this.logger.info("found session ", JSON.stringify(session));
         this.metrics.addMetric("found session", MetricUnits.Count, 1);
         this.logger.debug("Session is " + JSON.stringify(session));
         // Validate the User Info data presence required to generate the VC
