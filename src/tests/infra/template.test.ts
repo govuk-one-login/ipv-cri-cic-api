@@ -7,87 +7,88 @@ const { schema } = require("yaml-cfn");
 
 let template: Template;
 
-beforeAll(() => {
-	const yamltemplate: any = load(
-		readFileSync("../deploy/template.yaml", "utf-8"),
-		{ schema },
-	);
-	template = Template.fromJSON(yamltemplate);
-});
-
-it("Should define a DefinitionBody as part of the serverless::api", () => {
-	// N.B this only passes as we currently delete it on line 14 in the test setup step.
-	template.hasResourceProperties("AWS::Serverless::Api", {
-		DefinitionBody: Match.anyValue(),
-	});
-});
-
-it("API specification in the spec folder should match the DefinitionBody", () => {
-	const api_definition: any = load(readFileSync("../deploy/spec/cic-definition.yaml", "utf-8"), { schema });
-	template.hasResourceProperties("AWS::Serverless::Api", {
-		DefinitionBody: Match.objectEquals(api_definition),
+describe("Infra", () => {
+	beforeAll(() => {
+		const yamltemplate: any = load(
+			readFileSync("../deploy/template.yaml", "utf-8"),
+			{ schema },
+		);
+		template = Template.fromJSON(yamltemplate);
 	});
 
-});
-
-it("Should not define a Events section as part of the serverless::function", () => {
-	// N.B this only passes as we currently delete it on line 14 in the test setup step.
-	template.hasResourceProperties("AWS::Serverless::Function", {
-		Events: Match.absent(),
-	});
-});
-
-it("The template contains two API gateway resource", () => {
-	template.resourceCountIs("AWS::Serverless::Api", 1);
-});
-
-it("Has tracing enabled on at least one API", () => {
-	template.hasResourceProperties("AWS::Serverless::Api", {
-		TracingEnabled: true,
-	});
-});
-
-it("There are 1 lambdas defined, all with a specific permission:", () => {
-	const lambda_count = 1;
-	template.resourceCountIs("AWS::Serverless::Function", lambda_count);
-	template.resourceCountIs("AWS::Lambda::Permission", lambda_count);
-});
-
-it("All lambdas must have a FunctionName defined", () => {
-	const lambdas = template.findResources("AWS::Serverless::Function");
-	const lambda_list = Object.keys(lambdas);
-	lambda_list.forEach((lambda) => {
-		expect(lambdas[lambda].Properties.FunctionName).toBeTruthy();
-	});
-});
-
-it("All Lambdas must have an associated LogGroup named after their FunctionName.", () => {
-	const lambdas = template.findResources("AWS::Serverless::Function");
-	const lambda_list = Object.keys(lambdas);
-	lambda_list.forEach((lambda) => {
-		// These are functions we know are broken, but have to skip for now.
-		// They should be resolved and removed from this list ASAP.
-		const functionName = lambdas[lambda].Properties.FunctionName["Fn::Sub"];
-		console.log(functionName);
-		const expectedLogName = {
-			"Fn::Sub": `/aws/lambda/${functionName}`,
-		};
-		template.hasResourceProperties("AWS::Logs::LogGroup", {
-			LogGroupName: Match.objectLike(expectedLogName),
+	it("Should define a DefinitionBody as part of the serverless::api", () => {
+		// N.B this only passes as we currently delete it on line 14 in the test setup step.
+		template.hasResourceProperties("AWS::Serverless::Api", {
+			DefinitionBody: Match.anyValue(),
 		});
 	});
-});
 
-it("Each log group defined must have a retention period", () => {
-	const logGroups = template.findResources("AWS::Logs::LogGroup");
-	const logGroupList = Object.keys(logGroups);
-	logGroupList.forEach((logGroup) => {
-		expect(logGroups[logGroup].Properties.RetentionInDays).toBeTruthy();
+	it("API specification in the spec folder should match the DefinitionBody", () => {
+		const api_definition: any = load(readFileSync("../deploy/spec/cic-definition.yaml", "utf-8"), { schema });
+		template.hasResourceProperties("AWS::Serverless::Api", {
+			DefinitionBody: Match.objectEquals(api_definition),
+		});
+
 	});
-});
 
-describe("Log group retention", () => {
-	it.each`
+	it("Should not define a Events section as part of the serverless::function", () => {
+		// N.B this only passes as we currently delete it on line 14 in the test setup step.
+		template.hasResourceProperties("AWS::Serverless::Function", {
+			Events: Match.absent(),
+		});
+	});
+
+	it("The template contains two API gateway resource", () => {
+		template.resourceCountIs("AWS::Serverless::Api", 1);
+	});
+
+	it("Has tracing enabled on at least one API", () => {
+		template.hasResourceProperties("AWS::Serverless::Api", {
+			TracingEnabled: true,
+		});
+	});
+
+	it("There are 1 lambdas defined, all with a specific permission:", () => {
+		const lambda_count = 1;
+		template.resourceCountIs("AWS::Serverless::Function", lambda_count);
+		template.resourceCountIs("AWS::Lambda::Permission", lambda_count);
+	});
+
+	it("All lambdas must have a FunctionName defined", () => {
+		const lambdas = template.findResources("AWS::Serverless::Function");
+		const lambda_list = Object.keys(lambdas);
+		lambda_list.forEach((lambda) => {
+			expect(lambdas[lambda].Properties.FunctionName).toBeTruthy();
+		});
+	});
+
+	it("All Lambdas must have an associated LogGroup named after their FunctionName.", () => {
+		const lambdas = template.findResources("AWS::Serverless::Function");
+		const lambda_list = Object.keys(lambdas);
+		lambda_list.forEach((lambda) => {
+			// These are functions we know are broken, but have to skip for now.
+			// They should be resolved and removed from this list ASAP.
+			const functionName = lambdas[lambda].Properties.FunctionName["Fn::Sub"];
+			console.log(functionName);
+			const expectedLogName = {
+				"Fn::Sub": `/aws/lambda/${functionName}`,
+			};
+			template.hasResourceProperties("AWS::Logs::LogGroup", {
+				LogGroupName: Match.objectLike(expectedLogName),
+			});
+		});
+	});
+
+	it("Each log group defined must have a retention period", () => {
+		const logGroups = template.findResources("AWS::Logs::LogGroup");
+		const logGroupList = Object.keys(logGroups);
+		logGroupList.forEach((logGroup) => {
+			expect(logGroups[logGroup].Properties.RetentionInDays).toBeTruthy();
+		});
+	});
+
+	describe("Log group retention", () => {
+		it.each`
     environment      | retention
     ${"dev"}         | ${3}
     ${"build"}       | ${3}
@@ -95,12 +96,13 @@ describe("Log group retention", () => {
     ${"integration"} | ${30}
     ${"production"}  | ${30}
   `(
-		"Log group retention period for $environment has correct value in mappings",
-		({ environment, retention }) => {
-			const mappings = template.findMappings("EnvironmentConfiguration");
-			expect(
-				mappings.EnvironmentConfiguration[environment].logretentionindays,
-			).toBe(retention);
-		},
-	);
+			"Log group retention period for $environment has correct value in mappings",
+			({ environment, retention }) => {
+				const mappings = template.findMappings("EnvironmentConfiguration");
+				expect(
+					mappings.EnvironmentConfiguration[environment].logretentionindays,
+				).toBe(retention);
+			},
+		);
+	});
 });

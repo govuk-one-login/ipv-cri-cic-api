@@ -32,7 +32,7 @@ export class ValidationHelper {
 		});
 	}
 
-	async validateAccessCode(event: APIGatewayProxyEvent, logger: Logger): Promise<boolean> {
+	validateAccessCode(event: APIGatewayProxyEvent, logger: Logger): boolean {
 		try {
 			const headerValue = event.headers.authorization ?? event.headers.Authorization;
 			if (headerValue == null || headerValue === undefined) {
