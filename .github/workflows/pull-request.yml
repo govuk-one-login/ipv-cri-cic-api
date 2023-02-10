@@ -9,6 +9,8 @@ on:
       - reopened
       - ready_for_review
       - synchronize
+    paths-ignore:
+      - 'infra-l2-dynamo/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
