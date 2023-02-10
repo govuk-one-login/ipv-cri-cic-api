@@ -55,6 +55,8 @@ Globals:
 Resources:
   SessionTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       TableName: !Sub "session-${AWS::StackName}"
       BillingMode: "PAY_PER_REQUEST"
@@ -135,6 +137,8 @@ Resources:
 
   PersonIdentityTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub "person-identity-${AWS::StackName}"
       BillingMode: "PAY_PER_REQUEST"
