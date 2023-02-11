@@ -27,6 +27,11 @@ Parameters:
     Description: >
       The ARN of the permissions boundary to apply to any role created by the template
     Default: "none"
+
+  KmsPendingWindowInDays:
+    Type: Number
+    Description: Number of days to retain KMS in pending deletion state when deleted
+    Default: 30
     
 Conditions:
   UseCodeSigning:
@@ -108,7 +113,7 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
       MultiRegion: false
-      PendingWindowInDays: 30
+      PendingWindowInDays: !Ref KmsPendingWindowInDays
       EnableKeyRotation: true
       KeyPolicy:
         Version: "2012-10-17"
@@ -166,7 +171,7 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
       MultiRegion: false
-      PendingWindowInDays: 30
+      PendingWindowInDays: !Ref KmsPendingWindowInDays
       EnableKeyRotation: true
       KeyPolicy:
         Version: "2012-10-17"
