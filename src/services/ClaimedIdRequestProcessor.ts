@@ -73,7 +73,7 @@ export class ClaimedIdRequestProcessor {
 			await this.cicService.setAuthorizationCode(sessionId, authCode);
 			const cicResp = new CicResponse({
 				authorizationCode: authCode,
-				redirectUri: session?.redirectUri,
+				redirect_uri: session?.redirectUri,
 				state: session?.state,
 			});
 
