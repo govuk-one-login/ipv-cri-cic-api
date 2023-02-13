@@ -22,6 +22,6 @@
     "scripts": {
         "test": "npm run infra",
         "infra":"./node_modules/.bin/jest --testPathPattern=tests/infra",
-        "test:infra": "yarn run infra"
+        "test:infra": "npm run infra"
     }
 }
