@@ -66,11 +66,11 @@ Conditions:
     - dev
   IsNotDevEnvironment: !Not
     - Condition: IsDevEnvironment
-  UsePermissionsBoundary:
-    Fn::Not:
-      - Fn::Equals:
-          - !Ref PermissionsBoundary
-          - "none"
+  # UsePermissionsBoundary:
+  #   Fn::Not:
+  #     - Fn::Equals:
+  #         - !Ref PermissionsBoundary
+  #         - "none"
   UseSecretPrefix:
     Fn::Not:
       - Fn::Equals:
@@ -81,16 +81,14 @@ Conditions:
       - !FindInMap [ EnvironmentConfiguration, !Ref Environment, provisionedConcurrency ]
       - 0
 
+
 Globals:
   Function:
     VpcConfig:
       SecurityGroupIds:
         - !ImportValue cri-vpc-LambdaSecurityGroup
       SubnetIds: !Split [ ",", !ImportValue cri-vpc-PrivateSubnets ]
-    PermissionsBoundary: !If
-      - UsePermissionsBoundary
-      - !Ref PermissionsBoundary
-      - !Ref AWS::NoValue
+    PermissionsBoundary: !Ref PermissionsBoundary
     CodeSigningConfigArn: !If
       - EnforceCodeSigning
       - !Ref CodeSigningConfigArn
@@ -129,7 +127,7 @@ Mappings:
     dev:
       provisionedConcurrency: 0
     build:
-      provisionedConcurrency: 1
+      provisionedConcurrency: 0
     staging:
       provisionedConcurrency: 0
     integration:
