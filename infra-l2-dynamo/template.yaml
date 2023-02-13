@@ -243,5 +243,5 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-person-identity-table-key-id"
   PersonIdentityTableKeyAlias:
-    Description: "The Alias of the person udentity table encryption key"
+    Description: "The Alias of the person identity table encryption key"
     Value: !Ref PersonIdentityTableKeyAlias
