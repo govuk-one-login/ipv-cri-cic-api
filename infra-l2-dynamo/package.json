@@ -1,6 +1,6 @@
 {
     "name": "l2-dynamo-test",
-    "description": "Mock READID endpoints for use in e2e tests",
+    "description": "Nodejs package configuration for the platform jest tests",
     "version": "0.0.1",
     "private": true,
     "dependencies": {
