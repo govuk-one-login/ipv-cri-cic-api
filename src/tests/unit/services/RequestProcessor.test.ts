@@ -40,7 +40,7 @@ class Session implements ISessionItem {
 
 	redirectUri = "http://localhost:8085/callback";
 
-	state = "YpKACK4sgrVqjtBxYQSD07jFwfWhbewedpvyPkXZ7NA";
+	state = "Y@atr";
 
 	subject = "urn:fdc:gov.uk:2022:d1bdf4c6-1358-4bb3-8fea-bf6b330fd7fa";
 
@@ -81,7 +81,7 @@ describe("RequestProcessor", () => {
 		expect(out.body).toEqual(JSON.stringify({
 			authorizationCode: `${cicResp.authorizationCode}`,
 			redirect_uri: "http://localhost:8085/callback",
-			state: "YpKACK4sgrVqjtBxYQSD07jFwfWhbewedpvyPkXZ7NA",
+			state: "Y@atr",
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
