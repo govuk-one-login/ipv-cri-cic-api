@@ -1,5 +1,5 @@
 {
-    "name": "dca-mock-readid",
+    "name": "l2-dynamo-test",
     "description": "Mock READID endpoints for use in e2e tests",
     "version": "0.0.1",
     "private": true,
