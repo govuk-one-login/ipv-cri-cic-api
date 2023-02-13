@@ -1,8 +1,8 @@
 {
   "body": "{ \"fullName\": \"TestUser\",\"dateOfBirth\": \"1970-01-01\", \"documentSelected\": \"UK Passport\", \"dateOfExpiry\": \"2027-01-01\"}",
-  "resource": "/claimedidentity",
+  "resource": "/claimedIdentity",
   "httpMethod": "POST",
   "headers": {
-    "session_id": "bb7e25c9-9b62-4563-afd5-1798860f59bd"
+    "session_id": "01333e01-dde3-412f-a484-e9f23b06be3e"
   }
 }

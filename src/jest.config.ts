@@ -15,5 +15,6 @@ export default {
     testMatch: ["**/tests/**/*.test.ts"],
     setupFiles: [
         "./jest.setup.ts"
-    ]
+    ],
+    "testEnvironment": "node"
 };

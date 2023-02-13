@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
 import { CicSession } from "../models/CicSession";
-import { SessionItem } from "../models/SessionItem";
+import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { AppError, SessionNotFoundError } from "../utils/AppError";
-import { createDynamoDbClient } from "../utils/DynamoDBFactory";
+import { AppError } from "../utils/AppError";
 import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { ExternalCode } from "../vendor/ExternalCode";
+import { HttpCodesEnum } from "../utils/HttpCodesEnum";
+import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 
 
 export class CicService {
@@ -17,43 +17,40 @@ export class CicService {
 
     private static instance: CicService;
 
-    private static externalInstance: ExternalCode;
-
-    constructor(tableName: any, logger: Logger) {
+    constructor(tableName: any, logger: Logger, dynamoDbClient: DynamoDBDocument) {
     	this.tableName = tableName;
-    	this.dynamo = createDynamoDbClient();
+    	this.dynamo = dynamoDbClient;
     	this.logger = logger;
-    	CicService.externalInstance = new ExternalCode();
     }
 
-
-    static getInstance(tableName: string, logger: Logger): CicService {
+    static getInstance(tableName: string, logger: Logger, dynamoDbClient: DynamoDBDocument): CicService {
     	if (!CicService.instance) {
-    		CicService.instance = new CicService(tableName, logger);
+    		CicService.instance = new CicService(tableName, logger, dynamoDbClient);
     	}
     	return CicService.instance;
     }
 
-    async getSessionById(sessionId: string): Promise<SessionItem | undefined> {
-    	this.logger.debug("Table name ", this.tableName);
+    async getSessionById(sessionId: string): Promise<ISessionItem | undefined> {
+    	this.logger.debug("Table name " + this.tableName);
     	const getSessionCommand = new GetCommand({
     		TableName: this.tableName,
     		Key: {
     			sessionId,
     		},
     	});
+
     	let session;
     	try {
     		session = await this.dynamo.send(getSessionCommand);
     	} catch (e: any) {
     		this.logger.error("getSessionById - failed executing get from dynamodb: " + e);
-    		throw new AppError("Error retrieving Session", 500);
+    		throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
     	}
 
-    	if (!session.Item) {
-    		throw new SessionNotFoundError(`Could not find session item with id: ${sessionId}`);
+    	if (session.Item) {
+    		return session.Item as ISessionItem;
     	}
-    	return new SessionItem(session.Item);
+
     }
 
     async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
@@ -72,10 +69,10 @@ export class CicService {
     		},
     	});
 
-    	this.logger.info("updateItem - updating CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+    	this.logger.info("updating CIC data in dynamodb" + JSON.stringify(saveCICCommand));
     	try {
     		await this.dynamo.send(saveCICCommand);
-    		this.logger.info("updateItem - updated CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+    		this.logger.info("updated CIC data in dynamodb" + JSON.stringify(saveCICCommand));
     	} catch (error) {
     		this.logger.error("got error " + error);
     		throw new AppError("updateItem - failed ", 500);
@@ -83,7 +80,6 @@ export class CicService {
     }
 
     async setAuthorizationCode(sessionId: string, uuid: string): Promise<void> {
-    	this.logger.debug(sessionId);
 
     	const updateSessionCommand = new UpdateCommand({
     		TableName: this.tableName,
@@ -91,15 +87,15 @@ export class CicService {
     		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry",
     		ExpressionAttributeValues: {
     			":authCode": uuid,
-    			":authCodeExpiry": CicService.externalInstance.getAuthorizationCodeExpirationEpoch(),
+    			":authCodeExpiry": getAuthorizationCodeExpirationEpoch(process.env.AUTHORIZATION_CODE_TTL),
     		},
     	});
 
-    	this.logger.debug("updateItem - updating authorizationCode dynamodb" + JSON.stringify(updateSessionCommand));
+    	this.logger.info("updating authorizationCode dynamodb" + JSON.stringify(updateSessionCommand));
 
     	try {
     		await this.dynamo.send(updateSessionCommand);
-    		this.logger.info("updateItem - updated authorizationCode in dynamodb" + JSON.stringify(updateSessionCommand));
+    		this.logger.info("updated authorizationCode in dynamodb" + JSON.stringify(updateSessionCommand));
     	} catch (e: any) {
     		this.logger.error("got error " + e);
     		throw new AppError("updateItem - failed ", 500);
