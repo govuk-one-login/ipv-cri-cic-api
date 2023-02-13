@@ -18,12 +18,12 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-        
+
       - name: Setup SAM
         uses: aws-actions/setup-sam@v2
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.DEV_CRI_V1_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
@@ -49,7 +49,7 @@ jobs:
             signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
             working-directory: infrastructure
             template-file: template.yaml
-      
+
       # - name: SAM package
       #   run: |
       #     sam package \
