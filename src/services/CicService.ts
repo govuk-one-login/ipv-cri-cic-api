@@ -3,10 +3,9 @@ import { CicSession } from "../models/CicSession";
 import { SessionItem } from "../models/SessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AppError } from "../utils/AppError";
-import { createDynamoDbClient } from "../utils/DynamoDBFactory";
-import {DynamoDBDocument, GetCommand, QueryCommand, QueryCommandInput, UpdateCommand} from "@aws-sdk/lib-dynamodb";
-import { ExternalCode } from "../vendor/ExternalCode";
+import { DynamoDBDocument, GetCommand, QueryCommand, QueryCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
+import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 
 
 export class CicService {
@@ -18,19 +17,15 @@ export class CicService {
 
     private static instance: CicService;
 
-    private static externalInstance: ExternalCode;
-
-    constructor(tableName: any, logger: Logger) {
+    constructor(tableName: any, logger: Logger, dynamoDbClient: DynamoDBDocument) {
     	this.tableName = tableName;
-    	this.dynamo = createDynamoDbClient();
+    	this.dynamo = dynamoDbClient;
     	this.logger = logger;
-    	CicService.externalInstance = new ExternalCode();
     }
 
-
-    static getInstance(tableName: string, logger: Logger): CicService {
+    static getInstance(tableName: string, logger: Logger, dynamoDbClient: DynamoDBDocument): CicService {
     	if (!CicService.instance) {
-    		CicService.instance = new CicService(tableName, logger);
+    		CicService.instance = new CicService(tableName, logger, dynamoDbClient);
     	}
     	return CicService.instance;
     }
@@ -92,7 +87,7 @@ export class CicService {
     		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry",
     		ExpressionAttributeValues: {
     			":authCode": uuid,
-    			":authCodeExpiry": CicService.externalInstance.getAuthorizationCodeExpirationEpoch(),
+    			":authCodeExpiry": getAuthorizationCodeExpirationEpoch(process.env.AUTHORIZATION_CODE_TTL),
     		},
     	});
 
@@ -107,27 +102,27 @@ export class CicService {
     	}
     }
 
-	async getSessionByAccessToken (accessToken: string ): Promise<SessionItem | undefined> {
-		this.logger.debug("Table name " + this.tableName);
-		const getSessionCommand : QueryCommandInput = {
-			IndexName: "access-token-index",
-			KeyConditionExpression: "accessToken = :accessToken",
-			ExpressionAttributeValues: { ":accessToken" : accessToken },
-			TableName: this.tableName,
-			Limit: 1,
-		};
-		let session;
-		try {
-			session = await this.dynamo.send(new QueryCommand(getSessionCommand))
-			this.logger.info("Found Session: " + JSON.stringify(session.Items));
-		} catch (e: any) {
-			this.logger.error("getSessionByAccessToken - failed executing get from dynamodb: " + e);
-			throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
-		}
+    async getSessionByAccessToken(accessToken: string ): Promise<SessionItem | undefined> {
+    	this.logger.debug("Table name " + this.tableName);
+    	const getSessionCommand : QueryCommandInput = {
+    		IndexName: "access-token-index",
+    		KeyConditionExpression: "accessToken = :accessToken",
+    		ExpressionAttributeValues: { ":accessToken" : accessToken },
+    		TableName: this.tableName,
+    		Limit: 1,
+    	};
+    	let session;
+    	try {
+    		session = await this.dynamo.send(new QueryCommand(getSessionCommand));
+    		this.logger.info("Found Session: " + JSON.stringify(session.Items));
+    	} catch (e: any) {
+    		this.logger.error("getSessionByAccessToken - failed executing get from dynamodb: " + e);
+    		throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
+    	}
 
-		if (session.Items) {
-			const sessionId : string = session.Items[0].sessionId;
-			return this.getSessionById(sessionId);
-		}
-	}
+    	if (session.Items) {
+    		const sessionId : string = session.Items[0].sessionId;
+    		return this.getSessionById(sessionId);
+    	}
+    }
 }

@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
-import { RequestProcessor } from "./services/RequestProcessor";
+import { ClaimedIdRequestProcessor } from "./services/ClaimedIdRequestProcessor";
 import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
@@ -35,7 +35,7 @@ class ClaimedIdentity implements LambdaInterface {
 						}
 
 						if (event.body) {
-							return await RequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+							return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
 						} else {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 						}

@@ -1,4 +1,4 @@
-import { RequestProcessor } from "../../../services/RequestProcessor";
+import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -9,7 +9,7 @@ import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 
-let requestProcessorTest: RequestProcessor;
+let requestProcessorTest: ClaimedIdRequestProcessor;
 const mockCicService = mock<CicService>();
 
 const logger = new Logger({
@@ -20,7 +20,7 @@ const metrics = new Metrics({ namespace: "CIC" });
 
 describe("RequestProcessor", () => {
 	beforeAll(() => {
-		requestProcessorTest = new RequestProcessor(logger, metrics);
+		requestProcessorTest = new ClaimedIdRequestProcessor(logger, metrics);
 		// @ts-ignore
 		requestProcessorTest.cicService = mockCicService;
 	});

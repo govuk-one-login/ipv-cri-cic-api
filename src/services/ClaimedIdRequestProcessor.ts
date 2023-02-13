@@ -9,11 +9,13 @@ import { ValidationHelper } from "../utils/ValidationHelper";
 import { CicResponse } from "../utils/CicResponse";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
+import { absoluteTimeNow } from "../utils/DateTimeUtils";
+import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 
-export class RequestProcessor {
-	private static instance: RequestProcessor;
+export class ClaimedIdRequestProcessor {
+	private static instance: ClaimedIdRequestProcessor;
 
 	private readonly logger: Logger;
 
@@ -34,14 +36,14 @@ export class RequestProcessor {
 
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger);
+		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics): RequestProcessor {
-		if (!RequestProcessor.instance) {
-			RequestProcessor.instance = new RequestProcessor(logger, metrics);
+	static getInstance(logger: Logger, metrics: Metrics): ClaimedIdRequestProcessor {
+		if (!ClaimedIdRequestProcessor.instance) {
+			ClaimedIdRequestProcessor.instance = new ClaimedIdRequestProcessor(logger, metrics);
 		}
-		return RequestProcessor.instance;
+		return ClaimedIdRequestProcessor.instance;
 	}
 
 	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<Response> {
@@ -59,6 +61,10 @@ export class RequestProcessor {
 		const session = await this.cicService.getSessionById(sessionId);
 
 		if (session != null) {
+			if (session.expiryDate < absoluteTimeNow()) {
+				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
+			}
+
 			this.logger.info("found session", JSON.stringify(session));
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 			this.logger.debug("Session is " + JSON.stringify(session));
@@ -67,7 +73,7 @@ export class RequestProcessor {
 			await this.cicService.setAuthorizationCode(sessionId, authCode);
 			const cicResp = new CicResponse({
 				authorizationCode: authCode,
-				redirectUri: session?.redirectUri,
+				redirect_uri: session?.redirectUri,
 				state: session?.state,
 			});
 

@@ -17,7 +17,6 @@ export const createDynamoDbClient = () => {
 		wrapNumbers: false,
 	};
 	const translateConfig = { marshallOptions, unmarshallOptions };
-	console.log("region is " + awsRegion);
-	const dbClient = new DynamoDBClient({ region: "eu-west-2", credentials: fromEnv() });
+	const dbClient = new DynamoDBClient({ region: awsRegion, credentials: fromEnv() });
 	return DynamoDBDocument.from(dbClient, translateConfig);
 };
