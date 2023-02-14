@@ -2,9 +2,9 @@ import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProce
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
-import {MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO} from "../data/userInfo-events";
+import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
 import { CicService } from "../../../services/CicService";
-import { VerifiableCredentialService} from "../../../vendor/VerifiableCredentialService";
+import { VerifiableCredentialService } from "../../../vendor/VerifiableCredentialService";
 import { SessionItem } from "../../../models/SessionItem";
 import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -45,7 +45,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
-		const mockSignedJWT = "sewgwey346hdfhdh236"
+		const mockSignedJWT = "sewgwey346hdfhdh236";
 		mockCicService.getSessionByAccessToken.mockResolvedValue(mockSession);
 		mockVerifiableCredService.generateSignedVerifiableCredentialJwt.mockResolvedValue(mockSignedJWT);
 
@@ -55,7 +55,7 @@ describe("UserInfoRequestProcessor", () => {
 
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "ipv-core",
-			"https://vocab.account.gov.uk/v1/credentialJWT": [mockSignedJWT]
+			"https://vocab.account.gov.uk/v1/credentialJWT": [mockSignedJWT],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});

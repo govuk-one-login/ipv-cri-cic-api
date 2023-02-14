@@ -4,6 +4,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { SessionItem } from "../models/SessionItem";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { absoluteTimeNow } from "./DateTimeUtils";
 
 const BEARER = "Bearer ";
 
@@ -47,7 +48,7 @@ export class ValidationHelper {
 			const errorDetails = this.getErrors(errors);
 			console.log(`${event.headers}`);
 			console.log("**** Error validating Authentication Access token from headers" + "   " + JSON.stringify(errorDetails));
-			throw new AppError("Failed to Validate - Authentication header" + errorDetails, HttpCodesEnum.BAD_REQUEST );
+			throw new AppError("Failed to Validate - Authentication header" + errorDetails, HttpCodesEnum.BAD_REQUEST);
 		}
 	}
 
@@ -70,4 +71,42 @@ export class ValidationHelper {
 		}
 		return isValid;
 	}
+
+	//Viveak Stuff
+	isClientIdInJwtValid = (
+		queryParams: APIGatewayProxyEventQueryStringParameters,
+		jwtPayload: JwtPayload,
+	): boolean => {
+		return jwtPayload.client_id === queryParams.client_id;
+	};
+
+	isResponseTypeQueryParamValid = (
+		queryParam: APIGatewayProxyEventQueryStringParameters,
+	): boolean => {
+		return queryParam?.response_type === "code";
+	};
+
+	isResponseTypeInJwtValid = (
+		queryParam: APIGatewayProxyEventQueryStringParameters,
+		jwtClaim: JwtPayload,
+	): boolean => {
+		return queryParam.response_type === jwtClaim.response_type;
+	};
+
+	isJwtComplete = (payload: JwtPayload): boolean => {
+		const clientId = payload.client_id;
+		const responseType = payload.response_type;
+		const journeyId = payload.govuk_signin_journey_id;
+		const { iss, sub, aud, exp, nbf, state } = payload;
+		const mandatoryJwtValues = [iss, sub, aud, exp, nbf, state, clientId, responseType, journeyId];
+		return !mandatoryJwtValues.some((value) => value === undefined);
+	};
+
+	isJwtExpired = (jwtPayload: JwtPayload): boolean => {
+		return (jwtPayload.exp == null) || (absoluteTimeNow() > jwtPayload.exp);
+	};
+
+	isJwtNotYetValid = (jwtPayload: JwtPayload): boolean => {
+		return jwtPayload.nbf == null || (absoluteTimeNow() < jwtPayload.nbf);
+	};
 }

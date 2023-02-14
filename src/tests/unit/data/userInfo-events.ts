@@ -1,5 +1,5 @@
 export const VALID_USERINFO = {
-	body:'',
+	body:"",
 	httpMethod: "POST",
 	headers: { Authorization: "Bearer AbCdEf123456" },
 	isBase64Encoded: false,
@@ -44,12 +44,12 @@ export const VALID_USERINFO = {
 		resourcePath: "/userInfo",
 		stage: "dev",
 	},
-		resource: "/userInfo",
-		stageVariables: {},
+	resource: "/userInfo",
+	stageVariables: {},
 };
 
 export const MISSING_AUTH_HEADER_USERINFO = {
-	body:'',
+	body:"",
 	httpMethod: "POST",
 	headers: {},
 	isBase64Encoded: false,
@@ -98,7 +98,7 @@ export const MISSING_AUTH_HEADER_USERINFO = {
 	stageVariables: {},
 };
 export const RESOURCE_NOT_FOUND = {
-	body:'',
+	body:"",
 	httpMethod: "POST",
 	headers: { Authorization: "Bearer AbCdEf123456" },
 	isBase64Encoded: false,
