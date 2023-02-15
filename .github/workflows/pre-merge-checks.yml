@@ -6,6 +6,8 @@ on:
       - reopened
       - ready_for_review
       - synchronize
+    paths-ignore:
+      - 'infra-l2-dynamo/**'
 
 jobs:
 
