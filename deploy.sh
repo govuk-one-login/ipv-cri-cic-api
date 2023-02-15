@@ -9,8 +9,8 @@ echo "😱 stack name expected as first argument, e.g. ./deploy.sh cic-cri-api-v
 exit 1
 fi
 
-sam validate -t infrastructure/template.yaml
-sam build -t infrastructure/template.yaml
+sam validate -t deploy/template.yaml
+sam build -t deploy/template.yaml
 sam deploy --stack-name "$stack_name" \
    --no-fail-on-empty-changeset \
    --no-confirm-changeset \
