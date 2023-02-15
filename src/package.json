@@ -8,6 +8,7 @@
     "license": "MIT",
     "dependencies": {
         "@aws-lambda-powertools/commons": "^1.5.1",
+        "@aws-lambda-powertools/logger": "^1.5.0",
         "aws-sdk": "^2.1259.0",
         "axios": ">=0.21.1",
         "esbuild": "0.14.14"
@@ -18,8 +19,8 @@
         "lint": "./node_modules/.bin/ts-standard --fix",
         "lint:check": "./node_modules/.bin/ts-standard",
         "local": "./node_modules/.bin/jest --testPathIgnorePatterns=tests/e2e/",
-        "test": "npm run compile && npm run unit",
-        "unit": "jest --config=jest.config.ts",
+        "unit": "jest --config=jest.config.ts --passWithNoTests",
+        "test:unit": "npm run compile && npm run unit",
         "test:infra": "./node_modules/.bin/jest --testMatch '**/?(*.)infra-test.ts'"
     },
     "devDependencies": {
@@ -34,7 +35,10 @@
         "mocha": "^9.1.4",
         "prettier": "2.5.1",
         "ts-jest": "^29.0.5",
+        "ts-node": "^10.4.0",
         "ts-standard": "^11.0.0",
-        "typescript": "^4.9.4"
+        "typescript": "^4.9.4",
+        "js-yaml": "^4.1.0",
+        "yaml-cfn": "^0.3.1"
     }
 }

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../app.ts"],
+  "sourcesContent": ["\nimport { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'\nimport { LambdaInterface } from '@aws-lambda-powertools/commons'\n\nclass AccessTokenLambda implements LambdaInterface {\n  public async handler (event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {\n    console.log('Hello world!')\n    return {\n      statusCode: 200,\n      body: 'Hello world'\n    }\n  }\n}\n\nconst handlerClass = new AccessTokenLambda()\nexport const lambdaHandler = handlerClass.handler.bind(handlerClass)\n"],
+  "mappings": "MAIA,WAAmD,MACpC,SAAS,EAA6B,EAA8C,CAC/F,eAAQ,IAAI,gBACL,CACL,WAAY,IACZ,KAAM,iBAKN,EAAe,GAAI,GACZ,EAAgB,EAAa,QAAQ,KAAK",
+  "names": []
+}
