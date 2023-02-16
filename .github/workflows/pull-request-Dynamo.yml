@@ -1,6 +1,6 @@
-name: Pull Request CI
+name: Pull Request CI - Dynamo Infra
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
+  # Triggers the workflow on push or pull request events but only for the "main" branch.
   pull_request:
     branches:
       - main
@@ -9,7 +9,7 @@ on:
       - reopened
       - ready_for_review
       - synchronize
-    paths-ignore:
+    paths:
       - 'infra-l2-dynamo/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./src/
+        working-directory: ./infra-l2-dynamo/
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -60,11 +60,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run lint
-        run: npm run lint:check
-
-      - name: Run Tests
-        run: npm run test:unit
       - name: Run Infra checks
         run: npm run test:infra
   sam-validate:
@@ -73,7 +68,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./deploy/
+        working-directory: ./infra-l2-dynamo/
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
