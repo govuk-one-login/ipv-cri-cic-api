@@ -8,6 +8,7 @@ Recommended global installed packages:
 - nvm
 - python3
 - pre-commit (installed via pip3)
+- sam cli
 
 ## Dependencies
 

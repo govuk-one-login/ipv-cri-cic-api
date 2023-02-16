@@ -17,7 +17,7 @@ Parameters:
       - "staging"
       - "integration"
       - "production"
-    ConstraintDescription: Please ensure that your Environment variable is set to either dev, build, staging, integration or production.
+    ConstraintDescription: Ensure environment variable is set to one of dev, build, staging, integration or production.
   PermissionsBoundary:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
@@ -66,9 +66,9 @@ Mappings:
 
 Conditions:
   IsProdLikeEnvironment: !Or
-    - !Equals [ !Ref Environment, staging ]
-    - !Equals [ !Ref Environment, integration ]
-    - !Equals [ !Ref Environment, production ]
+    - !Equals [!Ref Environment, staging]
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -87,6 +87,7 @@ Conditions:
 
 Globals:
   Function:
+    Runtime: nodejs18.x
     VpcConfig:
       SecurityGroupIds:
         - !GetAtt LambdaEgressSecurityGroup.GroupId
@@ -95,8 +96,6 @@ Globals:
             "Fn::Sub": "${VpcStackName}-PrivateSubnetIdA"
         - Fn::ImportValue:
             "Fn::Sub": "${VpcStackName}-PrivateSubnetIdB"
-#        - Fn::ImportValue:
-#            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdC"
     PermissionsBoundary: !If
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
@@ -113,16 +112,19 @@ Globals:
     Environment:
       Variables:
         # These should always be alphabetically organised.
-        AWS_STACK_NAME: !Sub ${AWS::StackName}  # The AWS Stack Name, as passed into the template.
-        COMMON_PARAMETER_NAME_PREFIX: !Ref CommonStackName  # What is this? @TODO
-        POWERTOOLS_LOG_LEVEL: INFO  # The LogLevel for the AWS PowerTools LogHelper
+        AWS_STACK_NAME: !Sub ${AWS::StackName} # The AWS Stack Name, as passed into the template.
+        COMMON_PARAMETER_NAME_PREFIX: !Ref CommonStackName # What is this? @TODO
+        POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
-        SECRET_PREFIX: !If [UseSecretPrefix, !Ref SecretPrefix , !Ref AWS::StackName]  # What is this? @TODO
+        SECRET_PREFIX: !If [
+            UseSecretPrefix,
+            !Ref SecretPrefix,
+            !Ref AWS::StackName,
+          ] # What is this? @TODO
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
 
 Resources:
-
   LambdaEgressSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -156,96 +158,6 @@ Resources:
           title: !Sub "${AWS::StackName} - CIC Credential Issuer Private API"
 
         paths:
-          /userInfo:
-            post:
-              operationId: postUserInfo
-              summary: Retrieve the JWT contained the Verified Credential(s) for a given Auth Session.
-              description: >-
-                Returns a JWT containing the user information and associated verified credentials as supplied by the
-                biometrics vendor. Requires an access token as issued by `POST /token`, and can only be called once.
-              tags:
-                - Backend - CI CRI specific
-              parameters:
-                - $ref: '#/components/parameters/Authorization'
-              responses:
-                "200":
-                  description: >-
-                    OK - Signed Verified Credential returned as a JWT
-                  headers:
-                    Cache-Control:
-                      schema:
-                        type: "string"
-                    Content-Type:
-                      schema:
-                        type: "string"
-                    Strict-Transport-Security:
-                      schema:
-                        type: "string"
-                    X-Content-Type-Options:
-                      schema:
-                        type: "string"
-                    X-Frame-Options:
-                      schema:
-                        type: "string"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/UserInfoJwt"
-                "401":
-                  description: Unauthorized
-                  headers:
-                    Cache-Control:
-                      schema:
-                        type: "string"
-                    Content-Type:
-                      schema:
-                        type: "string"
-                    Strict-Transport-Security:
-                      schema:
-                        type: "string"
-                    X-Content-Type-Options:
-                      schema:
-                        type: "string"
-                    X-Frame-Options:
-                      schema:
-                        type: "string"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/OAuthErrorResponse"
-                "500":
-                  description: Internal Server Error
-                  headers:
-                    Cache-Control:
-                      schema:
-                        type: "string"
-                    Content-Type:
-                      schema:
-                        type: "string"
-                    Strict-Transport-Security:
-                      schema:
-                        type: "string"
-                    X-Content-Type-Options:
-                      schema:
-                        type: "string"
-                    X-Frame-Options:
-                      schema:
-                        type: "string"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/OAuthErrorResponse"
-              x-amazon-apigateway-request-validator: "both"
-              x-amazon-apigateway-integration:
-                httpMethod: "POST"
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserInfoFunction.Arn}:live/invocations
-                responses:
-                  default:
-                    statusCode: "200"
-                passthroughBehavior: "when_no_match"
-                contentHandling: "CONVERT_TO_TEXT"
-                type: "aws_proxy"
           /claimedIdentity:
             post:
               parameters:
@@ -272,12 +184,12 @@ Resources:
                   content:
                     application/json:
                       schema:
-                        $ref: "#/components/schemas/HelloWorld"
+                        $ref: "#/components/schemas/SessionId"
               x-amazon-apigateway-request-validator: "both"
               x-amazon-apigateway-integration:
                 httpMethod: "POST"
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CICHelloFunction.Arn}:live/invocations
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClaimedIdentityFunction.Arn}:live/invocations
                 responses:
                   default:
                     statusCode: "200"
@@ -286,111 +198,23 @@ Resources:
                 type: "aws_proxy"
 
         components:
-          parameters:
-            SessionHeader:
-              name: session-id
-              in: header
-              description: A UUID generated by the Session API to act as a primary key for the SessionTable in DynamoDB
-              required: true
-              schema:
-                type: string
           schemas:
-            OAuthErrorResponse:
-              type: object
-              additionalProperties: true
-              required:
-                - error
-              properties:
-                error:
-                  type: string
-                  enum:
-                    - access_denied
-                    - invalid_request
-                    - invalid_client
-                    - invalid_grant
-                    - unauthorized_client
-                    - unsupported_grant_type
-                    - invalid_scope
-                    - server_error
-                    - temporarily_unavailable
-                    - unsupported_response_type
-                    - authorization_pending
-                  example: access_denied
-                  description: >-
-                    A single ASCII [USASCII] error code from the following
-                error_description:
-                  type: string
-                  example: Access was denied as auth code was not recognised
-                  description: >-
-                    Human-readable ASCII [USASCII] text providing additional information, used to assist the
-                    client developer in understanding the error that occurred.
-                error_uri:
-                  type: string
-                  example: https://example.com/error1.html
-                  description: >-
-                    A URI identifying a human-readable web page with information about the error, used to
-                    provide the client developer with additional information about the error.
-            UserInfoJwt:
-              type: object
-              additionalProperties: true
-              required:
-                - sub
-                - 'https://vocab.account.gov.uk/v1/credentialJWT'
-              properties:
-                sub:
-                  type: string
-                  format: uuid
-                  description: >-
-                    `sub` value - this should be the same as encoded in the signed JWT
-                  example: 22222222-2222-2222-2222-222222222222
-                'https://vocab.account.gov.uk/v1/credentialJWT':
-                  type: string
-                  description: >-
-                    Signed JWT response with user credentials including the outcome from the biometric checks
-            Authorization:
-              required:
-                - "client_id"
-                - "request"
-              type: "object"
-              properties:
-                client_id:
-                  type: "string"
-                  minLength: 1
-                  example: "ipv-core-stub"
-                request:
-                  type: "string"
-            AuthorizationResponse:
-              required:
-                - "redirect_uri"
-                - "code"
-                - "state"
-              type: "object"
-              properties:
-                code:
-                  type: "string"
-                  example: "981bb74c-3b5e-462e-ba3a-abf868e5da68"
-                state:
-                  type: "string"
-                  example: "state"
-                  minLength: 1
-                redirect_uri:
-                  type: "string"
-                  format: "uri"
-                  example: "https://di-ipv-core-stub.london.cloudapps.digital/callback"
             Error:
               title: "Error Schema"
               type: "object"
               properties:
                 message:
                   type: "string"
-            Session:
-              required:
-                - "session_id"
-              type: "object"
-              properties:
-                session_id:
-                  type: "string"
-
+            SessionId:
+              in: header
+              name: x-govuk-signin-session-id
+              schema:
+                type: string
+                format: uuid
+              example: 44444444-4444-4444-4444-444444444444
+              description: >-
+                `sessionId` as returned by `POST /session` endpoint
+              required: true
 
         x-amazon-apigateway-request-validators:
           both:
@@ -409,7 +233,13 @@ Resources:
   CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+      # KmsKeyId: !GetAtt HelloWorldKmsKey.Arn
       Tags:
         - Key: Product
           Value: GOV.UK Sign In
@@ -426,91 +256,26 @@ Resources:
 
   ### Function Definition
 
-  ## UserInfo
-  UserInfoFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "User-Info-${AWS::StackName}"
-      Handler: UserInfoHandler.lambdaHandler
-      CodeUri: ../src/
-      Runtime: nodejs18.x
-      Environment:
-        Variables:
-          POWERTOOLS_SERVICE_NAME: F2F CRI
-          SESSION_TABLE: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-          EXAMPLE: !FindInMap [ EnvironmentVariables, !Ref Environment, EXAMPLE ]
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - AWSXrayWriteOnlyAccess
-        - DynamoDBWritePolicy:
-            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-        - DynamoDBReadPolicy:
-            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-        - Statement:
-            - Sid: KMSSignPolicy
-              Effect: Allow
-              Action:
-                - kms:Sign
-                - kms:Verify
-              Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/{{resolve:ssm:/${CommonStackName}/verifiableCredentialKmsSigningKeyId}}"
-      Events:
-        userInfo:
-          Type: Api
-          Properties:
-            Path: /userInfo
-            Method: post
-            RestApiId: !Ref CICRestApi
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
-        EntryPoints:
-          - UserInfoHandler.ts
-
-  UserInfoFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/User-Info-${AWS::StackName}"
-      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
-
-  UserInfoFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref UserInfoFunctionLogGroup
-
-  UserInfoFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref UserInfoFunction
-      Principal: apigateway.amazonaws.com
-
   # ClaimedIdentity
-  CICHelloFunction:
+  ClaimedIdentityFunction:
     Type: AWS::Serverless::Function
-    DependsOn: CICHelloFunctionLogGroup
+    DependsOn: ClaimedIdentityFunctionLogGroup
     Properties:
-      FunctionName: !Sub "CIC-Hello-${AWS::StackName}"
+      FunctionName: !Sub "CIC-ClaimedIdentity-${AWS::StackName}"
       Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
-      Runtime: nodejs18.x
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: F2F CRI
           SESSION_TABLE: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-          EXAMPLE: !FindInMap [ EnvironmentVariables, !Ref Environment, EXAMPLE ]
+          EXAMPLE: !FindInMap [EnvironmentVariables, !Ref Environment, EXAMPLE]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - DynamoDBWritePolicy:
-              TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
         - DynamoDBReadPolicy:
-              TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
       Events:
         claimedIdentity:
           Type: Api
@@ -525,31 +290,35 @@ Resources:
         Target: "es2020"
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
-        - ClaimedIdentityHandler.ts
+          - ClaimedIdentityHandler.ts
 
-  CICHelloFunctionLogGroup:
+  ClaimedIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/CIC-Hello-${AWS::StackName}"
-      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+      LogGroupName: !Sub "/aws/lambda/CIC-ClaimedIdentity-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
 
-  CICHelloFunctionLogsSubscriptionFilterCSLS:
+  ClaimedIdentityFunctionLogsSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProdLikeEnvironment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
-      LogGroupName: !Ref CICHelloFunctionLogGroup
+      LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
 
-  CICHelloFunctionPermission:
+  ClaimedIdentityFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref CICHelloFunction
+      FunctionName: !Ref ClaimedIdentityFunction
       Principal: apigateway.amazonaws.com
 
 Outputs:
-
   CICApiGatewayId:
     Description: "API GatewayID of the CIC CRI API"
     Value: !Sub "${CICRestApi}"

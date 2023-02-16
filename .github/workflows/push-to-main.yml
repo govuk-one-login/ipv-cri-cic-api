@@ -1,11 +1,12 @@
 name: Push to Main CI
 on:
-  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches:
       - main
     paths-ignore:
       - 'infra-l2-dynamo/**'
+      - 'infra-l2-kms/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -37,19 +38,34 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_V1_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Generate code signing config
+        id: signing
+        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+        with:
+          template: ./template.yaml
+          profile: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
+
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
 
       - name: SAM Build
         run: sam build -t template.yaml
 
-      - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v3
-        with:
-            artifact-bucket-name: ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
-            working-directory: deploy
-            template-file: template.yaml
+      - name: SAM package
+        run: |
+          sam package \
+            ${{ steps.signing.outputs.signing_config }} \
+            --s3-bucket ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --region ${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
+
+      - name: Zip the CloudFormation template
+        run: zip template.zip cf-template.yaml
+
+      - name: Upload zipped CloudFormation artifact to S3
+        env:
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
+
   deploy-to-build:
     name: Validate & Deploy SAM template to Build Envrionment
     runs-on: ubuntu-latest
@@ -61,7 +77,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Setup SAM
+      - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
 
       - name: Assume temporary AWS role
@@ -70,16 +86,30 @@ jobs:
           role-to-assume: ${{ secrets.BUILD_CRI_V1_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Generate code signing config
+        id: signing
+        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+        with:
+          template: ./template.yaml
+          profile: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
+
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
 
       - name: SAM Build
         run: sam build -t template.yaml
 
-      - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v3
-        with:
-            artifact-bucket-name: ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
-            working-directory: deploy
-            template-file: template.yaml
+      - name: SAM package
+        run: |
+          sam package \
+            ${{ steps.signing.outputs.signing_config }} \
+            --s3-bucket ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --region ${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
+
+      - name: Zip the CloudFormation template
+        run: zip template.zip cf-template.yaml
+
+      - name: Upload zipped CloudFormation artifact to S3
+        env:
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"

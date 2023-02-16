@@ -1,4 +1,4 @@
-# Claimed Idenity Collector
+# Claimed Identity Collector
 
 Claimed identity collector
 

@@ -4,7 +4,7 @@
     "description": "OneLogin CIC CRI",
     "repository": "https://github.com/alphagov/di-ipv-cri-cic-api",
     "author": "GDS",
-    "main": "app.js",
+    "main": "ClaimedIdentityHandler.ts",
     "license": "MIT",
     "dependencies": {
         "@aws-lambda-powertools/logger": "1.5.1",
@@ -22,7 +22,7 @@
     "scripts": {
         "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit",
         "test:unit": "npm run compile && npm run unit",
-        "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c .eslintrc.js --ext .ts .",
+        "lint:fix": "./node_modules/.bin/ts-standard --fix",
         "compile": "./node_modules/.bin/tsc",
         "lint": "eslint --output-file ./reports/eslint/reportFile.html --format html -c .eslintrc.js --ext .ts ./",
         "lint:check": "./node_modules/.bin/ts-standard",
