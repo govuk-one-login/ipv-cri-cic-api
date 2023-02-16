@@ -9,7 +9,7 @@ import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 
-let requestProcessorTest: ClaimedIdRequestProcessor;
+let claimedIdRequestProcessorTest: ClaimedIdRequestProcessor;
 const mockCicService = mock<CicService>();
 
 const logger = new Logger({
@@ -59,11 +59,11 @@ class Session implements ISessionItem {
 }
 
 
-describe("RequestProcessor", () => {
+describe("ClaimedIdRequestProcessor", () => {
 	beforeAll(() => {
-		requestProcessorTest = new ClaimedIdRequestProcessor(logger, metrics);
+		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor(logger, metrics);
 		// @ts-ignore
-		requestProcessorTest.cicService = mockCicService;
+		claimedIdRequestProcessorTest.cicService = mockCicService;
 	});
 
 	beforeEach(() => {
@@ -73,7 +73,7 @@ describe("RequestProcessor", () => {
 	it("Return successful response with 200 OK when session is found", async () => {
 		mockCicService.getSessionById.mockResolvedValue(new Session());
 
-		const out: Response = await requestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 		const cicResp = new CicResponse(JSON.parse(out.body));
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
@@ -91,7 +91,7 @@ describe("RequestProcessor", () => {
 		sess.expiryDate = 1675458564;
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
-		const out: Response = await requestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 		//const cicResp = new CicResponse(JSON.parse(out.body));
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
@@ -102,7 +102,7 @@ describe("RequestProcessor", () => {
 	it("Return 401 when session with that session id not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await requestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);

@@ -4,17 +4,17 @@
  */
 
 export default {
-    transform: {
-        "^.+\\.ts?$": "ts-jest",
-    },
-    clearMocks: true,
-    collectCoverage: true,
-    coverageDirectory: "coverage",
-    coverageProvider: "v8",
-    coveragePathIgnorePatterns: ["config.ts", "node_modules/"],
-    testMatch: ["**/tests/**/*.test.ts"],
-    setupFiles: [
-        "./jest.setup.ts"
-    ],
-    "testEnvironment": "node"
-};
+  transform: {
+    '^.+\\.ts?$': 'ts-jest'
+  },
+  clearMocks: true,
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
+  coveragePathIgnorePatterns: ['config.ts', 'node_modules/'],
+  testMatch: ['**/tests/**/*.test.ts'],
+  setupFiles: [
+    './jest.setup.ts'
+  ],
+  testEnvironment: 'node'
+}

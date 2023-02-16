@@ -1,2 +1,4 @@
 node_modules
 .aws-sam
+dist
+**/*.infra-test.ts

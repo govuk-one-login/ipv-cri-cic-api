@@ -1,7 +1,7 @@
 export const VALID_CLAIMEDID = {
 	httpMethod: "POST",
 	body: '{"message": "hello world", "fullName": "TestUser","dateOfBirth": "1970-01-01", "documentSelected": "UK Passport", "dateOfExpiry": "2027-01-01"}',
-	headers: { session_id: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
+	headers: { "x-govuk-signin-session-id": "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},
 	multiValueQueryStringParameters: {},

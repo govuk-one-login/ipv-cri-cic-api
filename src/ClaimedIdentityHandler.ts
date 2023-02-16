@@ -7,16 +7,18 @@ import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { HttpVerbsEnum } from "./utils/HttpVerbsEnum";
+import { Constants } from "./utils/Constants";
 
-const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : "CIC-CRI";
-const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
+const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CLAIMEDID_METRICS_NAMESPACE;
+const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : Constants.DEBUG;
 
 const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
-	serviceName: "ClaimedIdHandler",
+	serviceName: Constants.CLAIMEDID_LOGGER_SVC_NAME,
 });
 
-const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: "ClaimedIdentity" });
+const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: Constants.CLAIMEDID_METRICS_SVC_NAME });
 
 class ClaimedIdentity implements LambdaInterface {
 
@@ -24,20 +26,25 @@ class ClaimedIdentity implements LambdaInterface {
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 		switch (event.resource) {
 			case ResourcesEnum.CLAIMEDIDENTITY:
-				if (event.httpMethod === "POST") {
+				if (event.httpMethod === HttpVerbsEnum.POST) {
+					let sessionId;
 					try {
-						logger.debug("metrics is", { metrics });
 						logger.debug("Event received", { event });
-						const sessionId = event.headers.session_id as string;
-						logger.debug("Session id", { sessionId });
-						if (!event.headers || !sessionId) {
-							return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session_id is required");
+						if (event.headers) {
+							sessionId = event.headers[Constants.SESSION_ID];
+							logger.debug("Session id", { sessionId });
+						} else {
+							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 						}
 
-						if (event.body) {
-							return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+						if (sessionId) {
+							if (event.body) {
+								return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+							} else {
+								return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
+							}
 						} else {
-							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
+							return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required");
 						}
 
 					} catch (err: any) {
