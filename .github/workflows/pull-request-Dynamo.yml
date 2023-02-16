@@ -1,6 +1,6 @@
 name: Pull Request CI - Dynamo Infra
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
+  # Triggers the workflow on push or pull request events but only for the "main" branch.
   pull_request:
     branches:
       - main
