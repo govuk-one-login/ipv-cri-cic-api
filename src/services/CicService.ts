@@ -7,7 +7,6 @@ import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamo
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 
-
 export class CicService {
     readonly tableName: string;
 
@@ -43,7 +42,7 @@ export class CicService {
     	try {
     		session = await this.dynamo.send(getSessionCommand);
     	} catch (e: any) {
-    		this.logger.error("getSessionById - failed executing get from dynamodb: " + e);
+    		this.logger.error({ message: "getSessionById - failed executing get from dynamodb:", e });
     		throw new AppError("Error retrieving Session", HttpCodesEnum.SERVER_ERROR);
     	}
 
@@ -54,7 +53,6 @@ export class CicService {
     }
 
     async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
-    	this.logger.debug(sessionId);
 
     	const saveCICCommand: any = new UpdateCommand({
     		TableName: this.tableName,
@@ -69,12 +67,12 @@ export class CicService {
     		},
     	});
 
-    	this.logger.info("updating CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+    	this.logger.info({ message: "updating CIC data in dynamodb", saveCICCommand });
     	try {
     		await this.dynamo.send(saveCICCommand);
-    		this.logger.info("updated CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+    		this.logger.info({ message: "updated CIC data in dynamodb" });
     	} catch (error) {
-    		this.logger.error("got error " + error);
+    		this.logger.error({ message: "got error saving CIC data", error });
     		throw new AppError("updateItem - failed ", 500);
     	}
     }
@@ -91,13 +89,13 @@ export class CicService {
     		},
     	});
 
-    	this.logger.info("updating authorizationCode dynamodb" + JSON.stringify(updateSessionCommand));
+    	this.logger.info({ message: "updating authorizationCode dynamodb", updateSessionCommand });
 
     	try {
     		await this.dynamo.send(updateSessionCommand);
-    		this.logger.info("updated authorizationCode in dynamodb" + JSON.stringify(updateSessionCommand));
+    		this.logger.info({ message: "updated authorizationCode in dynamodb" });
     	} catch (e: any) {
-    		this.logger.error("got error " + e);
+    		this.logger.error({ message: "got error setting auth code", e });
     		throw new AppError("updateItem - failed ", 500);
     	}
     }

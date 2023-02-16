@@ -46,16 +46,15 @@ class Session implements ISessionItem {
 
 	authorizationCode = "1234";
 
-	cicSession = {
-		fullName:"Test",
-		dateOfBirth:"data.dateOfBirth!",
-		documentSelected: "Passport",
-		dateOfExpiry: "data.dateOfExpiry!",
-	};
-
 	sessionId = "01333e01-dde3-412f-a484-e9f23b06be3e";
 
+	dateOfBirth = "";
 
+	dateOfExpiry = "";
+
+	documentSelected = "";
+
+	fullName = "";
 }
 
 

@@ -5,7 +5,7 @@ export interface ICicSession {
 	dateOfExpiry: string;
 }
 
-export interface ISessionItem {
+export interface ISessionItem extends ICicSession {
 	sessionId: string;
 	clientId: string;
 	clientSessionId: string;
@@ -21,5 +21,4 @@ export interface ISessionItem {
 	persistentSessionId: string;
 	clientIpAddress: string;
 	attemptCount: number;
-	cicSession: ICicSession;
 }

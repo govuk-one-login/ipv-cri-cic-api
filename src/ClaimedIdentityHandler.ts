@@ -29,10 +29,10 @@ class ClaimedIdentity implements LambdaInterface {
 				if (event.httpMethod === HttpVerbsEnum.POST) {
 					let sessionId;
 					try {
-						logger.debug("Event received", { event });
+						logger.info("Event received", { event });
 						if (event.headers) {
 							sessionId = event.headers[Constants.SESSION_ID];
-							logger.debug("Session id", { sessionId });
+							logger.info({ message: "Session id", sessionId });
 						} else {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 						}
@@ -48,7 +48,7 @@ class ClaimedIdentity implements LambdaInterface {
 						}
 
 					} catch (err: any) {
-						logger.error("An error has occurred. " + err);
+						logger.error({ message: "An error has occurred.", err });
 						if (err instanceof  AppError) {
 							return new Response(err.statusCode, err.message);
 						}

@@ -50,7 +50,7 @@ export class ClaimedIdRequestProcessor {
 			const bodyParsed = JSON.parse(event.body as string);
 			cicSession = new CicSession(bodyParsed);
 			await this.validationHelper.validateModel(cicSession, this.logger);
-			this.logger.debug("CIC Session is  " + JSON.stringify(cicSession));
+			this.logger.debug({ message: "CIC Session is", cicSession });
 		} catch (error) {
 			return new Response(HttpCodesEnum.BAD_REQUEST, "Missing mandatory fields in the request payload");
 		}
@@ -58,13 +58,14 @@ export class ClaimedIdRequestProcessor {
 		const session = await this.cicService.getSessionById(sessionId);
 
 		if (session != null) {
+			const fullName = session.fullName;
 			if (session.expiryDate < absoluteTimeNow()) {
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.logger.info("found session", JSON.stringify(session));
+			this.logger.info({ message: "fullName ", fullName });
+			this.logger.info({ message: "found session", session });
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
-			this.logger.debug("Session is " + JSON.stringify(session));
 			await this.cicService.saveCICData(sessionId, cicSession);
 			const authCode = randomUUID();
 			await this.cicService.setAuthorizationCode(sessionId, authCode);

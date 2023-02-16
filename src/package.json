@@ -4,7 +4,6 @@
     "description": "OneLogin CIC CRI",
     "repository": "https://github.com/alphagov/di-ipv-cri-cic-api",
     "author": "GDS",
-    "main": "app.js",
     "license": "MIT",
     "dependencies": {
         "@aws-lambda-powertools/logger": "1.5.1",
