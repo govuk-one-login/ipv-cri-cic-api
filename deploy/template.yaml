@@ -340,7 +340,7 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref PrivateCICApiAccessLogGroup
-  # commented out propertise for codebuld to pass
+# commented out propertise for codebuld to pass
   APIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -422,7 +422,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
-          - app.ts
+        - app.ts
 
   HelloWorldFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -438,61 +438,61 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref HelloWorldFunctionLogGroup
 
-  #  IssueCredentialFunction:
-  #    Type: AWS::Serverless::Function
-  #    Properties:
-  #      Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
-  #      CodeUri: ../../lambdas/issuecredential
-  #      Environment:
-  #        Variables:
-  #          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
-  #          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-  #      Policies:
-  #        - AWSLambdaBasicExecutionRole
-  #        - AWSXrayWriteOnlyAccess
-  #        - DynamoDBReadPolicy:
-  #            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
-  #        - DynamoDBReadPolicy:
-  #            TableName: !Ref CICTable
-  #        - Statement:
-  #            Effect: Allow
-  #            Action:
-  #              - "kms:Sign"
-  #            Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
-  #        - SQSSendMessagePolicy:
-  #            QueueName: !ImportValue AuditEventQueueName
-  #        - Statement:
-  #            Effect: Allow
-  #            Action:
-  #              - ssm:GetParameter
-  #            Resource:
-  #              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
-  #              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
-  #              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
-  #              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
-  #              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
-  #              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
-  #        - Statement:
-  #            Effect: Allow
-  #            Action:
-  #              - kms:Decrypt
-  #              - kms:GenerateDataKey
-  #            Resource:
-  #              - !ImportValue AuditEventQueueEncryptionKeyArn
-  #
-  #  IssueCredentialFunctionLogGroup:
-  #    Type: AWS::Logs::LogGroup
-  #    Properties:
-  #      LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
-  #      RetentionInDays: 30
-  #
-  #  IssueCredentialFunctionLogsSubscriptionFilterCSLS:
-  #    Type: AWS::Logs::SubscriptionFilter
-  #    Condition: IsNotDevEnvironment
-  #    Properties:
-  #      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-  #      FilterPattern: ""
-  #      LogGroupName: !Ref IssueCredentialFunctionLogGroup
+#  IssueCredentialFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      Handler: uk.gov.di.ipv.cri.CIC.api.handler.IssueCredentialHandler::handleRequest
+#      CodeUri: ../../lambdas/issuecredential
+#      Environment:
+#        Variables:
+#          POWERTOOLS_SERVICE_NAME: !Sub "${CriIdentifier}-issuecredential"
+#          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+#      Policies:
+#        - AWSLambdaBasicExecutionRole
+#        - AWSXrayWriteOnlyAccess
+#        - DynamoDBReadPolicy:
+#            TableName: !Sub "{{resolve:ssm:/${CommonStackName}/SessionTableName}}"
+#        - DynamoDBReadPolicy:
+#            TableName: !Ref CICTable
+#        - Statement:
+#            Effect: Allow
+#            Action:
+#              - "kms:Sign"
+#            Resource: !ImportValue core-infrastructure-CriVcSigningKey1Arn
+#        - SQSSendMessagePolicy:
+#            QueueName: !ImportValue AuditEventQueueName
+#        - Statement:
+#            Effect: Allow
+#            Action:
+#              - ssm:GetParameter
+#            Resource:
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/CICTableName"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/MaxJwtTtl"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/JwtTtlUnit"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiableCredentialKmsSigningKeyId"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/SessionTableName"
+#              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CommonStackName}/verifiable-credential/issuer"
+#        - Statement:
+#            Effect: Allow
+#            Action:
+#              - kms:Decrypt
+#              - kms:GenerateDataKey
+#            Resource:
+#              - !ImportValue AuditEventQueueEncryptionKeyArn
+#
+#  IssueCredentialFunctionLogGroup:
+#    Type: AWS::Logs::LogGroup
+#    Properties:
+#      LogGroupName: !Sub "/aws/lambda/${IssueCredentialFunction}"
+#      RetentionInDays: 30
+#
+#  IssueCredentialFunctionLogsSubscriptionFilterCSLS:
+#    Type: AWS::Logs::SubscriptionFilter
+#    Condition: IsNotDevEnvironment
+#    Properties:
+#      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+#      FilterPattern: ""
+#      LogGroupName: !Ref IssueCredentialFunctionLogGroup
 
   PublicCICApiUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
@@ -565,12 +565,12 @@ Resources:
       FunctionName: !Ref HelloWorldFunction.Alias
       Principal: apigateway.amazonaws.com
 
-  #  IssueCredentialFunctionPermission:
-  #    Type: AWS::Lambda::Permission
-  #    Properties:
-  #      Action: lambda:InvokeFunction
-  #      FunctionName: !Ref IssueCredentialFunction.Alias
-  #      Principal: apigateway.amazonaws.com
+#  IssueCredentialFunctionPermission:
+#    Type: AWS::Lambda::Permission
+#    Properties:
+#      Action: lambda:InvokeFunction
+#      FunctionName: !Ref IssueCredentialFunction.Alias
+#      Principal: apigateway.amazonaws.com
 
   CICLambdaErrors:
     Type: AWS::CloudWatch::Alarm
