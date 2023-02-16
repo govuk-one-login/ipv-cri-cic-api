@@ -4,14 +4,15 @@
     "target": "es2020",
     "strict": true,
     "preserveConstEnums": true,
-    "noEmit": true,
+     //"noEmit": true, // emit for debugger testing purposes.
     "sourceMap": false,
     "module": "es2015",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./build/"
   },
   "ts-node": {
     "compilerOptions": {
