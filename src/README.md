@@ -1,10 +1,10 @@
-# Claimed Idenity Collector
+# Claimed Identity Collector
 
 Claimed identity collector
 
 ## How to run build
 
-From `deploy` folder run `sam build` 
+From `src` folder run `sam build` 
 
 ## How to run tests
 

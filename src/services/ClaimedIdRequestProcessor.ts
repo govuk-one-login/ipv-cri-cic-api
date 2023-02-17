@@ -65,7 +65,7 @@ export class ClaimedIdRequestProcessor {
 			this.logger.info({ message: "found session", session });
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 			await this.cicService.saveCICData(sessionId, cicSession);
-			return new Response(HttpCodesEnum.OK,"");
+			return new Response(HttpCodesEnum.OK, "");
 		} else {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}

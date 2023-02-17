@@ -1,0 +1,1 @@
+{"version":3,"file":"CicResponse.js","sourceRoot":"","sources":["CicResponse.ts"],"names":[],"mappings":"AAAA,MAAM,OAAO,WAAW;IAEvB,YAAY,IAA0B;QACrC,IAAI,CAAC,iBAAiB,GAAG,IAAI,CAAC,iBAAkB,CAAC;QACjD,IAAI,CAAC,YAAY,GAAG,IAAI,CAAC,YAAY,CAAC;QACtC,IAAI,CAAC,KAAK,GAAG,IAAI,CAAC,KAAK,CAAC;IACzB,CAAC;CAOD"}

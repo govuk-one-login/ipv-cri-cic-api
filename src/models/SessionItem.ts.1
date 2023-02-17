@@ -1,0 +1,48 @@
+import {ICicSession, ISessionItem} from "./ISessionItem";
+
+export class SessionItem implements ISessionItem{
+
+    constructor(data: SessionItem) {
+        this.clientSessionId = data.clientSessionId;
+        this.persistentSessionId = data.persistentSessionId;
+        this.state = data.state;
+        this.subject = data.subject;
+        this.createdDate = data.createdDate;
+        this.expiryDate =data.expiryDate;
+        this.redirectUri =data.redirectUri;
+        this.accessToken = data.accessToken;
+        this.accessTokenExpiryDate = data.accessTokenExpiryDate;
+        this.attemptCount = data.attemptCount;
+        this.authorizationCode = data.authorizationCode;
+        this.authorizationCodeExpiryDate = data.authorizationCodeExpiryDate;
+        this.clientId = data.clientId;
+        this.clientSessionId = data.clientSessionId;
+        this.sessionId = data.sessionId;
+        this.clientIpAddress =data.clientIpAddress;
+        this.fullName = data.fullName;
+        this.documentSelected = data.documentSelected;
+        this.dateOfExpiry = data.dateOfExpiry;
+        this.dateOfBirth = data.dateOfBirth;
+    }
+    readonly accessToken: string;
+    readonly accessTokenExpiryDate: number;
+    readonly attemptCount: number;
+    readonly authorizationCode: string;
+    readonly authorizationCodeExpiryDate: number;
+
+    readonly clientId: string;
+    readonly clientIpAddress: string;
+    readonly clientSessionId: string;
+    readonly createdDate: number;
+    readonly expiryDate: number;
+    readonly persistentSessionId: string;
+    readonly redirectUri: string;
+    readonly sessionId: string;
+    readonly state: string;
+    readonly subject: string;
+    readonly dateOfBirth: string;
+    readonly dateOfExpiry: string;
+    readonly documentSelected: string;
+    readonly fullName: string;
+
+}
