@@ -4,9 +4,7 @@
     "target": "es2020",
     "strict": true,
     "preserveConstEnums": true,
-    // "noEmit": true, // emit for debugger testing purposes.
     "sourceMap": false,
-    "module": "es2015",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
@@ -15,5 +13,5 @@
     "outDir": "./build/",
     "module": "commonjs"
   },
-  "exclude": ["node_modules", "**/*.infra-test.ts"]
+  "exclude": ["node_modules"]
 }

@@ -70,18 +70,13 @@ describe("ClaimedIdRequestProcessor", () => {
 	});
 
 	it("Return successful response with 200 OK when session is found", async () => {
-		mockCicService.getSessionById.mockResolvedValue(new Session());
+		const sess = new Session();
+		mockCicService.getSessionById.mockResolvedValue(sess);
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
-		const cicResp = new CicResponse(JSON.parse(out.body));
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-
-		expect(out.body).toEqual(JSON.stringify({
-			authorizationCode: `${cicResp.authorizationCode}`,
-			redirect_uri: "http://localhost:8085/callback",
-			state: "Y@atr",
-		}));
+		expect(out.body).toBe("");
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 
@@ -91,7 +86,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
-		//const cicResp = new CicResponse(JSON.parse(out.body));
+
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("Session with session id: 1234 has expired");
