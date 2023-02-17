@@ -58,24 +58,14 @@ export class ClaimedIdRequestProcessor {
 		const session = await this.cicService.getSessionById(sessionId);
 
 		if (session != null) {
-			const fullName = session.fullName;
 			if (session.expiryDate < absoluteTimeNow()) {
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.logger.info({ message: "fullName ", fullName });
 			this.logger.info({ message: "found session", session });
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 			await this.cicService.saveCICData(sessionId, cicSession);
-			const authCode = randomUUID();
-			await this.cicService.setAuthorizationCode(sessionId, authCode);
-			const cicResp = new CicResponse({
-				authorizationCode: authCode,
-				redirect_uri: session?.redirectUri,
-				state: session?.state,
-			});
-
-			return new Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
+			return new Response(HttpCodesEnum.OK,"");
 		} else {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
