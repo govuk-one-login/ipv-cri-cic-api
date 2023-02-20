@@ -2,5 +2,4 @@ node_modules
 .aws-sam
 dist
 reports/
-/tests/**
-/**/tests
+/tests/infra/**
