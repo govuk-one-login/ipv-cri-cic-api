@@ -2,6 +2,8 @@ import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
+import { absoluteTimeNow } from "./DateTimeUtils";
+
 
 export class ValidationHelper {
 
@@ -27,5 +29,43 @@ export class ValidationHelper {
 			};
 		});
 	}
+
+	//Viveak Stuff
+	isClientIdInJwtValid = (
+		queryParams: APIGatewayProxyEventQueryStringParameters,
+		jwtPayload: JwtPayload,
+	): boolean => {
+		return jwtPayload.client_id === queryParams.client_id;
+	};
+
+	isResponseTypeQueryParamValid = (
+		queryParam: APIGatewayProxyEventQueryStringParameters,
+	): boolean => {
+		return queryParam?.response_type === "code";
+	};
+
+	isResponseTypeInJwtValid = (
+		queryParam: APIGatewayProxyEventQueryStringParameters,
+		jwtClaim: JwtPayload,
+	): boolean => {
+		return queryParam.response_type === jwtClaim.response_type;
+	};
+
+	isJwtComplete = (payload: JwtPayload): boolean => {
+		const clientId = payload.client_id;
+		const responseType = payload.response_type;
+		const journeyId = payload.govuk_signin_journey_id;
+		const { iss, sub, aud, exp, nbf, state } = payload;
+		const mandatoryJwtValues = [iss, sub, aud, exp, nbf, state, clientId, responseType, journeyId];
+		return !mandatoryJwtValues.some((value) => value === undefined);
+	};
+
+	isJwtExpired = (jwtPayload: JwtPayload): boolean => {
+		return (jwtPayload.exp == null) || (absoluteTimeNow() > jwtPayload.exp);
+	};
+
+	isJwtNotYetValid = (jwtPayload: JwtPayload): boolean => {
+		return jwtPayload.nbf == null || (absoluteTimeNow() < jwtPayload.nbf);
+	};
 
 }
