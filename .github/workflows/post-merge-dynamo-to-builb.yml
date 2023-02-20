@@ -19,7 +19,7 @@ env: # Only adding the variables in that are required for
 
 jobs:
   deploy-to-dev:
-    name: Validate & Deploy SAM template to Dev Envrionment
+    name: Validate & Deploy L2Dynamo template to Build Envrionment
     runs-on: ubuntu-latest
     defaults:
       run:
