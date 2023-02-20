@@ -30,6 +30,10 @@ Parameters:
     Type: String
     Default: "vpc-cri"
     Description: The name of the VPC stack deployed.
+  L2DynamoStackName:
+    Type: String
+    Default: "none"
+    Description: The name of the L2 DynamoDB stack deployed.
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -147,74 +151,12 @@ Resources:
       EndpointConfiguration:
         Type: REGIONAL
       DefinitionBody:
-        openapi: "3.0.1"
-        info:
-          version: "0.2"
-          title: !Sub "${AWS::StackName} - CIC Credential Issuer Private API"
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './cic-spec.yaml'
+        OpenApiVersion: 3.0.1
 
-        paths:
-          /claimedIdentity:
-            post:
-              parameters:
-                - in: header
-                  name: "session_id"
-                  schema:
-                    type: string
-                  required: true
-              responses:
-                "400":
-                  description: "400 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/Error"
-                "500":
-                  description: "500 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/Error"
-                "200":
-                  description: "200 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/SessionId"
-              x-amazon-apigateway-request-validator: "both"
-              x-amazon-apigateway-integration:
-                httpMethod: "POST"
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClaimedIdentityFunction.Arn}:live/invocations
-                responses:
-                  default:
-                    statusCode: "200"
-                passthroughBehavior: "when_no_match"
-                contentHandling: "CONVERT_TO_TEXT"
-                type: "aws_proxy"
-
-        components:
-          schemas:
-            Error:
-              title: "Error Schema"
-              type: "object"
-              properties:
-                message:
-                  type: "string"
-            SessionId:
-              in: header
-              name: x-govuk-signin-session-id
-              schema:
-                type: string
-                format: uuid
-              example: 44444444-4444-4444-4444-444444444444
-              description: >-
-                `sessionId` as returned by `POST /session` endpoint
-              required: true
-
-        x-amazon-apigateway-request-validators:
-          both:
-            validateRequestBody: true
-            validateRequestParameters: true
 
       TracingEnabled: true
       Tags:
@@ -261,10 +203,26 @@ Resources:
       CodeUri: ../src/
       Environment:
         Variables:
-          POWERTOOLS_SERVICE_NAME: F2F CRI
+          POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
+          SESSION_TABLE:
+             Fn::ImportValue:
+               !Sub "${L2DynamoStackName}-session-table-name"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+             KeyId:
+               Fn::ImportValue:
+                 !Sub "${L2DynamoStackName}-session-table-key-id"
+
       Events:
         claimedIdentity:
           Type: Api

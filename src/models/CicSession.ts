@@ -3,25 +3,25 @@ import { ICicSession } from "./ISessionItem";
 
 export class CicSession implements ICicSession {
 	constructor(data: CicSession) {
-		this.fullName = data.fullName!;
-		this.dateOfBirth = data.dateOfBirth!;
-		this.documentSelected = data.documentSelected!;
-		this.dateOfExpiry = data.dateOfExpiry!;
+		this.full_name = data.full_name!;
+		this.date_of_birth = data.date_of_birth!;
+		this.document_selected = data.document_selected!;
+		this.date_of_expiry = data.date_of_expiry!;
 	}
 
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  full_name: string;
 
   @IsISO8601()
   @IsNotEmpty()
-  dateOfBirth: string;
+  date_of_birth: string;
 
   @IsString()
   @IsNotEmpty()
-  documentSelected: string;
+  document_selected: string;
 
   @IsISO8601()
   @IsNotEmpty()
-  dateOfExpiry: string;
+  date_of_expiry: string;
 }

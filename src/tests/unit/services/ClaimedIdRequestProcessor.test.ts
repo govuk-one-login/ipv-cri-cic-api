@@ -48,13 +48,13 @@ class Session implements ISessionItem {
 
 	sessionId = "01333e01-dde3-412f-a484-e9f23b06be3e";
 
-	dateOfBirth = "";
+	date_of_birth = "";
 
-	dateOfExpiry = "";
+	date_of_expiry = "";
 
-	documentSelected = "";
+	document_selected = "";
 
-	fullName = "";
+	full_name = "";
 }
 
 

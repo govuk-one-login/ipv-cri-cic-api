@@ -38,7 +38,7 @@ describe("Cic Service", () => {
 
 	it("should throw 500 if request fails during save CIC data", async () => {
 		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
-		const cicSess = new CicSession({ fullName: "Test", dateOfBirth: "1970-01-01", documentSelected: "passport", dateOfExpiry: "1970-01-01" });
+		const cicSess = new CicSession({ full_name: "Test", date_of_birth: "1970-01-01", document_selected: "passport", date_of_expiry: "1970-01-01" });
 
 		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,

@@ -10,76 +10,76 @@ const logger = new Logger({
 describe("CicSession", () => {
 	it("should validate CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "Frederick Joseph Flintstone",
-			dateOfBirth: "1970-01-01",
-			documentSelected: "driversPermit",
-			dateOfExpiry: "1970-01-01",
+			full_name: "Frederick Joseph Flintstone",
+			date_of_birth: "1970-01-01",
+			document_selected: "driversPermit",
+			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
 	});
 
-	it("should throw error if fullName is empty in CicSession model", async () => {
+	it("should throw error if full_name is empty in CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "",
-			dateOfBirth: "1970-01-01",
-			documentSelected: "driversPermit",
-			dateOfExpiry: "1970-01-01",
+			full_name: "",
+			date_of_birth: "1970-01-01",
+			document_selected: "driversPermit",
+			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
-	it("should throw error if dateOfBirth is empty in CicSession model", async () => {
+	it("should throw error if date_of_birth is empty in CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "Frederick Joseph Flintstone",
-			dateOfBirth: "",
-			documentSelected: "driversPermit",
-			dateOfExpiry: "1970-01-01",
+			full_name: "Frederick Joseph Flintstone",
+			date_of_birth: "",
+			document_selected: "driversPermit",
+			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
-	it("should throw error if documentSelected is empty in CicSession model", async () => {
+	it("should throw error if document_selected is empty in CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "Frederick Joseph Flintstone ",
-			dateOfBirth: "1970-01-01",
-			documentSelected: "",
-			dateOfExpiry: "1970-01-01",
+			full_name: "Frederick Joseph Flintstone ",
+			date_of_birth: "1970-01-01",
+			document_selected: "",
+			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
-	it("should throw error if dateOfExpiry is empty in CicSession model", async () => {
+	it("should throw error if date_of_expiry is empty in CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "Frederick Joseph Flintstone ",
-			dateOfBirth: "1970-01-01",
-			documentSelected: "driversPermit",
-			dateOfExpiry: "",
+			full_name: "Frederick Joseph Flintstone ",
+			date_of_birth: "1970-01-01",
+			document_selected: "driversPermit",
+			date_of_expiry: "",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
-	it("should throw error if dateOfBirth is invalid in CicSession model", async () => {
+	it("should throw error if date_of_birth is invalid in CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "Frederick Joseph Flintstone ",
-			dateOfBirth: "dateOfBirth",
-			documentSelected: "driversPermit",
-			dateOfExpiry: "1970-01-01",
+			full_name: "Frederick Joseph Flintstone ",
+			date_of_birth: "date_of_birth",
+			document_selected: "driversPermit",
+			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
-	it("should throw error if dateOfExpiry is invalid in CicSession model", async () => {
+	it("should throw error if date_of_expiry is invalid in CicSession model", async () => {
 		const cicSession = new CicSession({
-			fullName: "Frederick Joseph Flintstone ",
-			dateOfBirth: "1970-01-01",
-			documentSelected: "driversPermit",
-			dateOfExpiry: "dateOfExpiry",
+			full_name: "Frederick Joseph Flintstone ",
+			date_of_birth: "1970-01-01",
+			document_selected: "driversPermit",
+			date_of_expiry: "date_of_expiry",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
