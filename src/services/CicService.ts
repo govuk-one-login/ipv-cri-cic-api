@@ -3,14 +3,20 @@ import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AppError } from "../utils/AppError";
-import { DynamoDBDocument, GetCommand, QueryCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, GetCommand, QueryCommandInput, UpdateCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
-import { SendMessageCommand } from "@aws-sdk/client-sqs";
-import { sqsClient } from "../utils/SqsClient";
+import { sqsClient, SendMessageCommand } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
+import { Address, BirthDate, Name, PersonIdentity  } from "../models/PersonIdentity";
+import {
+	PersonIdentityAddress,
+	PersonIdentityDateOfBirth,
+	PersonIdentityItem,
+	PersonIdentityName,
+} from "../models/PersonIdentityItem";
 
 export class CicService {
     readonly tableName: string;
@@ -162,5 +168,80 @@ export class CicService {
     		this.logger.error({ message: "got error saving Access token details", error });
     		throw new AppError("updateItem - failed: got error saving Access token details", HttpCodesEnum.SERVER_ERROR);
     	}
+    }
+
+    async createAuthSession(session: ISessionItem): Promise<void> {
+    	const putSessionCommand = new PutCommand({
+    		TableName: this.tableName,
+    		Item: session,
+    	});
+    	this.logger.info("Saving session data in dynamodb" + JSON.stringify(putSessionCommand));
+	
+    	try {
+    		await this.dynamo.send(putSessionCommand);
+    		this.logger.info("Successfully created session in dynamodb");
+    	} catch (error) {
+    		this.logger.error("got error " + error);
+    		throw new AppError("saveItem - failed ", 500);
+    	}
+    }
+	
+    private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
+    	return addresses?.map((address) => ({
+    		uprn: address.uprn,
+    		organisationName: address.organisationName,
+    		departmentName: address.departmentName,
+    		subBuildingName: address.subBuildingName,
+    		buildingNumber: address.buildingNumber,
+    		buildingName: address.buildingName,
+    		dependentStreetName: address.dependentStreetName,
+    		streetName: address.streetName,
+    		addressCountry: address.addressCountry,
+    		postalCode: address.postalCode,
+    		addressLocality: address.addressLocality,
+    		dependentAddressLocality: address.dependentAddressLocality,
+    		doubleDependentAddressLocality: address.doubleDependentAddressLocality,
+    		validFrom: address.validFrom,
+    		validUntil: address.validUntil,
+    	}));
+    }
+	
+    private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
+    	return birthDates?.map((bd) => ({ value: bd.value }));
+    }
+	
+    private mapNames(names: Name[]): PersonIdentityName[] {
+    	return names?.map((name) => ({
+    		nameParts: name?.nameParts?.map((namePart) => ({
+    			type: namePart.type,
+    			value: namePart.value,
+    		})),
+    	}));
+    }
+	
+    private createPersonIdentityItem(
+    	sharedClaims: PersonIdentity,
+    	sessionId: string,
+    	sessionExpirationEpoch: number,
+    ): PersonIdentityItem {
+    	return {
+    		sessionId,
+    		addresses: this.mapAddresses(sharedClaims.address),
+    		birthDates: this.mapBirthDates(sharedClaims.birthDate),
+    		expiryDate: sessionExpirationEpoch,
+    		names: this.mapNames(sharedClaims.name),
+    	};
+    }
+	
+	
+    async savePersonIdentity(sharedClaims: PersonIdentity, sessionId: string, expiryDate: number): Promise<void> {
+    	const personIdentityItem = this.createPersonIdentityItem(sharedClaims, sessionId, expiryDate);
+	
+    	const putSessionCommand = new PutCommand({
+    		TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+    		Item: personIdentityItem,
+    	});
+    	await this.dynamo.send(putSessionCommand);
+    	return putSessionCommand?.input?.Item?.sessionId;
     }
 }

@@ -58,20 +58,30 @@ Mappings:
       apiTracingEnabled: false
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
-      ISSUER: 'https://review-c.dev.account.gov.uk'
+      ISSUER: "https://review-c.dev.account.gov.uk"
+      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      AUTHSESSIONTTL: "604800" # 7 days in seconds
     build:
-      ISSUER: 'https://review-c.build.account.gov.uk'
+      ISSUER: "https://review-c.build.account.gov.uk"
+      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      AUTHSESSIONTTL: "604800" # 7 days in seconds
     staging:
-      ISSUER: 'https://review-c.staging.account.gov.uk'
+      ISSUER: "https://review-c.staging.account.gov.uk"
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      AUTHSESSIONTTL: "604800" # 7 days in seconds
     integration:
-      ISSUER: 'https://review-c.integration.account.gov.uk'
+      ISSUER: "https://review-c.integration.account.gov.uk"
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      AUTHSESSIONTTL: "604800" # 7 days in seconds
     production:
-      ISSUER: 'https://review-c.account.gov.uk'
+      ISSUER: "https://review-c.account.gov.uk"
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      AUTHSESSIONTTL: "604800" # 7 days in seconds
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -122,9 +132,9 @@ Globals:
         - !GetAtt LambdaEgressSecurityGroup.GroupId
       SubnetIds:
         - Fn::ImportValue:
-            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdA"
+            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdA"
         - Fn::ImportValue:
-            "Fn::Sub": "${VpcStackName}-PrivateSubnetIdB"
+            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdB"
     PermissionsBoundary: !If
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
@@ -145,11 +155,12 @@ Globals:
         POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
         ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+        REGION: !Sub "${AWS::Region}"
         SECRET_PREFIX: !If [
-          UseSecretPrefix,
-          !Ref SecretPrefix,
-          !Ref AWS::StackName,
-        ] # What is this? @TODO
+            UseSecretPrefix,
+            !Ref SecretPrefix,
+            !Ref AWS::StackName,
+          ] # What is this? @TODO
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
 
@@ -226,9 +237,8 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: './cic-spec.yaml'
+            Location: "./cic-spec.yaml"
         OpenApiVersion: 3.0.1
-
 
       TracingEnabled: true
       Tags:
@@ -277,23 +287,19 @@ Resources:
         Variables:
           POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
           SESSION_TABLE:
-             Fn::ImportValue:
-               !Sub "${L2DynamoStackName}-session-table-name"
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - DynamoDBWritePolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - DynamoDBReadPolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - KMSDecryptPolicy:
-             KeyId:
-               Fn::ImportValue:
-                 !Sub "${L2DynamoStackName}-session-table-key-id"
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
 
       Events:
         claimedIdentity:
@@ -358,16 +364,13 @@ Resources:
         - AWSXrayWriteOnlyAccess
         - DynamoDBWritePolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - DynamoDBReadPolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - KMSDecryptPolicy:
             KeyId:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-key-id"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
         - Statement:
             - Sid: KMSPolicy
               Effect: Allow
@@ -407,7 +410,12 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/User-Info-${AWS::StackName}"
-      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
 
   UserInfoFunctionLogsSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
@@ -422,6 +430,108 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref UserInfoFunction
+      Principal: apigateway.amazonaws.com
+
+  # SessionHandler
+  SessionFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SessionFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "CIC-Session-${AWS::StackName}"
+      Handler: SessionHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          AUTH_SESSION_TTL:
+            !FindInMap [EnvironmentVariables, !Ref Environment, AUTHSESSIONTTL]
+          POWERTOOLS_SERVICE_NAME: UserInfoHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          PERSON_IDENTITY_TABLE_NAME:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+          CLIENT_CONFIG:
+            !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
+          ENCRYPTION_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+                #Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+              #Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        session:
+          Type: Api
+          Properties:
+            Path: /session
+            Method: post
+            RestApiId: !Ref CICRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - SessionHandler.ts
+
+  SessionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/CIC-Session-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  SessionFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref SessionFunctionLogGroup
+
+  SessionFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SessionFunction
       Principal: apigateway.amazonaws.com
 
   ## AccessToken
@@ -444,16 +554,13 @@ Resources:
         - AWSXrayWriteOnlyAccess
         - DynamoDBWritePolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - DynamoDBReadPolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - KMSDecryptPolicy:
             KeyId:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-key-id"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
         - Statement:
             - Sid: KMSPolicy
               Effect: Allow
@@ -481,7 +588,12 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/Access-Token-${AWS::StackName}"
-      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
 
   TokenFunctionLogsSubscriptionFilterCSLS:
     Type: AWS::Logs::SubscriptionFilter
@@ -509,24 +621,20 @@ Resources:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationCodeHandler
           SESSION_TABLE:
-            Fn::ImportValue:
-              !Sub "${L2DynamoStackName}-session-table-name"
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - DynamoDBWritePolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - DynamoDBReadPolicy:
             TableName:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-name"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - KMSDecryptPolicy:
             KeyId:
-              Fn::ImportValue:
-                !Sub "${L2DynamoStackName}-session-table-key-id"
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
         - Statement:
             - Effect: Allow
               Action:
@@ -581,11 +689,15 @@ Resources:
       FunctionName: !Ref AuthorizationFunction
       Principal: apigateway.amazonaws.com
 
-
   TxMASQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, MESSAGERETENTIONPERIODDAYS]
+      MessageRetentionPeriod:
+        !FindInMap [
+          EnvironmentVariables,
+          !Ref Environment,
+          MESSAGERETENTIONPERIODDAYS,
+        ]
       VisibilityTimeout: 60
       KmsMasterKeyId: !Ref TxMAKeyAlias
       RedrivePolicy:
@@ -712,7 +824,12 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/JsonWebKeys-${AWS::StackName}"
-      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
 
   JsonWebKeysFunctionPermission:
     Type: AWS::Lambda::Permission
