@@ -1,9 +1,11 @@
-name: Deploy Main to Dev Env
+name: Deploy Main to Dev Env L2Dynamo - cic-cri-ddb
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches:
       - main
+    paths:
+      - 'infra-l2-dynamo/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./infra-l2-*/
+        working-directory: ./infra-l2-dynamo/**
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -45,5 +47,7 @@ jobs:
         uses: alphagov/di-devplatform-upload-action@v3
         with:
             artifact-bucket-name: ${{ secrets.DEV_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
-            working-directory: infra-l2-*
+            working-directory: infra-l2-dynamo/**
             template-file: template.yaml
+
+
