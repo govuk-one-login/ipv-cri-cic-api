@@ -19,6 +19,7 @@
         "class-validator": "0.14.0",
         "esbuild": "0.17.12",
         "node-jose": "^2.1.1",
+        "jose": "^4.11.2",
         "ecdsa-sig-formatter": "^1.0.11"
     },
     "scripts": {
