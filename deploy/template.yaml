@@ -272,6 +272,7 @@ Resources:
   ## UserInfo
   UserInfoFunction:
     Type: AWS::Serverless::Function
+    DependsOn: UserInfoFunctionLogGroup
     Properties:
       FunctionName: !Sub "User-Info-${AWS::StackName}"
       Handler: UserInfoHandler.lambdaHandler
@@ -294,6 +295,10 @@ Resources:
             TableName:
               Fn::ImportValue:
                 !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
         - Statement:
             - Sid: KMSPolicy
               Effect: Allow
