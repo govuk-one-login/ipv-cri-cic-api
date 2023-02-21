@@ -1,13 +1,13 @@
 export interface CredentialSubject {
-    fullName: object[];
-    dateOfBirth: string | undefined;
-    documentType: string | undefined;
-    dateOfExpiry: string | undefined;
+	fullName: object[];
+	dateOfBirth: string | undefined;
+	documentType: string | undefined;
+	dateOfExpiry: string | undefined;
 }
 export interface VerifiedCredential {
-    "@context": string[];
-    type: string[];
-    credentialSubject: CredentialSubject;
+	"@context": string[];
+	type: string[];
+	credentialSubject: CredentialSubject;
 }
 // limit to supported algs https://datatracker.ietf.org/doc/html/rfc7518
 export type Algorithm =
@@ -17,42 +17,42 @@ export type Algorithm =
     "PS256" | "PS384" | "PS512" |
     "none";
 export interface CredentialJwt {
-    iat: number;
-    iss: string;
-    nbf: number;
-    sub: string;
-    aud: string;
-    exp: number;
-    vc: VerifiedCredential;
+	iat: number;
+	iss: string;
+	nbf: number;
+	sub: string;
+	aud: string;
+	exp: number;
+	vc: VerifiedCredential;
 }
 export interface JwtHeader {
-    alg: Algorithm | string;
-    typ?: string | undefined;
-    kid?: string;
+	alg: Algorithm | string;
+	typ?: string | undefined;
+	kid?: string;
 }
 // standard claims https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
 export interface JwtPayload {
-    [key: string]: any;
-    iss?: string;
-    sub?: string;
-    aud?: string | string[];
-    exp?: number | undefined;
-    nbf?: number | undefined;
-    iat?: number | undefined;
-    jti?: string | undefined;
+	[key: string]: any;
+	iss?: string;
+	sub?: string;
+	aud?: string | string[];
+	exp?: number | undefined;
+	nbf?: number | undefined;
+	iat?: number | undefined;
+	jti?: string | undefined;
 }
 export interface Jwk extends JsonWebKey {
-    alg: Algorithm;
-    kid: string;
-    kty: "EC" | "RSA";
-    use: "sig" | "enc";
+	alg: Algorithm;
+	kid: string;
+	kty: "EC" | "RSA";
+	use: "sig" | "enc";
 }
 export interface Jwks {
-    keys: Jwk[];
+	keys: Jwk[];
 }
 export interface Jwt {
-    header: JwtHeader;
-    payload: JwtPayload;
-    signature: string;
-    jwk?: Jwk;
+	header: JwtHeader;
+	payload: JwtPayload;
+	signature: string;
+	jwk?: Jwk;
 }

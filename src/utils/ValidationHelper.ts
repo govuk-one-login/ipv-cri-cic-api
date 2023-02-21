@@ -2,10 +2,10 @@ import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
-import {ISessionItem} from "../models/ISessionItem";
-import {KmsJwtAdapter} from "./KmsJwtAdapter";
-import {APIGatewayProxyEvent} from "aws-lambda";
-import {absoluteTimeNow} from "./DateTimeUtils";
+import { ISessionItem } from "../models/ISessionItem";
+import { KmsJwtAdapter } from "./KmsJwtAdapter";
+import { APIGatewayProxyEvent } from "aws-lambda";
+import { absoluteTimeNow } from "./DateTimeUtils";
 
 export class ValidationHelper {
 	private readonly BEARER = "Bearer ";
@@ -33,7 +33,7 @@ export class ValidationHelper {
 		});
 	}
 
-	private async validateUserData(data: string | undefined, errmsg: string, logger: Logger): Promise<boolean> {
+	private validateUserData(data: string | undefined, errmsg: string, logger: Logger): boolean {
 		let isValid = true;
 		if (data == null || data === undefined || data.trim().length === 0) {
 			logger.info("UserInfo missing: ", errmsg);
@@ -42,12 +42,12 @@ export class ValidationHelper {
 		return isValid;
 	}
 
-	async validateUserInfo(session: ISessionItem, logger: Logger): Promise<boolean> {
+	validateUserInfo(session: ISessionItem, logger: Logger): boolean {
 		let isValid = true;
-		if (!await this.validateUserData(session.full_name, "Full Name is missing", logger) ||
-			!await this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger) ||
-			!await this.validateUserData(session.document_selected, "Document selection type is missing", logger) ||
-			!await this.validateUserData(session.date_of_expiry, "Expiry Date is missing", logger)) {
+		if (!this.validateUserData(session.full_name, "Full Name is missing", logger) ||
+			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger) ||
+			!this.validateUserData(session.document_selected, "Document selection type is missing", logger) ||
+			!this.validateUserData(session.date_of_expiry, "Expiry Date is missing", logger)) {
 			isValid = false;
 		}
 		return isValid;
@@ -58,7 +58,7 @@ export class ValidationHelper {
 		if (headerValue === null || headerValue === undefined) {
 			throw new AppError( "Missing header: Authorization header value is missing or invalid auth_scheme", HttpCodesEnum.BAD_REQUEST);
 		}
-		const authHeader = event.headers["Authorization"] as string;
+		const authHeader = event.headers.Authorization as string;
 		if (authHeader !== null && !authHeader.includes(this.BEARER)) {
 			throw new AppError( "Missing header: Authorization header is not of Bearer type access_token", HttpCodesEnum.BAD_REQUEST);
 

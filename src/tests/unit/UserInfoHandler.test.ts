@@ -7,26 +7,26 @@ import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 const mockedUserInfoRequestProcessor = mock<UserInfoRequestProcessor>();
 
 jest.mock("../../services/UserInfoRequestProcessor", () => {
-    return {
-        UserInfoRequestProcessor: jest.fn(() => mockedUserInfoRequestProcessor),
-    };
+	return {
+		UserInfoRequestProcessor: jest.fn(() => mockedUserInfoRequestProcessor),
+	};
 });
 
 describe("UserInfoHandler", () => {
-    it("return success response for userInfo", async () => {
-        UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
+	it("return success response for userInfo", async () => {
+		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
 
-        await lambdaHandler(VALID_USERINFO);
+		await lambdaHandler(VALID_USERINFO);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockedUserInfoRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
-    });
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockedUserInfoRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
+	});
 
-    it("return not found when resource not found", async () => {
-        UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
+	it("return not found when resource not found", async () => {
+		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
 
-        return expect(lambdaHandler(RESOURCE_NOT_FOUND)).rejects.toThrow(expect.objectContaining({
-            statusCode: HttpCodesEnum.NOT_FOUND,
-        }));
-    });
+		return expect(lambdaHandler(RESOURCE_NOT_FOUND)).rejects.toThrow(expect.objectContaining({
+			statusCode: HttpCodesEnum.NOT_FOUND,
+		}));
+	});
 });
