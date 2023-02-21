@@ -74,7 +74,6 @@ export class KmsJwtAdapter {
             payload: JSON.parse(jwtUtils.base64DecodeToString(payload)),
             signature,
         };
-        console.log("Decoded JWT result: " +JSON.stringify(result))
         return result;
     }
 
