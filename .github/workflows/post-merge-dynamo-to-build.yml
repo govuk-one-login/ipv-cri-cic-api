@@ -1,4 +1,4 @@
-name: Deploy Main to Build Env L2Dynamo - cic-cri-ddb
+name: Deploy Main to Build Env Dynamo Infra
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
@@ -19,7 +19,7 @@ env: # Only adding the variables in that are required for
 
 jobs:
   deploy-to-dev:
-    name: Validate & Deploy L2Dynamo template to Build Envrionment
+    name: Validate & Deploy Dynamo Infra template to Build Envrionment
     runs-on: ubuntu-latest
     defaults:
       run:

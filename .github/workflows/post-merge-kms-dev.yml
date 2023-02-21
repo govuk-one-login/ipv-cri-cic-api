@@ -1,4 +1,4 @@
-name: Deploy Main to Dev Env L2KMS - cic-cri-kms
+name: Deploy Main to Dev Env KMS Infra
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
@@ -19,7 +19,7 @@ env: # Only adding the variables in that are required for
 
 jobs:
   deploy-to-dev:
-    name: Validate & Deploy KMS template to Dev Envrionment
+    name: Validate & Deploy KMS Infra template to Dev Envrionment
     runs-on: ubuntu-latest
     defaults:
       run:
