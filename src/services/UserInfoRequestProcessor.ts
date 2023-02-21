@@ -13,10 +13,7 @@ import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import {ISessionItem} from "../models/ISessionItem";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
-//const SESSION_TABLE = "session-infra-l2-dynamo-bhavana";
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
-//const KMS_KEY_ARN = "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"; // f2f-dev-aws-account value
-
 
 export class UserInfoRequestProcessor {
     private static instance: UserInfoRequestProcessor;
@@ -91,6 +88,9 @@ export class UserInfoRequestProcessor {
 
         //Generate VC and create a signedVC as response back to IPV Core.
         const signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, absoluteTimeNow);
+        if (signedJWT === null || signedJWT === undefined) {
+            return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the verifiableCredential Jwt");
+        }
         return new Response(HttpCodesEnum.OK, JSON.stringify({
             sub: session?.clientId,
             "https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],

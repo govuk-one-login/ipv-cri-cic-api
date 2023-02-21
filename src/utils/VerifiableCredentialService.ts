@@ -2,6 +2,8 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { VerifiedCredential } from "./IverifiedCredential";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
+import {AppError} from "./AppError";
+import {HttpCodesEnum} from "./HttpCodesEnum";
 
 const CREDENTIAL_EXPIRY = 15638400;
 
@@ -15,7 +17,6 @@ export class VerifiableCredentialService {
     private static instance: VerifiableCredentialService;
 
     constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, logger: Logger ) {
-        //throw error if tableName is null
         this.tableName = tableName;
         this.logger = logger;
         this.kmsJwtAdapter = kmsJwtAdapter;
@@ -47,10 +48,14 @@ export class VerifiableCredentialService {
             exp: now + CREDENTIAL_EXPIRY,
             vc: verifiedCredential,
         };
-        // Sign the VC
-        const signedVerifiedCredential = await this.kmsJwtAdapter.sign(result);
-        // TODO Check for error while signing the vc and throw App error and log it.
-        return signedVerifiedCredential;
+
+        try {
+            // Sign the VC
+            const signedVerifiedCredential = await this.kmsJwtAdapter.sign(result);
+            return signedVerifiedCredential;
+        } catch (error) {
+            throw new AppError( "Failed to sign Jwt", HttpCodesEnum.SERVER_ERROR);
+        }
     }
 }
 class VerifiableCredentialBuilder {
