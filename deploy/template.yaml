@@ -304,9 +304,8 @@ Resources:
               Effect: Allow
               Action:
                 - kms:*
-              Resource: "*"
-                #Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
-              #Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"
+              Resource:
+                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
       Events:
         userInfo:
           Type: Api

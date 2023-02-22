@@ -55,6 +55,8 @@ class Session implements ISessionItem {
 	document_selected = "";
 
 	full_name = "";
+
+	authSessionState = "";
 }
 
 

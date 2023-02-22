@@ -1,5 +1,7 @@
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { Jwt, JwtPayload } from "../../../utils/IverifiedCredential";
+import { AppError } from "../../../utils/AppError";
+import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 
 export class MockKmsJwtAdapter {
     result: boolean;
@@ -30,4 +32,9 @@ export class MockKmsJwtAdapter {
     decode(_urlEncodedJwt: string): Jwt { return this.mockJwt; }
 
     sign(_jwtPayload: JwtPayload): string { return "signedJwt-test"; }
+}
+
+export class MockFailingKmsSigningJwtAdapter {
+
+	sign(_jwtPayload: JwtPayload): string { throw new Error("Failed to sign Jwt"); }
 }

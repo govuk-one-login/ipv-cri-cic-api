@@ -11,6 +11,7 @@ import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
@@ -61,35 +62,43 @@ export class UserInfoRequestProcessor {
     		sub = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
     	} catch (error) {
     		if (error instanceof AppError) {
-    			console.log(`${event.headers}`);
-    			console.log("**** Error validating Authentication Access token from headers: " + error.message);
-    			return new Response( HttpCodesEnum.BAD_REQUEST, "Failed to Validate - Authentication header: " + error.message );
+    			this.logger.error({ message: "Error validating Authentication Access token from headers: " + error.message });
+    			return new Response( HttpCodesEnum.UNAUTHORIZED, "Failed to Validate - Authentication header: " + error.message );
     		}
     	}
 
     	let session :ISessionItem | undefined;
     	try {
     		session = await this.cicService.getSessionById(sub as string);
-    		console.log("Found Session: " + JSON.stringify(session));
+    		this.logger.debug({ message :"Found Session: " + JSON.stringify(session) });
     		if (!session) {
-    			return new Response(HttpCodesEnum.NOT_FOUND, `No session found with the sessionId: ${sub}`);
+    			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the sessionId: ${sub}`);
     		}
     	} catch (err) {
-    		return new Response(HttpCodesEnum.NOT_FOUND, `No session found with the sessionId: ${sub}`);
+    		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the sessionId: ${sub}`);
     	}
 
     	this.metrics.addMetric("found session", MetricUnits.Count, 1);
     	this.logger.debug("Session is " + JSON.stringify(session));
+    	// Validate the AuthSessionState to be "CIC_ACCESS_TOKEN_ISSUED"
+    	if (session.authSessionState !== AuthSessionState.CIC_ACCESS_TOKEN_ISSUED) {
+    		return new Response(HttpCodesEnum.UNAUTHORIZED, `AuthSession is in wrong Auth state: Expected state- ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}, actual state- ${session.authSessionState}`);
+    	}
+
     	// Validate the User Info data presence required to generate the VC
     	const isValidUserCredentials = this.validationHelper.validateUserInfo(session, this.logger);
     	if (!isValidUserCredentials) {
     		return new Response(HttpCodesEnum.SERVER_ERROR, "Missing user info: User may have not completed the journey, hence few of the required user data is missing.");
     	}
-
     	//Generate VC and create a signedVC as response back to IPV Core.
-    	const signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, absoluteTimeNow);
-    	if (signedJWT === null || signedJWT === undefined) {
-    		return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the verifiableCredential Jwt");
+    	let signedJWT;
+    	try {
+    		signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, absoluteTimeNow);
+    	} catch (error) {
+    		if (error instanceof AppError) {
+    			this.logger.error("**** Error generating signed verifiable credential jwt: " + error.message);
+    			return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the verifiableCredential Jwt");
+    		}
     	}
     	return new Response(HttpCodesEnum.OK, JSON.stringify({
     		sub: session?.clientId,

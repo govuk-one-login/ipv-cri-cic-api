@@ -8,6 +8,8 @@ export class Constants {
 
     static readonly CLAIMEDID_METRICS_NAMESPACE = "CIC-CRI";
 
+    static readonly USERINFO_LOGGER_SVC_NAME = "UserInfoHandler";
+
     static readonly DEBUG = "DEBUG";
 
     static readonly INFO = "INFO";
@@ -15,4 +17,6 @@ export class Constants {
     static readonly WARN = "WARN";
 
     static readonly ERROR = "ERROR";
+
+    static readonly BEARER = "Bearer";
 }

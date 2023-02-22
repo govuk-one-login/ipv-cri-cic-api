@@ -6,9 +6,9 @@ import { ISessionItem } from "../models/ISessionItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
+import { Constants } from "./Constants";
 
 export class ValidationHelper {
-	private readonly BEARER = "Bearer ";
 
 	async validateModel(model: object, logger: Logger): Promise<void> {
 		try {
@@ -56,11 +56,11 @@ export class ValidationHelper {
 	async eventToSubjectIdentifier(jwtAdapter: KmsJwtAdapter, event: APIGatewayProxyEvent): Promise<string> {
 		const headerValue = event.headers.authorization ?? event.headers.Authorization;
 		if (headerValue === null || headerValue === undefined) {
-			throw new AppError( "Missing header: Authorization header value is missing or invalid auth_scheme", HttpCodesEnum.BAD_REQUEST);
+			throw new AppError( "Missing header: Authorization header value is missing or invalid auth_scheme", HttpCodesEnum.UNAUTHORIZED);
 		}
 		const authHeader = event.headers.Authorization as string;
-		if (authHeader !== null && !authHeader.includes(this.BEARER)) {
-			throw new AppError( "Missing header: Authorization header is not of Bearer type access_token", HttpCodesEnum.BAD_REQUEST);
+		if (authHeader !== null && !authHeader.includes(Constants.BEARER)) {
+			throw new AppError( "Missing header: Authorization header is not of Bearer type access_token", HttpCodesEnum.UNAUTHORIZED);
 
 		}
 		const token = headerValue.replace(/^Bearer\s+/, "");
@@ -68,21 +68,21 @@ export class ValidationHelper {
 		try {
 			isValidJwt = await jwtAdapter.verify(token);
 		} catch (err) {
-			throw new AppError( "Failed to verify signature", HttpCodesEnum.BAD_REQUEST);
+			throw new AppError( "Failed to verify signature", HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		if (!isValidJwt) {
-			throw new AppError("Verification of JWT failed", HttpCodesEnum.BAD_REQUEST);
+			throw new AppError("Verification of JWT failed", HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		const jwt = jwtAdapter.decode(token);
 
 		if (jwt?.payload?.exp == null || jwt.payload.exp < absoluteTimeNow()) {
-			throw new AppError("Verification of exp failed", HttpCodesEnum.BAD_REQUEST);
+			throw new AppError("Verification of exp failed", HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		if (jwt?.payload?.sub == null) {
-			throw new AppError( "sub missing", HttpCodesEnum.BAD_REQUEST);
+			throw new AppError( "sub missing", HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		return jwt.payload.sub;
