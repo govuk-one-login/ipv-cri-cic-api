@@ -58,15 +58,15 @@ Mappings:
       apiTracingEnabled: false
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.dev.account.gov.uk'
     build:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.build.account.gov.uk'
     staging:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.staging.account.gov.uk'
     integration:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.integration.account.gov.uk'
     production:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.account.gov.uk'
 
 Conditions:
   IsProdLikeEnvironment: !Or
@@ -119,6 +119,7 @@ Globals:
         AWS_STACK_NAME: !Sub ${AWS::StackName} # The AWS Stack Name, as passed into the template.
         POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
+        ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
         SECRET_PREFIX: !If [
           UseSecretPrefix,
           !Ref SecretPrefix,
@@ -303,7 +304,8 @@ Resources:
             - Sid: KMSPolicy
               Effect: Allow
               Action:
-                - kms:*
+                - kms:Verify
+                - kms:Sign
               Resource:
                 Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
       Events:

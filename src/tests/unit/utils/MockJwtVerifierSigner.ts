@@ -1,5 +1,5 @@
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
-import { Jwt, JwtPayload } from "../../../utils/IverifiedCredential";
+import { Jwt, JwtPayload } from "../../../utils/IVeriCredential";
 import { AppError } from "../../../utils/AppError";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 

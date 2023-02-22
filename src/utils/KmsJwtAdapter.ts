@@ -1,6 +1,6 @@
 import format from "ecdsa-sig-formatter";
 import { Buffer } from "buffer";
-import { Jwt, JwtHeader, JwtPayload } from "./IverifiedCredential";
+import { Jwt, JwtHeader, JwtPayload } from "./IVeriCredential";
 import * as AWS from "@aws-sdk/client-kms";
 import { jwtUtils } from "./JwtUtils";
 import { DecryptCommand, DecryptCommandInput, DecryptCommandOutput } from "@aws-sdk/client-kms";

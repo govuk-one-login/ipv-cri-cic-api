@@ -1,11 +1,13 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { VerifiedCredential } from "./IverifiedCredential";
+import { VerifiedCredential } from "./IVeriCredential";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
 import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
+import { Constants } from "./Constants";
 
 const CREDENTIAL_EXPIRY = 15638400;
+const ISSUER = process.env.ISSUER;
 
 export class VerifiableCredentialService {
     readonly tableName: string;
@@ -17,6 +19,10 @@ export class VerifiableCredentialService {
     private static instance: VerifiableCredentialService;
 
     constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, logger: Logger ) {
+    	if (!ISSUER) {
+    		logger.error("Environment variable ISSUER is not configured");
+    		throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
+    	}
     	this.tableName = tableName;
     	this.logger = logger;
     	this.kmsJwtAdapter = kmsJwtAdapter;
@@ -31,18 +37,13 @@ export class VerifiableCredentialService {
 
     async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem | undefined, getNow: () => number): Promise<string> {
     	const now = getNow();
-    	// Retrieve the verifiable issuer from SSM Parameter (/verifiable-credential/issuer), hard coded with Dev account value.
-    	const issuer = "https://review-c.dev.account.gov.uk";
-    	//const expectedAudience = await configService.getJwtAudience(sessionItem.clientId); // common lib function
-    	// Retrieve the audience value from SSM Parameter (/jwtAuthentication/audience), hard coded with Dev account value.
-    	const expectedAudience = "https://review-c.dev.account.gov.uk";
     	const subject = sessionItem?.clientId as string;
     	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(sessionItem?.full_name, sessionItem?.date_of_birth, sessionItem?.document_selected, sessionItem?.date_of_expiry)
     		.build();
     	const result = {
     		iat: now,
-    		iss: issuer,
-    		aud: expectedAudience,
+    		iss: ISSUER,
+    		aud: ISSUER,
     		sub: subject,
     		nbf: now,
     		exp: now + CREDENTIAL_EXPIRY,
@@ -61,22 +62,22 @@ export class VerifiableCredentialService {
 class VerifiableCredentialBuilder {
     private readonly credential: VerifiedCredential;
 
-    constructor(fullName: string | undefined, dateOfBirth: string | undefined, documentType: string | undefined, dateOfExpiry: string | undefined) {
+    constructor(full_name: string | undefined, date_of_birth: string | undefined, document_selected: string | undefined, date_of_expiry: string | undefined) {
     	this.credential = {
     		"@context": [
-    			"https://www.w3.org/2018/credentials/v1",
-    			"https://vocab.account.gov.uk/contexts/identity-v1.jsonld",
+    			Constants.W3_BASE_CONTEXT,
+    			Constants.DI_CONTEXT,
     		],
     		type: [
-    			"VerifiableCredential",
-    			"ClaimedIdentityCredential",
+    			Constants.VERIFIABLE_CREDENTIAL,
+    			Constants.CLAIMED_IDENTITY_CREDENTIAL_TYPE,
     		],
     		credentialSubject: {
     			fullName: [
-    				{ value: fullName }],
-    			dateOfBirth,
-    			documentType,
-    			dateOfExpiry,
+    				{ value: full_name }],
+    			dateOfBirth: date_of_birth,
+    			documentType: document_selected,
+    			dateOfExpiry: date_of_expiry,
     		},
     	};
     }
