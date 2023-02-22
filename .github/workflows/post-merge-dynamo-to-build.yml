@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'infra-l2-dynamo'
+      - 'infra-l2-dynamo/**'
 
 permissions:
   id-token: write

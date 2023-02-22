@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'infra-l2-dynamo'
+      - 'infra-l2-dynamo/**'
 
 permissions:
   id-token: write
@@ -22,7 +22,6 @@ jobs:
     defaults:
       run:
         working-directory: infra-l2-dynamo
-        template-file: template.yaml
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
