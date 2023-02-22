@@ -1,16 +1,13 @@
 name: Deploy Main to Build Env KMS Infra
 on:
-  workflow_dqispatch:
+  workflow_dispatch:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches:
       - main
     paths:
       - 'infra-l2-kms/**'
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
+      
 permissions:
   id-token: write
   contents: read
