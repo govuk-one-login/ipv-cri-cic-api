@@ -1,6 +1,7 @@
-name: Deploy DynamoDB to Build Env
+name: Deploy Main to Build Env Dynamo Infra
 'on':
-  # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
+  workflow_dispatch:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ main ]
     paths:
