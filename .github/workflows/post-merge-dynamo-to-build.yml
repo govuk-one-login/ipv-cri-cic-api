@@ -4,7 +4,7 @@ name: Deploy DynamoDB to Build Env
   push:
     branches: [ main ]
     paths:
-      - "../../infra-l2-dynamo/**"
+      - "infra-l2-dynamo/**"
   
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./infra-l2-dynamo/**
+        working-directory: infra-l2-dynamo/**
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -48,5 +48,3 @@ jobs:
             artifact-bucket-name: ${{ secrets.BUILD_CRI_DDB_ARTIFACT_SOURCE_BUCKET_NAME }}
             working-directory: infra-l2-dynamo/**
             template-file: template.yaml
-
-
