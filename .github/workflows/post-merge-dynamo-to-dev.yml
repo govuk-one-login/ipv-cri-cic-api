@@ -7,7 +7,7 @@ on:
       - main
     paths:
       - 'infra-l2-dynamo/**'
-      
+
 permissions:
   id-token: write
   contents: read
@@ -37,8 +37,8 @@ jobs:
 
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t 
-           working-directory: infra-l2-dynamo/**
-           template-file: template.yaml
+          working-directory: infra-l2-dynamo/**
+          template-file: template.yaml
 
       - name: SAM Build
         run: sam build -t template.yaml
@@ -49,5 +49,3 @@ jobs:
             artifact-bucket-name: ${{ secrets.DEV_CRI_DDB_ARTIFACT_SOURCE_BUCKET_NAME }}
             working-directory: infra-l2-dynamo/**
             template-file: template.yaml
-
-
