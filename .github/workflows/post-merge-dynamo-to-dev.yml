@@ -49,5 +49,3 @@ jobs:
             artifact-bucket-name: ${{ secrets.DEV_CRI_DDB_ARTIFACT_SOURCE_BUCKET_NAME }}
             working-directory: infra-l2-dynamo/**
             template-file: template.yaml
-
-
