@@ -1,11 +1,11 @@
 name: Deploy DynamoDB to Build Env
-on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
+'on':
+  # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
+  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
-      - 'infra-l2-dynamo/**'
+      - "infra-l2-dynamo/**"
 
 permissions:
   id-token: write
