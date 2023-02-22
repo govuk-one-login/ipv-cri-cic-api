@@ -125,5 +125,4 @@ export class ValidationHelper {
 	isJwtNotYetValid = (jwtPayload: JwtPayload): boolean => {
 		return jwtPayload.nbf == null || (absoluteTimeNow() < jwtPayload.nbf);
 	};
-
 }

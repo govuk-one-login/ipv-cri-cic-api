@@ -3,10 +3,11 @@ import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AppError } from "../utils/AppError";
-import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { SQSClient } from "@aws-sdk/client-sqs";
+import { DynamoDBDocument, GetCommand, UpdateCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 
 export class CicService {
     readonly tableName: string;
@@ -101,53 +102,48 @@ export class CicService {
     	}
     }
 
-		async createAuthSession(session: IFullAuthSession): Promise<void> {
-			this.logger.debug(session.authSessionId);
-	
-			const createAuthSessionCommand: any = new UpdateCommand({
-				TableName: this.tableName,
-				Key: { sessionId: session.authSessionId },
-				UpdateExpression: "SET fullName = :fullName, dateOfBirth = :dateOfBirth, documentSelected = :documentSelected, dateOfExpiry =:dateOfExpiry",
-	
-				ExpressionAttributeValues: {
-					":sessionId": session.authSessionId,
-					":subjectIdentifier": session.subjectIdentifier,
-					":redirect_uri": session.redirectUri,
-					":state": session.state,
-					":issuer": session.issuer,
-					":timeToLive": session.timeToLive.toString(),
-					":issuedOn": session.issuedOn.toString(),
-					":authSessionState": session.authSessionState,
-					":biometricSessionId": "",
-					":clientId": session.clientId,
-					":journeyId": session.journeyId,
-					":abortReason": "",
-				},
+		async createAuthSession(session: SessionRequestSummary): Promise<string> {
+			const putSessionCommand = new PutCommand({
+					TableName: this.tableName,
+					Item: {
+							sessionId: randomUUID(),
+							expiryDate: session.expiryDate,
+							createdDate: Date.now(),
+							clientId: session.clientId,
+							state: session.state,
+							redirectUri: session.redirectUri,
+							subject: session.subjectIdentifier,
+							// persistentSessionId: sessionRequest.persistentSessionId,
+							clientSessionId: session.journeyId,
+							// clientIpAddress: sessionRequest.clientIpAddress,
+							attemptCount: 0,
+					},
 			});
-	
-			this.logger.info("saving session data in dynamodb" + JSON.stringify(createAuthSessionCommand));
+			this.logger.info("saving session data in dynamodb" + JSON.stringify(putSessionCommand));
+			
 			try {
-				await this.dynamo.send(createAuthSessionCommand);
-				this.logger.info("updated CIC data in dynamodb" + JSON.stringify(createAuthSessionCommand));
+				await this.dynamo.send(putSessionCommand);
+				this.logger.info("updated CIC data in dynamodb" + JSON.stringify(putSessionCommand));
 			} catch (error) {
 				this.logger.error("got error " + error);
 				throw new AppError("saveItem - failed ", 500);
 			}
-		}
+	}
 
 		async sendToTXMA(messageBody: string): Promise<void> {
-			var params = {
-			 MessageBody: messageBody,
-			 QueueUrl: process.env.TXMA_QUEUE_URL,
-		 };
+			const params = {
+				QueueUrl: process.env.TXMA_QUEUE_URL,
+				MessageBody: JSON.stringify(messageBody)
+			}
 	
-			this.logger.info("updating CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+			this.logger.info("Sending event to SQS Qeue" + JSON.stringify(messageBody));
 			try {
-				await this.sqs.sendMessage(params);
-				this.logger.info("updated CIC data in dynamodb" + JSON.stringify(saveCICCommand));
+				const client = new SQSClient({ region: process.env.REGION });
+				await client.send(new SendMessageCommand(params))
+				this.logger.info("Event sent to SQS" + JSON.stringify(messageBody));
 			} catch (error) {
-				this.logger.error("got error " + error);
-				throw new AppError("updateItem - failed ", 500);
+				this.logger.error("Error sending to SQS" + error);
+				throw new AppError("Error sedning to SQS", 500);
 			}
 		}
 }

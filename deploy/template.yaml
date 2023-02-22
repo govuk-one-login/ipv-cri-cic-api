@@ -58,17 +58,52 @@ Mappings:
       apiTracingEnabled: false
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
+      CLIENTS: '[{"jwksEndpoint":"https://lg0i8qtuph.execute-api.eu-west-2.amazonaws.com/dev/.well-known/jwks.json","clientId":"cd2cc8b5-304a-46e8-9b04-0e90438c18be","redirectUri":"https://www.review-b.build.account.gov.uk/stub/callback"},{"jwksEndpoint": "https://oxhi1jeu67.execute-api.eu-west-2.amazonaws.com/dev/.well-known/jwks.json", "clientId":"5C584572-9A61-4601-9E78-676713292A4E", "redirectUri": "https://oxhi1jeu67.execute-api.eu-west-2.amazonaws.com/dev/redirect"},{"jwksEndpoint":"https://ykp2os4gy2.execute-api.eu-west-2.amazonaws.com/dev/.well-known/jwks.json", "clientId":"5C584572-9A61-4601-9E78-676713292ADC", "redirectUri":"https://ykp2os4gy2.execute-api.eu-west-2.amazonaws.com/dev/redirect"}]'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       ISSUER: 'https://review-c.dev.account.gov.uk'
+      AUTHSESSIONTTL: '604800' # 7 days in seconds
     build:
+      CLIENTS: '[{"jwksEndpoint":"https://lg0i8qtuph.execute-api.eu-west-2.amazonaws.com/dev/.well-known/jwks.json","clientId":"cd2cc8b5-304a-46e8-9b04-0e90438c18be","redirectUri":"https://www.review-b.build.account.gov.uk/stub/callback"},{"jwksEndpoint":"https://vtkjzynbr9.execute-api.eu-west-2.amazonaws.com/build/.well-known/jwks.json","clientId":"BD7B2A5D-1167-4EA3-8B57-B693A850689D","redirectUri":"https://vtkjzynbr9.execute-api.eu-west-2.amazonaws.com/build/redirect"}]'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       ISSUER: 'https://review-c.build.account.gov.uk'
+      AUTHSESSIONTTL: '604800' # 7 days in seconds
     staging:
+      CLIENTS: '[{"jwksEndpoint":"https://oidc.staging.account.gov.uk/.well-known/jwks.json","clientId":"authOrchestratorDocApp","redirectUri":"https://oidc.staging.account.gov.uk/doc-app-callback"},{"jwksEndpoint":"https://18zwbqzm0k.execute-api.eu-west-2.amazonaws.com/staging/.well-known/jwks.json","clientId":"ipv-core","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmaw"},{"jwksEndpoint":"https://18zwbqzm0k.execute-api.eu-west-2.amazonaws.com/staging/.well-known/jwks.json","clientId":"23d554e9-6b6e-46cb-8440-d6010635d673","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback/dcmaw"},{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback/dcmaw"},{"jwksEndpoint":"https://xqy12f7o47.execute-api.eu-west-2.amazonaws.com/staging/.well-known/jwks.json","clientId":"9CDA6F61-DCA5-4747-96D8-AFC6C6ECB068","redirectUri":"https://xqy12f7o47.execute-api.eu-west-2.amazonaws.com/staging/redirect"}]'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       ISSUER: 'https://review-c.staging.account.gov.uk'
+      AUTHSESSIONTTL: '86400' # 24 hours in seconds
     integration:
+      CLIENTS: '[{"jwksEndpoint":"https://oidc.integration.account.gov.uk/.well-known/jwks.json", "clientId":"authOrchestratorDocApp", "redirectUri":"https://oidc.integration.account.gov.uk/doc-app-callback"}, {"jwksEndpoint":"https://khcwzwwkrk.execute-api.eu-west-2.amazonaws.com/integration/.well-known/jwks.json", "clientId":"ipv-core", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback/dcmaw"}, {"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback/dcmaw"}]'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       ISSUER: 'https://review-c.integration.account.gov.uk'
+      AUTHSESSIONTTL: '86400' # 24 hours in seconds
     production:
+      CLIENTS: '[{"jwksEndpoint":"https://oidc.account.gov.uk/.well-known/jwks.json", "clientId":"authOrchestratorDocApp", "redirectUri":"https://oidc.account.gov.uk/doc-app-callback"}, {"jwksEndpoint":"https://sxzot82ph2.execute-api.eu-west-2.amazonaws.com/production/.well-known/jwks.json", "clientId":"ipv-core", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback/dcmaw"}, {"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback/dcmaw"}]'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       ISSUER: 'https://review-c.account.gov.uk'
+      AUTHSESSIONTTL: '86400' # 24 hours in seconds
+  TxMAAccounts:
+    # EVENTS is used to egress to TxMA.
+    dev:
+      AUDIT: arn:aws:iam::725018305812:root
+      EVENTS: arn:aws:iam::248098332657:root
+    build:
+      AUDIT: arn:aws:iam::761029721660:root
+      EVENTS: arn:aws:iam::750703655225:root
+    staging:
+      AUDIT: arn:aws:iam::778587367904:root
+      EVENTS: arn:aws:iam::178023842775:root
+    integration:
+      AUDIT: arn:aws:iam::423448613278:root
+      EVENTS: arn:aws:iam::729485541398:root
+    production:
+      AUDIT: arn:aws:iam::348043515437:root
+      EVENTS: arn:aws:iam::451773080033:root
 
 Conditions:
+  CreateDevResources: !Equals
+    - !Ref Environment
+    - dev
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -120,6 +155,7 @@ Globals:
         POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
         ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+        REGION: !Sub "${AWS::Region}"
         SECRET_PREFIX: !If [
           UseSecretPrefix,
           !Ref SecretPrefix,
@@ -196,7 +232,7 @@ Resources:
 
   ### End of API Gateway definition.
 
-  ### Function Definition
+  ### Function Definition
 
   # ClaimedIdentity
   ClaimedIdentityFunction:
@@ -344,6 +380,189 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref UserInfoFunction
       Principal: apigateway.amazonaws.com
+ 
+  
+  # SessionHandler
+  SessionFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SessionFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "CIC-Session-${AWS::StackName}"
+      Handler: SessionHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          AUTH_SESSION_TTL:
+            !FindInMap [EnvironmentVariables, !Ref Environment, AUTHSESSIONTTL]
+          POWERTOOLS_SERVICE_NAME: UserInfoHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+          CLIENT_CONFIG: !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
+          ENCRYPTION_KEY_IDS: !Sub "{{resolve:ssm:/${Environment}/${L2KMSStackName}/KMS/EncryptionKeyArn}}"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource: "*"
+                #Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+              #Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        session:
+          Type: Api
+          Properties:
+            Path: /session
+            Method: post
+            RestApiId: !Ref CICRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - SessionHandler.ts
+
+  SessionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/CIC-Session-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  SessionFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref SessionFunctionLogGroup
+
+  SessionFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SessionFunction
+      Principal: apigateway.amazonaws.com
+
+
+  TxMASQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, MESSAGERETENTIONPERIODDAYS]
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref TxMAKeyAlias
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "TxMASQSQueueDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+
+  TxMASQSQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref TxMASQSQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:ReceiveMessage"
+            Resource:
+              - !GetAtt TxMASQSQueue.Arn
+            Principal:
+              AWS:
+                - !FindInMap [TxMAAccounts, !Ref Environment, EVENTS]
+
+  TxMASQSQueueDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 259200 # three days
+      KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+
+  TxMAKMSEncryptionKey:
+    Type: AWS::KMS::Key
+    # KMS Key manually rotated.
+    # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
+    Properties:
+      Description: A KMS Key for encrypting the SQS Queue for TxMA
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: Allow
+            Principal:
+              AWS: !FindInMap [TxMAAccounts, !Ref Environment, EVENTS]
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:GenerateDataKey"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  TxMAKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        - CreateDevResources
+        - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
+        - alias/TxMAKMSEncryptionKey
+      TargetKeyId: !Ref TxMAKMSEncryptionKey
 
 Outputs:
   CICApiGatewayId:

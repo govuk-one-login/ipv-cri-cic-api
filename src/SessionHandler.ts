@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { Response } from "./utils/Response";
+import { Response, SECURITY_HEADERS } from "./utils/Response";
 import { SessionRequestProcessor } from "./services/SessionRequestProcessor";
 import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
@@ -21,22 +21,28 @@ const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceNa
 class Session implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
-	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
+	async handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 		switch (event.resource) {
 			case ResourcesEnum.SESSION:
 				try {
 					logger.debug("metrics is", { metrics });
 					logger.debug("Event received", { event });
-					const sessionId = event.headers.session_id as string;
-					logger.debug("Session id", { sessionId });
-					if (!event.headers || !sessionId) {
-						return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session_id is required");
-					}
-
-					if (event.body) {
-						return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+					if (event.queryStringParameters === null || Object.keys(event.queryStringParameters).length === 0) {
+						logger.error('INVALID_REQUEST', {
+							fieldName: 'queryParams',
+							value: '',
+							reason: 'No query string params present'
+						})
+						return {
+							statusCode: HttpCodesEnum.UNAUTHORIZED,
+							headers: SECURITY_HEADERS,
+							body: JSON.stringify({
+								redirect: null,
+								message: 'Invalid request: No query string params'
+							})
+						}
 					} else {
-						return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
+						return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
 					}
 				} catch (err: any) {
 					logger.error("An error has occurred. " + err);
