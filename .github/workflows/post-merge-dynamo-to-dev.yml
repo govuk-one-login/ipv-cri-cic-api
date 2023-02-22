@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'infra-l2-dynamo/**'
+      - 'infra-l2-dynamo'
 
 permissions:
   id-token: write
@@ -37,7 +37,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM Validate
-        run: sam validate --region ${{ env.AWS_REGION }} -t
+        run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
 
       - name: SAM Build
         run: sam build -t template.yaml
@@ -46,5 +46,5 @@ jobs:
         uses: alphagov/di-devplatform-upload-action@v3
         with:
             artifact-bucket-name: ${{ secrets.DEV_CRI_DDB_ARTIFACT_SOURCE_BUCKET_NAME }}
-            working-directory: infra-l2-dynamo/**
+            working-directory: infra-l2-dynamo
             template-file: template.yaml
