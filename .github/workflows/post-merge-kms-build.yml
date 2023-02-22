@@ -1,6 +1,9 @@
 name: Deploy Main to Build Env KMS Infra
 on:
+<<<<<<< HEAD
   workflow_dispatch:
+=======
+>>>>>>> ee026e60cad45b184a24cc9d9e9aef29456689c1
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches:
