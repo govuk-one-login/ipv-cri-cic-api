@@ -8,6 +8,8 @@ export class Constants {
 
     static readonly CLAIMEDID_METRICS_NAMESPACE = "CIC-CRI";
 
+    static readonly USERINFO_LOGGER_SVC_NAME = "UserInfoHandler";
+
     static readonly DEBUG = "DEBUG";
 
     static readonly INFO = "INFO";
@@ -15,4 +17,14 @@ export class Constants {
     static readonly WARN = "WARN";
 
     static readonly ERROR = "ERROR";
+
+    static readonly BEARER = "Bearer";
+
+    static readonly W3_BASE_CONTEXT = "https://www.w3.org/2018/credentials/v1";
+
+    static readonly DI_CONTEXT = "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld";
+
+    static readonly CLAIMED_IDENTITY_CREDENTIAL_TYPE = "ClaimedIdentityCredential";
+
+    static readonly VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 }
