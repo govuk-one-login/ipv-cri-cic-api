@@ -36,7 +36,7 @@ export class ValidationHelper {
 	private validateUserData(data: string | undefined, errmsg: string, logger: Logger): boolean {
 		let isValid = true;
 		if (data == null || data === undefined || data.trim().length === 0) {
-			logger.info("UserInfo missing: ", errmsg);
+			logger.info({ message :"UserInfo missing: ", errmsg });
 			isValid = false;
 		}
 		return isValid;

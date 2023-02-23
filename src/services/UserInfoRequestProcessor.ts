@@ -79,7 +79,6 @@ export class UserInfoRequestProcessor {
     	}
 
     	this.metrics.addMetric("found session", MetricUnits.Count, 1);
-    	this.logger.debug("Session is " + JSON.stringify(session));
     	// Validate the AuthSessionState to be "CIC_ACCESS_TOKEN_ISSUED"
     	if (session.authSessionState !== AuthSessionState.CIC_ACCESS_TOKEN_ISSUED) {
     		return new Response(HttpCodesEnum.UNAUTHORIZED, `AuthSession is in wrong Auth state: Expected state- ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}, actual state- ${session.authSessionState}`);
@@ -96,12 +95,12 @@ export class UserInfoRequestProcessor {
     		signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, absoluteTimeNow);
     	} catch (error) {
     		if (error instanceof AppError) {
-    			this.logger.error("**** Error generating signed verifiable credential jwt: " + error.message);
+    			this.logger.error({ message :"Error generating signed verifiable credential jwt: " + error.message });
     			return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the verifiableCredential Jwt");
     		}
     	}
     	return new Response(HttpCodesEnum.OK, JSON.stringify({
-    		sub: session?.clientId,
+    		sub: session.clientId,
     		"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
     	}));
     }
