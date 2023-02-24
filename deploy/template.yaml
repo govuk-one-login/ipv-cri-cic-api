@@ -32,11 +32,11 @@ Parameters:
     Description: The name of the VPC stack deployed.
   L2DynamoStackName:
     Type: String
-    Default: "none"
+    Default: "cic-cri-ddb"
     Description: The name of the L2 DynamoDB stack deployed.
   L2KMSStackName:
     Type: String
-    Default: "none"
+    Default: "cic-cri-kms"
     Description: The name of the L2 DynamoDB stack deployed.
 
 Mappings:
