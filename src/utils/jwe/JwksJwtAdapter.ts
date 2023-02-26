@@ -17,27 +17,6 @@ export class JwksJwtAdapter implements IVerifyJwts {
     this.publicKeyGetter = publicKeyGetter
   }
 
-  async verify (urlEncodedJwt: string): Promise<boolean> {
-    const JWKS: Jwks = await this.publicKeyGetter.getJwks()
-    const keystore: jose.JWK.KeyStore = await new Promise((resolve, reject) => {
-      jose.JWK.asKeyStore(JWKS)
-        .then(result => resolve(result))
-        .catch(err => reject(err))
-    })
-    try {
-      const result = await new Promise((resolve, reject) => {
-        jose.JWS.createVerify(keystore)
-          .verify(urlEncodedJwt)
-          .then(result => resolve(result))
-          .catch(error => reject(error))
-      })
-      return result != null
-    } catch (error) {
-      console.error(error)
-      return false
-    }
-  }
-
   decode (urlEncodedJwt: string): Jwt {
     const [header, payload, signature] = urlEncodedJwt.split('.')
     const result: Jwt = {
