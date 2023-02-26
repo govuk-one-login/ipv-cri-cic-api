@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { IEncryptAsymmetric } from '../interfaces/IEncryptAsymmetric'
-import { IGetPublicKeys } from '../../adapters/PublicKeyGetter'
+import { IGetPublicKeys } from '../PublicKeyGetter'
 
 export class RsaEncryptor implements IEncryptAsymmetric {
   private readonly publicKeyGetter

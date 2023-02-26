@@ -1,4 +1,4 @@
-import { Response, GenericServerError, UnauthorizedResponse, SuccessSessionResponse, UnauthorizedResponseWithRedirect } from "../utils/Response";
+import { Response, GenericServerError, UnauthorizedResponse, SuccessSessionResponse, UnauthorizedResponseWithRedirect, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { randomUUID } from "crypto";
@@ -11,11 +11,14 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { GcmDecryptor } from "../utils/jwe/adapters/GcmDecryptor";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
-import { VerifiableCredentialService } from "../utils/VerifiableCredentialService";
 import { RsaDecryptor } from "../utils/jwe/adapters/RsaDecryptor";
 import { JweDecryptor } from "../utils/jwe/JweDecryptor";
 import { KmsPublicKeyGetter } from "../utils/jwe/PublicKeyGetter";
 import { JwksJwtAdapter } from "../utils/jwe/JwksJwtAdapter";
+import { Jwt } from "../utils/IVeriCredential";
+import { encrypt } from "../utils/jwe/jwtEncryptor";
+import { sign } from "../utils/jwe/jwtSigner";
+import { buildJwt } from "../utils/jwe/jwtBuilder";
 
 const config = {
 	CLIENT_CONFIG: process.env.CLIENT_CONFIG || [],
@@ -82,6 +85,36 @@ export class SessionRequestProcessor {
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 
+		const clientTest = {
+			redirectUri: "https://www.review-b.build.account.gov.uk/stub/callback",
+			jwksEndpoint: "https://lg0i8qtuph.execute-api.eu-west-2.amazonaws.com/dev/.well-known/jwks.json",
+			clientId: "cd2cc8b5-304a-46e8-9b04-0e90438c18be"
+		};
+
+		const jwt = buildJwt(clientTest);
+		const requestJwt = await encrypt(await sign(jwt, '63ca7025-70db-4265-8643-35aec68f3d0f'))
+
+		console.log('requestJwt', requestJwt);
+
+		let queryStringParams;
+		if (event.queryStringParameters === null || Object.keys(event.queryStringParameters).length === 0) {
+			this.logger.error('INVALID_REQUEST', {
+				fieldName: 'queryParams',
+				value: '',
+				reason: 'No query string params present'
+			})
+			return {
+				statusCode: HttpCodesEnum.UNAUTHORIZED,
+				headers: SECURITY_HEADERS,
+				body: JSON.stringify({
+					redirect: null,
+					message: 'Invalid request: No query string params'
+				})
+			}
+		} else {
+			queryStringParams = event.queryStringParameters;
+		}
+
 		let ipAddress, client, jwksEndpoint;
 
 		if (event.headers['x-govuk-signin-source-ip'] == null || event.headers['x-govuk-signin-source-ip'] === undefined) {
@@ -94,7 +127,7 @@ export class SessionRequestProcessor {
 			ipAddress = event.headers['x-govuk-signin-source-ip']
 		}
 
-		const clientId = event.queryStringParameters.client_id;
+		const clientId = queryStringParams.client_id;
 
 		if (clientId == null) {
 			this.logger.error('INVALID_REQUEST', {
@@ -136,16 +169,16 @@ export class SessionRequestProcessor {
 			jwksEndpoint
 		}
 
-		if (event.queryStringParameters.request_uri != null) {
+		if (queryStringParams.request_uri != null) {
 			this.logger.error('INVALID_REQUEST', {
 				fieldName: 'request_uri',
-				value: event.queryStringParameters.request_uri,
+				value: queryStringParams.request_uri,
 				reason: 'request uri is not expected to be present'
 			})
 			return UnauthorizedResponse('Invalid request: Request uri not supported')
 		}
 
-		const requestJwe = event.queryStringParameters.request ?? null
+		const requestJwe = queryStringParams.request ?? null
 		if (requestJwe === null) {
 			this.logger.error('INVALID_REQUEST', {
 				fieldName: 'request_jwe',
@@ -155,7 +188,6 @@ export class SessionRequestProcessor {
 			return UnauthorizedResponse('Invalid request: Missing request query parameter')
 		}
 
-		//IT BEGINS
 		let urlEncodedJwt;
 		try { 
 			const gcmAdapter = new GcmDecryptor();
@@ -174,59 +206,21 @@ export class SessionRequestProcessor {
 		}
 
 		const PublicKeyGetter = new KmsPublicKeyGetter();
-		const keyGetter = await PublicKeyGetter.getPublicKey((client.jwksEndpoint).toString());
+		const keyGetter = await PublicKeyGetter.getPublicKey('017ee0fc-f90c-4a56-b5b3-70c42807f626');
 		console.log('keyGetter', keyGetter);
 		const jwtAdapter = new JwksJwtAdapter(PublicKeyGetter);
 		console.log('jwtAdapter', jwtAdapter);
-		let parsedJwt;
+		let parsedJwt: Jwt
 
 		try {
 			parsedJwt = jwtAdapter.decode(urlEncodedJwt)
 			console.log('parsedJwt', parsedJwt);
 		} catch (error) {
 			this.logger.debug('FAILED_DECODING_JWT', { error: error })
+			return UnauthorizedResponse('Invalid request: Rejected jwt')
 		}
 
-		
-
-		const jwtPayload = {
-			exp:1708954462,
-			iat:1648562707,
-			nbf:1648562707,
-			aud:"https://f2f.cri.account.gov.uk/",
-			iss:"https://ipv.core.account.gov.uk",
-			sub:"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
-			response_type:"code",
-			client_id:"cd2cc8b5-304a-46e8-9b04-0e90438c18be",
-			redirect_uri:"https://www.review-b.build.account.gov.uk/stub/callback",
-			state:"af0ifjsldkj",
-			govuk_signin_journey_id: "govuk_signin_journey_id",
-			shared_claims:{
-				 name:[
-						{
-							 nameParts:[
-									{
-										 value:"Frederick",
-										 type:"GivenName"
-									},
-									{
-										 value:"Joseph",
-										 type:"GivenName"
-									},
-									{
-										 value:"Flintstone",
-										 type:"FamilyName"
-									}
-							 ]
-						}
-				 ],
-				 birthDate:[
-						{
-							 value:"1960-02-02"
-						}
-				 ]
-			}
-	 }
+		const jwtPayload = parsedJwt.payload
 
 		const redirectUri = jwtPayload.redirect_uri ?? null
 		if (redirectUri === null) {
@@ -271,10 +265,10 @@ export class SessionRequestProcessor {
 			)
 		}
 
-		if (!(this.validationHelper.isClientIdInJwtValid(event.queryStringParameters, jwtPayload))) {
+		if (!(this.validationHelper.isClientIdInJwtValid(queryStringParams, jwtPayload))) {
 			this.logger.error('INVALID_DECODED_JWT', {
 				fieldName: 'jwt and queryParam clientId',
-				value: { jwt: jwtPayload.client_id, queryParam: event.queryStringParameters.client_id },
+				value: { jwt: jwtPayload.client_id, queryParam: queryStringParams.client_id },
 				reason: 'Value in JWT does not match query params'
 			})
 			return UnauthorizedResponseWithRedirect({
@@ -284,10 +278,10 @@ export class SessionRequestProcessor {
 			})
 		}
 
-		if (!(this.validationHelper.isResponseTypeQueryParamValid(event.queryStringParameters))) {
+		if (!(this.validationHelper.isResponseTypeQueryParamValid(queryStringParams))) {
 			this.logger.error('INVALID_REQUEST', {
 				fieldName: 'response type',
-				value: event.queryStringParameters.response_type,
+				value: queryStringParams.response_type,
 				reason: 'Invalid response_type in query params'
 			})
 			return UnauthorizedResponseWithRedirect({
@@ -297,7 +291,7 @@ export class SessionRequestProcessor {
 			})
 		}
 
-		if (!(this.validationHelper.isResponseTypeInJwtValid(event.queryStringParameters, jwtPayload))) {
+		if (!(this.validationHelper.isResponseTypeInJwtValid(queryStringParams, jwtPayload))) {
 			this.logger.error('INVALID_DECODED_JWT', {
 				fieldName: 'jwt response_type',
 				value: jwtPayload.response_type,
@@ -335,9 +329,7 @@ export class SessionRequestProcessor {
 				errorDescription: 'expired jwt'
 			})
 		}
-		// Payload Validation -- END
 
-		// Check in DynamoDB if session exists TXMA Event -- START
 		const sessionId: string = randomUUID()
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
@@ -348,7 +340,6 @@ export class SessionRequestProcessor {
 			this.logger.error('UNEXPECTED_ERROR_SESSION_EXISTS', { error: err })
 			return GenericServerError
 		}
-		// Check in DynamoDB if session exists TXMA Event -- END
 
 		const session = {
 			authSessionId: sessionId,
@@ -367,16 +358,13 @@ export class SessionRequestProcessor {
 			expiryDate: Date.now() + config.AUTH_SESSION_TTL * 1000,
 		}
 
-		// Add session to DynamoDB -- START
 		try {
 			await await this.cicService.createAuthSession(session);
 		} catch (error) {
 			this.logger.error('FAILED_CREATING_SESSION', { error: error })
 			return GenericServerError
 		}
-		// Add session to DynamoDB -- END
 
-		// Send event to SQS -- START
 		const buildCoreEventFieldsMessage = buildCoreEventFields(session, config.ISSUER, ipAddress);
 
 		const txmaData = {
@@ -395,7 +383,6 @@ export class SessionRequestProcessor {
 			})
 			return GenericServerError
 		}
-		// Send event to SQS -- END
 
 		this.logger.info('COMPLETED')
 		return SuccessSessionResponse(session.authSessionId, state, redirectUri)

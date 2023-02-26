@@ -1,6 +1,6 @@
 import { v3KmsClient } from './kmsClient'
 import { GetPublicKeyCommand, GetPublicKeyCommandOutput } from '@aws-sdk/client-kms'
-import { Jwks } from './Auth'
+import { Jwks } from '../IVeriCredential'
 import https from 'https'
 
 export interface IGetPublicKeys {

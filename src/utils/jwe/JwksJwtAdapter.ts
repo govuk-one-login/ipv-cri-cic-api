@@ -1,13 +1,7 @@
 import jose from 'node-jose'
-import { Jwt, Jwks } from './Auth'
-// import { IVerifyJwts } from '../types/ISecureJwts'
+import { Jwt, Jwks, IVerifyJwts } from '../IVeriCredential'
 import { jwtUtils } from '../JwtUtils'
 import { IGetPublicKeys } from './PublicKeyGetter'
-
-interface IVerifyJwts {
-  verify: (urlEncodedJwt: string) => Promise<boolean>
-  decode: (urlEncodedJwt: string) => Jwt
-}
 
 export class JwksJwtAdapter implements IVerifyJwts {
   readonly publicKeyGetter: IGetPublicKeys

@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { jwtUtils } from '../JwtUtils'
+import { jwtUtils } from '../../JwtUtils'
 import { IEncryptSymmetric } from '../interfaces/IEncryptSymmetric'
 
 export class GcmEncryptor implements IEncryptSymmetric {

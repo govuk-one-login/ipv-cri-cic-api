@@ -4,9 +4,10 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { ISessionItem } from "../models/ISessionItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyEventQueryStringParameters } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
 import { Constants } from "./Constants";
+import { JwtPayload } from "./IVeriCredential";
 
 export class ValidationHelper {
 
@@ -88,7 +89,6 @@ export class ValidationHelper {
 		return jwt.payload.sub;
 	}
 
-	//Viveak Stuff
 	isClientIdInJwtValid = (
 		queryParams: APIGatewayProxyEventQueryStringParameters,
 		jwtPayload: JwtPayload,

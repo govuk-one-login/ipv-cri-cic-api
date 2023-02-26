@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { Response, SECURITY_HEADERS } from "./utils/Response";
+import { Response } from "./utils/Response";
 import { SessionRequestProcessor } from "./services/SessionRequestProcessor";
 import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
@@ -27,23 +27,7 @@ class Session implements LambdaInterface {
 				try {
 					logger.debug("metrics is", { metrics });
 					logger.debug("Event received", { event });
-					if (event.queryStringParameters === null || Object.keys(event.queryStringParameters).length === 0) {
-						logger.error('INVALID_REQUEST', {
-							fieldName: 'queryParams',
-							value: '',
-							reason: 'No query string params present'
-						})
-						return {
-							statusCode: HttpCodesEnum.UNAUTHORIZED,
-							headers: SECURITY_HEADERS,
-							body: JSON.stringify({
-								redirect: null,
-								message: 'Invalid request: No query string params'
-							})
-						}
-					} else {
-						return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
-					}
+					return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
 				} catch (err: any) {
 					logger.error("An error has occurred. " + err);
 					if (err instanceof AppError) {

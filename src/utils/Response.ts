@@ -1,4 +1,5 @@
 import { HttpCodesEnum } from "./HttpCodesEnum";
+import { JwtPayload } from "./IVeriCredential";
 export class Response {
 	constructor(
 		public statusCode: number,

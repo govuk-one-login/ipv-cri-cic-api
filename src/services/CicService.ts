@@ -113,9 +113,7 @@ export class CicService {
 							state: session.state,
 							redirectUri: session.redirectUri,
 							subject: session.subjectIdentifier,
-							// persistentSessionId: sessionRequest.persistentSessionId,
 							clientSessionId: session.journeyId,
-							// clientIpAddress: sessionRequest.clientIpAddress,
 							attemptCount: 0,
 					},
 			});

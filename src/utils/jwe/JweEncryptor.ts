@@ -1,7 +1,6 @@
 import { IEncryptAsymmetric } from './interfaces/IEncryptAsymmetric'
 import { IEncryptSymmetric } from './interfaces/IEncryptSymmetric'
 import crypto from 'crypto'
-import { buildEncryptConfig } from '../config'
 import { jwtUtils } from '../JwtUtils'
 
 export class JweEncryptor {
@@ -15,7 +14,6 @@ export class JweEncryptor {
 
   async encrypt (plaintext: string): Promise<string> {
     const webcrypto = crypto.webcrypto as unknown as Crypto
-    const config = buildEncryptConfig()
 
     const header = {
       alg: 'RSA-OAEP-256',
@@ -26,7 +24,7 @@ export class JweEncryptor {
     const cek: Uint8Array = webcrypto.getRandomValues(new Uint8Array(32))
     const additionalData: Uint8Array = new Uint8Array(Buffer.from(protectedHeader))
 
-    const encryptedKey = await this.asymmetricEncryptor.encrypt(cek, config.ENCRYPTION_KEY_IDS)
+    const encryptedKey = await this.asymmetricEncryptor.encrypt(cek, process.env.ENCRYPTION_KEY_IDS)
     const encrypted: Uint8Array = await this.symmetricEncryptor.encrypt(plaintext, cek, initializationVector, additionalData)
 
     const tag: Uint8Array = encrypted.slice(-16)

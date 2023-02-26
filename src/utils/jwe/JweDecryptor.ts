@@ -1,6 +1,6 @@
 import { IDecryptAsymmetric } from './interfaces/IDecryptAsymmetric'
 import { IDecryptSymmetric } from './interfaces/IDecryptSymmetric'
-import { JsonWebTokenError } from './Auth'
+import { JwtPayload, JsonWebTokenError } from "../IVeriCredential";
 import { jwtUtils } from '../JwtUtils'
 import { IDecryptJwe } from './interfaces/IDecryptJwe'
 
