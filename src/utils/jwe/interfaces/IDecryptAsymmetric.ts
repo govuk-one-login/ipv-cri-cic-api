@@ -1,3 +1,3 @@
 export interface IDecryptAsymmetric {
-  decrypt: (cek: Uint8Array) => Promise<Uint8Array>
+	decrypt(cek: Uint8Array): Promise<Uint8Array>;
 }

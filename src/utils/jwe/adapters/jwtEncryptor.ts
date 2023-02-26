@@ -1,15 +1,15 @@
-import {RsaEncryptor} from "./RsaEncryptor"
-import {GcmEncryptor} from "./GcmEncryptor";
+import { RsaEncryptor } from "./RsaEncryptor";
+import { GcmEncryptor } from "./GcmEncryptor";
 import { JweEncryptor } from "../JweEncryptor";
 import { KmsJwksAdapter } from "./KmsJwksAdapter";
 
 export async function encrypt(jws: string) {
 
-    const jweEncryptor = new JweEncryptor(
-      new RsaEncryptor(new KmsJwksAdapter()),
-      new GcmEncryptor()
-    )
+	const jweEncryptor = new JweEncryptor(
+		new RsaEncryptor(new KmsJwksAdapter()),
+		new GcmEncryptor(),
+	);
 
-    return await jweEncryptor.encrypt(jws)
+	return jweEncryptor.encrypt(jws);
 }
 

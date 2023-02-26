@@ -59,29 +59,34 @@ export interface Jwt {
 }
 
 export interface JWKSBody {
-  keys: Jwk[]
+	keys: Jwk[];
 }
 
 export class JarPayload implements JwtPayload {
-  redirect_uri?: string
-  client_id?: string
-  response_type?: 'code'
-  scope?: string
-  state?: string
-  nonce?: string
+  redirect_uri?: string;
+
+  client_id?: string;
+
+  response_type?: "code";
+
+  scope?: string;
+
+  state?: string;
+
+  nonce?: string;
 }
 
-export type kid = string
+export type kid = string;
 
 export class JsonWebTokenError extends Error {
-  inner?: unknown
+  inner?: unknown;
 
-  constructor (message: string, error?: unknown) {
-    super(message)
-    this.inner = error
-  };
+  constructor(message: string, error?: unknown) {
+  	super(message);
+  	this.inner = error;
+  }
 }
 export interface IVerifyJwts {
-  verify: (urlEncodedJwt: string) => Promise<boolean>
-  decode: (urlEncodedJwt: string) => Jwt
+	verify(urlEncodedJwt: string): Promise<boolean>;
+	decode(urlEncodedJwt: string): Jwt;
 }

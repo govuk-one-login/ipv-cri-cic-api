@@ -7,7 +7,7 @@ import { DynamoDBDocument, GetCommand, UpdateCommand, PutCommand } from "@aws-sd
 import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 export class CicService {
     readonly tableName: string;
@@ -102,46 +102,46 @@ export class CicService {
     	}
     }
 
-		async createAuthSession(session: SessionRequestSummary): Promise<string> {
-			const putSessionCommand = new PutCommand({
-					TableName: this.tableName,
-					Item: {
-							sessionId: randomUUID(),
-							expiryDate: session.expiryDate,
-							createdDate: Date.now(),
-							clientId: session.clientId,
-							state: session.state,
-							redirectUri: session.redirectUri,
-							subject: session.subjectIdentifier,
-							clientSessionId: session.journeyId,
-							attemptCount: 0,
-					},
-			});
-			this.logger.info("saving session data in dynamodb" + JSON.stringify(putSessionCommand));
+    async createAuthSession(session: SessionRequestSummary): Promise<string> {
+    	const putSessionCommand = new PutCommand({
+    		TableName: this.tableName,
+    		Item: {
+    			sessionId: randomUUID(),
+    			expiryDate: session.expiryDate,
+    			createdDate: Date.now(),
+    			clientId: session.clientId,
+    			state: session.state,
+    			redirectUri: session.redirectUri,
+    			subject: session.subjectIdentifier,
+    			clientSessionId: session.journeyId,
+    			attemptCount: 0,
+    		},
+    	});
+    	this.logger.info("saving session data in dynamodb" + JSON.stringify(putSessionCommand));
 			
-			try {
-				await this.dynamo.send(putSessionCommand);
-				this.logger.info("updated CIC data in dynamodb" + JSON.stringify(putSessionCommand));
-			} catch (error) {
-				this.logger.error("got error " + error);
-				throw new AppError("saveItem - failed ", 500);
-			}
-	}
+    	try {
+    		await this.dynamo.send(putSessionCommand);
+    		this.logger.info("updated CIC data in dynamodb" + JSON.stringify(putSessionCommand));
+    	} catch (error) {
+    		this.logger.error("got error " + error);
+    		throw new AppError("saveItem - failed ", 500);
+    	}
+    }
 
-		async sendToTXMA(messageBody: string): Promise<void> {
-			const params = {
-				QueueUrl: process.env.TXMA_QUEUE_URL,
-				MessageBody: JSON.stringify(messageBody)
-			}
+    async sendToTXMA(messageBody: string): Promise<void> {
+    	const params = {
+    		QueueUrl: process.env.TXMA_QUEUE_URL,
+    		MessageBody: JSON.stringify(messageBody),
+    	};
 	
-			this.logger.info("Sending event to SQS Qeue" + JSON.stringify(messageBody));
-			try {
-				const client = new SQSClient({ region: process.env.REGION });
-				await client.send(new SendMessageCommand(params))
-				this.logger.info("Event sent to SQS" + JSON.stringify(messageBody));
-			} catch (error) {
-				this.logger.error("Error sending to SQS" + error);
-				throw new AppError("Error sedning to SQS", 500);
-			}
-		}
+    	this.logger.info("Sending event to SQS Qeue" + JSON.stringify(messageBody));
+    	try {
+    		const client = new SQSClient({ region: process.env.REGION });
+    		await client.send(new SendMessageCommand(params));
+    		this.logger.info("Event sent to SQS" + JSON.stringify(messageBody));
+    	} catch (error) {
+    		this.logger.error("Error sending to SQS" + error);
+    		throw new AppError("Error sedning to SQS", 500);
+    	}
+    }
 }
