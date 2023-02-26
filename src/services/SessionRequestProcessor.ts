@@ -55,7 +55,17 @@ export class SessionRequestProcessor {
 
 	private readonly cicService: CicService;
 
-	private readonly kmsJwtAdapter: KmsJwtAdapter;
+	private readonly gcmAdapter: GcmDecryptor;
+
+	private readonly kmsAdapter: KmsJwtAdapter;
+
+	private readonly rsaDecryptorAdapter: RsaDecryptor;
+
+	private readonly jweDecryptor: JweDecryptor;
+
+	private readonly publicKeyGetter: KmsPublicKeyGetter;
+
+	private readonly jwtAdapter: JwksJwtAdapter;
 
 	constructor(logger: Logger, metrics: Metrics) {
 		if (!config.SESSION_TABLE) {
@@ -73,7 +83,13 @@ export class SessionRequestProcessor {
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
 		this.cicService = CicService.getInstance(config.SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsJwtAdapter = new KmsJwtAdapter(config.KMS_KEY_ARN);
+		// this.kmsJwtAdapter = new KmsJwtAdapter(config.KMS_KEY_ARN);
+		this.gcmAdapter = new GcmDecryptor();
+		this.kmsAdapter = new KmsJwtAdapter(config.ENCRYPTION_KEY_IDS);
+		this.rsaDecryptorAdapter = new RsaDecryptor(this.kmsAdapter);
+		this.jweDecryptor =  new JweDecryptor(this.rsaDecryptorAdapter, this.gcmAdapter);
+		this.publicKeyGetter = new KmsPublicKeyGetter();
+		this.jwtAdapter = new JwksJwtAdapter(this.publicKeyGetter);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
@@ -84,17 +100,6 @@ export class SessionRequestProcessor {
 	}
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
-
-		const clientTest = {
-			redirectUri: "https://www.review-b.build.account.gov.uk/stub/callback",
-			jwksEndpoint: "https://lg0i8qtuph.execute-api.eu-west-2.amazonaws.com/dev/.well-known/jwks.json",
-			clientId: "cd2cc8b5-304a-46e8-9b04-0e90438c18be"
-		};
-
-		const jwt = buildJwt(clientTest);
-		const requestJwt = await encrypt(await sign(jwt, '63ca7025-70db-4265-8643-35aec68f3d0f'))
-
-		console.log('requestJwt', requestJwt);
 
 		let queryStringParams;
 		if (event.queryStringParameters === null || Object.keys(event.queryStringParameters).length === 0) {
@@ -190,30 +195,17 @@ export class SessionRequestProcessor {
 
 		let urlEncodedJwt;
 		try { 
-			const gcmAdapter = new GcmDecryptor();
-			console.log('gcmAdapter', gcmAdapter);
-			console.log('config.ENCRYPTION_KEY_IDS', config.ENCRYPTION_KEY_IDS);
-			const kmsAdapter = new KmsJwtAdapter(config.ENCRYPTION_KEY_IDS);
-			console.log('kmsAdapter', kmsAdapter);
-			const rsaDecryptorAdapter = new RsaDecryptor(kmsAdapter);
-			console.log('rsaDecryptorAdapter', rsaDecryptorAdapter);
-			const jweDecryptor = new JweDecryptor(rsaDecryptorAdapter, gcmAdapter);
-			console.log('jweDecryptor', jweDecryptor);
-			urlEncodedJwt = await jweDecryptor.decrypt(requestJwe)
+			urlEncodedJwt = await this.jweDecryptor.decrypt(requestJwe)
 			console.log('urlEncodedJwt', urlEncodedJwt);
 		} catch (error) {
 			this.logger.debug('FAILED_DECRYPTING_JWE', {error})
 		}
 
-		const PublicKeyGetter = new KmsPublicKeyGetter();
-		const keyGetter = await PublicKeyGetter.getPublicKey('017ee0fc-f90c-4a56-b5b3-70c42807f626');
-		console.log('keyGetter', keyGetter);
-		const jwtAdapter = new JwksJwtAdapter(PublicKeyGetter);
-		console.log('jwtAdapter', jwtAdapter);
+		// const keyGetter = await this.publicKeyGetter.getPublicKey('017ee0fc-f90c-4a56-b5b3-70c42807f626');
 		let parsedJwt: Jwt
 
 		try {
-			parsedJwt = jwtAdapter.decode(urlEncodedJwt)
+			parsedJwt = this.jwtAdapter.decode(urlEncodedJwt)
 			console.log('parsedJwt', parsedJwt);
 		} catch (error) {
 			this.logger.debug('FAILED_DECODING_JWT', { error: error })

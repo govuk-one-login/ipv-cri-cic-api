@@ -59,7 +59,7 @@ export const UnauthorizedResponseWithRedirect = (params:
 }
 
 //TODO: Include full name and DOB from shared_claims (Optional)
-export const SuccessSessionResponse = (sessionId: string, state: string, redirect_uri: string, name: string, dob: string) => {
+export const SuccessSessionResponse = (sessionId: string, state: string, redirect_uri: string) => {
 	const responseBody = {
 		session_id: sessionId,
 		state,
