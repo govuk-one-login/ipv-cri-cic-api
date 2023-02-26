@@ -1,4 +1,4 @@
-import { KmsJwtAdapter } from "../../adapters/KmsJwtAdapter";
+import { KmsJwtAdapter } from "../../KmsJwtAdapter";
 import { IDecryptAsymmetric } from "../interfaces/IDecryptAsymmetric";
 
 export class RsaDecryptor implements IDecryptAsymmetric {
@@ -9,6 +9,6 @@ export class RsaDecryptor implements IDecryptAsymmetric {
   }
 
   async decrypt(encryptedCek: Uint8Array): Promise<Uint8Array> {
-  	return await this.kmsJwsAdapter.decrypt(encryptedCek);
+  	return this.kmsJwsAdapter.decrypt(encryptedCek);
   }
 }

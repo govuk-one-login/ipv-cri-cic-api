@@ -131,7 +131,7 @@ export class CicService {
     async sendToTXMA(messageBody: string): Promise<void> {
     	const params = {
     		QueueUrl: process.env.TXMA_QUEUE_URL,
-    		MessageBody: JSON.stringify(messageBody),
+    		MessageBody: messageBody,
     	};
 	
     	this.logger.info("Sending event to SQS Qeue" + JSON.stringify(messageBody));
