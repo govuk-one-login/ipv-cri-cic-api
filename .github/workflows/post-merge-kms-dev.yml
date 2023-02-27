@@ -1,15 +1,12 @@
-name: Deploy Main to Dev Env
+name: Deploy Main to Dev Env KMS Infra
 on:
+  workflow_dispatch:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches:
       - main
-    paths-ignore:
-      - 'infra-l2-dynamo/**'
-      - 'infra-l2-kms/**'
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    paths:
+      - 'infra-l2-kms/**' 
 
 permissions:
   id-token: write
@@ -20,11 +17,11 @@ env: # Only adding the variables in that are required for
 
 jobs:
   deploy-to-dev:
-    name: Validate & Deploy SAM template to Dev Envrionment
+    name: Validate & Deploy KMS Infra template to Dev Envrionment
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./deploy/
+        working-directory: infra-l2-kms
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -35,19 +32,18 @@ jobs:
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.DEV_CRI_CIC_GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.DEV_CRI_KMS_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
-
+          
       - name: SAM Build
         run: sam build -t template.yaml
 
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
         with:
-            artifact-bucket-name: ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.DEV_CRI_CIC_SIGNING_PROFILE_NAME }}
-            working-directory: deploy
+            artifact-bucket-name: ${{ secrets.DEV_CRI_KMS_ARTIFACT_SOURCE_BUCKET_NAME }}
+            working-directory: infra-l2-kms
             template-file: template.yaml
