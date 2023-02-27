@@ -288,7 +288,7 @@ paths:
                 $ref: "#/components/schemas/OAuthErrorResponse"
       x-amazon-apigateway-request-validator: "both"
       x-amazon-apigateway-integration:
-        httpMethod: "GET"
+        httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizationFunction.Arn}:live/invocations
         responses:

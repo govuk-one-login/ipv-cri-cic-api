@@ -11,10 +11,12 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
-import {AuthSessionState} from "../models/enums/AuthSessionState";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
+import { buildCoreEventFields } from "../utils/TxmaEvent";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const TXMA_QUEUE_URL = process.env.TXMA_QUEUE_URL;
+const ISSUER = process.env.ISSUER!;
 
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
@@ -36,6 +38,11 @@ export class AuthorizationRequestProcessor {
 			logger.error("Environment variable TXMA_QUEUE_URL is not configured");
 			throw new AppError( "Service incorrectly configured", 500);
 		}
+
+		if (!ISSUER) {
+			logger.error("Environment variable ISSUER is not configured");
+			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
+		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
@@ -50,7 +57,6 @@ export class AuthorizationRequestProcessor {
 	}
 
 	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<Response> {
-		let cicSession;
 
 		const session = await this.cicService.getSessionById(sessionId);
 
@@ -62,25 +68,27 @@ export class AuthorizationRequestProcessor {
 			this.logger.info({ message: "found session", session });
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 			if (session.authSessionState !== AuthSessionState.CIC_DATA_RECEIVED) {
-				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_FINISHED}`)
+				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_FINISHED}`);
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
-			const authorizationCode = randomUUID()
+			const authorizationCode = randomUUID();
 
-			await this.cicService.setAuthorizationCode(sessionId, authorizationCode)
-			// try {
-			// 	await sqsAdapter.writeToSqs({
-			// 		event_name: 'DCMAW_WEB_END',
-			// 		...buildCoreEventFields(authSession, issuer, sourceIp, absoluteTimeNow)
-			//
-			// 	})
-			// } catch (error) {
-			// 	return left('Failed to write TXMA event DCMAW_WEB_END to SQS queue.')
-			// }
-			//await this.cicService.saveCICData(sessionId, cicSession);
+			await this.cicService.setAuthorizationCode(sessionId, authorizationCode);
+
+			this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
+			try {
+				await this.cicService.sendToTXMA({
+					event_name: "CIC_CRI_AUTH_CODE_ISSUED",
+					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+
+				});
+			} catch (error) {
+				this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.");
+			}
+
 			const cicResp = new CicResponse({
-				authorizationCode: authorizationCode,
+				authorizationCode,
 				redirect_uri: session?.redirectUri,
 				state: session?.state,
 			});

@@ -30,27 +30,29 @@ class ClaimedIdentity implements LambdaInterface {
 				if (event.httpMethod === HttpVerbsEnum.POST) {
 					let sessionId;
 					try {
-						logger.info("Event received", { event });
+						logger.info("Event received", {event});
 						if (event.headers) {
 							sessionId = event.headers[Constants.X_SESSION_ID];
-							logger.info({ message: "Session id", sessionId });
+							if (sessionId) {
+								logger.info({message: "Session id", sessionId});
+								if (!Constants.REGEX_UUID.test(sessionId)) {
+									return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
+								}
+							} else {
+								return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required");
+							}
 						} else {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 						}
 
-						if (sessionId) {
-							if (event.body) {
-								return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
-							} else {
-								return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
-							}
+						if (event.body) {
+							return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
 						} else {
-							return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required");
+							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 						}
-
 					} catch (err: any) {
-						logger.error({ message: "An error has occurred.", err });
-						if (err instanceof  AppError) {
+						logger.error({message: "An error has occurred.", err});
+						if (err instanceof AppError) {
 							return new Response(err.statusCode, err.message);
 						}
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");

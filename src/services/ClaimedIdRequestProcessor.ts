@@ -11,6 +11,7 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 
@@ -63,7 +64,12 @@ export class ClaimedIdRequestProcessor {
 			}
 
 			this.logger.info({ message: "found session", session });
-			this.metrics.addMetric("found session", MetricUnits.Count, 1);
+			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
+
+			if (session.authSessionState !== AuthSessionState.CIC_SESSION_CREATED) {
+				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`);
+				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+			}
 			await this.cicService.saveCICData(sessionId, cicSession);
 			return new Response(HttpCodesEnum.OK, "");
 		} else {
