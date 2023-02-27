@@ -310,7 +310,7 @@ paths:
       tags:
         - Backend - Common CRI Lambda
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
