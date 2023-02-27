@@ -1,13 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { Metrics } from "@aws-lambda-powertools/metrics";
-import { Response } from "./utils/Response";
-import { ResourcesEnum } from "./models/enums/ResourcesEnum";
-import { AppError } from "./utils/AppError";
-import { HttpCodesEnum } from "./utils/HttpCodesEnum";
-import { UserInfoRequestProcessor } from "./services/UserInfoRequestProcessor";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { Metrics } from "@aws-lambda-powertools/metrics";
+import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "./utils/Constants";
+import { ResourcesEnum } from "./models/enums/ResourcesEnum";
+import { Response } from "./utils/Response";
+import { HttpCodesEnum } from "./utils/HttpCodesEnum";
+import { AppError } from "./utils/AppError";
+import { AccessTokenRequestProcessor } from "./services/AccessTokenRequestProcessor";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : "CIC-CRI";
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
@@ -19,16 +19,16 @@ const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
 
-class UserInfo implements LambdaInterface {
+export class AccessToken implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 		switch (event.resource) {
-			case ResourcesEnum.USERINFO:
+			case ResourcesEnum.TOKEN:
 				if (event.httpMethod === "POST") {
 					try {
-						logger.info("Received userInfo request:", { event });
-						return await UserInfoRequestProcessor.getInstance(logger, metrics).processRequest(event);
+						logger.info("Got token request:", { event });
+						return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
 					} catch (err) {
 						logger.error({ message: "An error has occurred. ", err });
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
@@ -42,5 +42,5 @@ class UserInfo implements LambdaInterface {
 		}
 	}
 }
-const handlerClass = new UserInfo();
+const handlerClass = new AccessToken();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);

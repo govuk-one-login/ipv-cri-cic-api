@@ -85,6 +85,7 @@ Resources:
               - "sessionId"
               - "redirectUri"
               - "clientId"
+              - "authSessionState"
             ProjectionType: "INCLUDE"
         - IndexName: "access-token-index"
           KeySchema:

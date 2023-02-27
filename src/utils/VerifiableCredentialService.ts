@@ -6,7 +6,6 @@ import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
 
-const CREDENTIAL_EXPIRY = 15638400;
 const ISSUER = process.env.ISSUER;
 
 export class VerifiableCredentialService {
@@ -46,7 +45,7 @@ export class VerifiableCredentialService {
     		aud: ISSUER,
     		sub: subject,
     		nbf: now,
-    		exp: now + CREDENTIAL_EXPIRY,
+    		exp: now + Constants.CREDENTIAL_EXPIRY,
     		vc: verifiedCredential,
     	};
 

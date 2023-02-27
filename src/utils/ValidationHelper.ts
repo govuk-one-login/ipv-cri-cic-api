@@ -88,4 +88,11 @@ export class ValidationHelper {
 		return jwt.payload.sub;
 	}
 
+	isValidUUID(code: string): boolean {
+		const regexUUID =
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+		const isValidUUID = regexUUID.test(code);
+		return isValidUUID;
+	}
+
 }
