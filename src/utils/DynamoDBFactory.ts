@@ -1,6 +1,9 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { fromEnv } from "@aws-sdk/credential-providers";
+import AWSXRay from 'aws-xray-sdk-core'
+
+AWSXRay.setContextMissingStrategy('LOG_ERROR')
 
 const awsRegion = process.env.AWS_REGION;
 export const createDynamoDbClient = () => {
@@ -18,5 +21,6 @@ export const createDynamoDbClient = () => {
 	};
 	const translateConfig = { marshallOptions, unmarshallOptions };
 	const dbClient = new DynamoDBClient({ region: awsRegion, credentials: fromEnv() });
-	return DynamoDBDocument.from(dbClient, translateConfig);
+	const dbClientRaw = DynamoDBDocument.from(dbClient, translateConfig);
+	return  process.env.XRAY_ENABLED === 'true' ? AWSXRay.captureAWSv3Client(dbClientRaw as any) : dbClientRaw
 };

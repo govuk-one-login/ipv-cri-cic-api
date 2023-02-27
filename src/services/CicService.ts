@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -6,6 +5,9 @@ import { AppError } from "../utils/AppError";
 import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
+import {AuthSessionState} from "../models/enums/AuthSessionState";
+import { SendMessageCommand } from '@aws-sdk/client-sqs'
+import {sqsClient} from "../utils/SqsClient";
 
 export class CicService {
     readonly tableName: string;
@@ -57,13 +59,14 @@ export class CicService {
     	const saveCICCommand: any = new UpdateCommand({
     		TableName: this.tableName,
     		Key: { sessionId },
-    		UpdateExpression: "SET full_name = :full_name, date_of_birth = :date_of_birth, document_selected = :document_selected, date_of_expiry =:date_of_expiry",
+    		UpdateExpression: "SET full_name = :full_name, date_of_birth = :date_of_birth, document_selected = :document_selected, date_of_expiry =:date_of_expiry, authSessionState = :authSessionState",
 
     		ExpressionAttributeValues: {
     			":full_name": cicData.full_name,
     			":date_of_birth": cicData.date_of_birth,
     			":document_selected": cicData.document_selected,
     			":date_of_expiry": cicData.date_of_expiry,
+				":authSessionState": AuthSessionState.CIC_DATA_RECEIVED
     		},
     	});
 
@@ -82,10 +85,11 @@ export class CicService {
     	const updateSessionCommand = new UpdateCommand({
     		TableName: this.tableName,
     		Key: { sessionId },
-    		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry",
+    		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry, authSessionState = :authSessionState",
     		ExpressionAttributeValues: {
     			":authCode": uuid,
     			":authCodeExpiry": getAuthorizationCodeExpirationEpoch(process.env.AUTHORIZATION_CODE_TTL),
+				":authSessionState": AuthSessionState.CIC_AUTH_CODE_ISSUED
     		},
     	});
 
@@ -99,4 +103,20 @@ export class CicService {
     		throw new AppError("updateItem - failed ", 500);
     	}
     }
+
+	async sendToTXMA(messageBody: string): Promise<void> {
+		const params = {
+			MessageBody: messageBody,
+			QueueUrl: process.env.TXMA_QUEUE_URL,
+		};
+
+		this.logger.info({message: "Sending message to TxMA", messageBody});
+		try {
+			await sqsClient.send(new SendMessageCommand(params))
+			this.logger.info("Sent message to TxMA");
+		} catch (error) {
+			this.logger.error("got error " + error);
+			throw new AppError("sending event - failed ", 500);
+		}
+	}
 }

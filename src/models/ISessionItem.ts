@@ -21,4 +21,5 @@ export interface ISessionItem extends ICicSession {
 	persistentSessionId: string;
 	clientIpAddress: string;
 	attemptCount: number;
+	authSessionState: string;
 }

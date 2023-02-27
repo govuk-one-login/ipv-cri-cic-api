@@ -32,7 +32,7 @@ class ClaimedIdentity implements LambdaInterface {
 					try {
 						logger.info("Event received", { event });
 						if (event.headers) {
-							sessionId = event.headers[Constants.SESSION_ID];
+							sessionId = event.headers[Constants.X_SESSION_ID];
 							logger.info({ message: "Session id", sessionId });
 						} else {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
