@@ -102,7 +102,7 @@ export class CicService {
     	}
     }
 
-    async getSessionByAuthorizationCode(code: string | undefined): Promise<ISessionItem> {
+    async getSessionByAuthorizationCode(code: string | undefined): Promise<ISessionItem | undefined> {
     	const params: QueryCommandInput = {
     		TableName: this.tableName,
     		IndexName: Constants.AUTHORIZATION_CODE_INDEX_NAME,

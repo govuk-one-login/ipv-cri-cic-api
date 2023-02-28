@@ -59,7 +59,7 @@ export class AccessTokenRequestProcessor {
     				return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
     			}
     		} catch (err) {
-    			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
+    			return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
     		}
 
     		this.accessTokenRequestValidationHelper.validateTokenRequestToRecord(session, requestPayload.redirectUri);
