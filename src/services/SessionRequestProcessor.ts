@@ -8,42 +8,23 @@ import { ValidationHelper } from "../utils/ValidationHelper";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
+import { Jwt } from "../utils/IVeriCredential";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { GcmDecryptor } from "../utils/jwe/adapters/GcmDecryptor";
-import { createDynamoDbClient } from "../utils/DynamoDBFactory";
-import { RsaDecryptor } from "../utils/jwe/adapters/RsaDecryptor";
 import { JweDecryptor } from "../utils/jwe/JweDecryptor";
 import { KmsPublicKeyGetter } from "../utils/jwe/PublicKeyGetter";
 import { JwksJwtAdapter } from "../utils/jwe/JwksJwtAdapter";
-import { Jwt } from "../utils/IVeriCredential";
-import { encrypt } from "../utils/jwe/jwtEncryptor";
-import { sign } from "../utils/jwe/jwtSigner";
-import { buildJwt } from "../utils/jwe/jwtBuilder";
+import { GcmDecryptor } from "../utils/jwe/adapters/GcmDecryptor";
+import { RsaDecryptor } from "../utils/jwe/adapters/RsaDecryptor";
+import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 
 const config = {
-	CLIENT_CONFIG: process.env.CLIENT_CONFIG || [],
-	AUTH_SESSION_TTL: parseInt(process.env.AUTH_SESSION_TTL || "0", 10),
+	CLIENT_CONFIG: process.env.CLIENT_CONFIG,
+	AUTH_SESSION_TTL: Number(process.env.AUTH_SESSION_TTL),
 	ISSUER: process.env.ISSUER,
 	SESSION_TABLE: process.env.SESSION_TABLE,
 	KMS_KEY_ARN: process.env.KMS_KEY_ARN,
 	ENCRYPTION_KEY_IDS: process.env.ENCRYPTION_KEY_IDS,
 };
-
-const buildCoreEventFields = (session: IFullAuthSession, issuer: string, sourceIp?: string | undefined, getNow: () => number = absoluteTimeNow): BaseTxmaEvent => {
-	return {
-		user: {
-			user_id: session.subjectIdentifier,
-			transaction_id: session.biometricSessionId,
-			session_id: session.authSessionId,
-			govuk_signin_journey_id: session.journeyId,
-			ip_address: sourceIp,
-		},
-		client_id: session.clientId,
-		timestamp: getNow(),
-		component_id: issuer,
-	};
-};
-
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
 
@@ -83,7 +64,6 @@ export class SessionRequestProcessor {
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
 		this.cicService = CicService.getInstance(config.SESSION_TABLE, this.logger, createDynamoDbClient());
-		// this.kmsJwtAdapter = new KmsJwtAdapter(config.KMS_KEY_ARN);
 		this.gcmAdapter = new GcmDecryptor();
 		this.kmsAdapter = new KmsJwtAdapter(config.ENCRYPTION_KEY_IDS);
 		this.rsaDecryptorAdapter = new RsaDecryptor(this.kmsAdapter);
@@ -120,16 +100,16 @@ export class SessionRequestProcessor {
 			queryStringParams = event.queryStringParameters;
 		}
 
-		let ipAddress, client, jwksEndpoint;
+		let ipAddress, jwksEndpoint;
 
-		if (event.headers["x-govuk-signin-source-ip"] == null || event.headers["x-govuk-signin-source-ip"] === undefined) {
+		if (event.headers["x-forwarded-for"] == null || event.headers["x-forwarded-for"] === undefined) {
 			this.logger.error("SOURCE_IP_MISSING", {
 				fieldName: "sourceIp",
 				value: ipAddress,
 				reason: "Undefined sourceIp",
 			});
 		} else {
-			ipAddress = event.headers["x-govuk-signin-source-ip"];
+			ipAddress = event.headers["x-forwarded-for"];
 		}
 
 		const clientId = queryStringParams.client_id;
@@ -168,7 +148,7 @@ export class SessionRequestProcessor {
 			this.logger.error("INVALID_ENVIRONMENT_VARIABLE", { envVar: "clients.jwksEndpoint", value: configClient.jwksEndpoint });
 			return GenericServerError;
 		}
-		client = {
+		const client = {
 			clientId,
 			redirectUri: configClient.redirectUri,
 			jwksEndpoint,
@@ -184,6 +164,8 @@ export class SessionRequestProcessor {
 		}
 
 		const requestJwe = queryStringParams.request ?? null;
+
+		console.log('requestJwe', requestJwe);
 		if (requestJwe === null) {
 			this.logger.error("INVALID_REQUEST", {
 				fieldName: "request_jwe",
@@ -213,6 +195,7 @@ export class SessionRequestProcessor {
 		}
 
 		const jwtPayload = parsedJwt.payload;
+		console.log("jwtPayload", jwtPayload);
 
 		const redirectUri = jwtPayload.redirect_uri ?? null;
 		if (redirectUri === null) {
@@ -344,28 +327,34 @@ export class SessionRequestProcessor {
 			state: jwtPayload.state,
 			clientId: jwtPayload.client_id,
 			journeyId: jwtPayload.govuk_signin_journey_id,
+			// clientSessionId: jwtPayload["govuk_signin_journey_id"] as string,
 			clientIpAddress: ipAddress,
-			biometricSessionId: "",
 			abortReason: "",
 			expiryDate: Date.now() + config.AUTH_SESSION_TTL * 1000,
 		};
 
 		try {
-			await await this.cicService.createAuthSession(session);
+			await this.cicService.createAuthSession(session);
 		} catch (error) {
 			this.logger.error("FAILED_CREATING_SESSION", { error });
 			return GenericServerError;
 		}
 
-		const buildCoreEventFieldsMessage = buildCoreEventFields(session, config.ISSUER, ipAddress);
-
-		const txmaData = {
-			event_name: "CIC_CRI_START",
-			buildCoreEventFieldsMessage,
-		};
-
 		try {
-			await await this.cicService.sendToTXMA(JSON.stringify(txmaData));
+			await this.cicService.sendToTXMA(JSON.stringify({
+				event_name: "CIC_CRI_START",
+				...{
+					user: {
+						user_id: session.subjectIdentifier,
+						session_id: session.authSessionId,
+						govuk_signin_journey_id: session.journeyId,
+						ip_address: ipAddress,
+					},
+					client_id: session.clientId,
+					timestamp: absoluteTimeNow(),
+					component_id: config.ISSUER,
+				},
+			}));
 		} catch (error) {
 			this.logger.error("FAILED_TO_WRITE_TXMA", {
 				session,
