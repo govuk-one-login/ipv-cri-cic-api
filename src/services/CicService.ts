@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 
 export class CicService {
     readonly tableName: string;
@@ -102,19 +103,21 @@ export class CicService {
     	}
     }
 
-    async createAuthSession(session: SessionRequestSummary): Promise<string> {
+    async createAuthSession(sessionRequest: SessionRequestSummary): Promise<string> {
     	const putSessionCommand = new PutCommand({
     		TableName: this.tableName,
     		Item: {
     			sessionId: randomUUID(),
-    			expiryDate: session.expiryDate,
-    			createdDate: Date.now(),
-    			clientId: session.clientId,
-    			state: session.state,
-    			redirectUri: session.redirectUri,
-    			subject: session.subjectIdentifier,
-    			clientSessionId: session.journeyId,
-    			attemptCount: 0,
+						createdDate: Date.now(),
+						expiryDate: sessionRequest.expiryDate,
+						state: sessionRequest.state,
+						clientId: sessionRequest.clientId,
+						redirectUri: sessionRequest.redirectUri,
+						subject: sessionRequest.subject,
+						persistentSessionId: sessionRequest.persistentSessionId,
+						clientSessionId: sessionRequest.clientSessionId,
+						clientIpAddress: sessionRequest.clientIpAddress,
+						attemptCount: 0,
     		},
     	});
     	this.logger.info("saving session data in dynamodb" + JSON.stringify(putSessionCommand));
@@ -122,6 +125,7 @@ export class CicService {
     	try {
     		await this.dynamo.send(putSessionCommand);
     		this.logger.info("updated CIC data in dynamodb" + JSON.stringify(putSessionCommand));
+				return putSessionCommand?.input?.Item?.sessionId;
     	} catch (error) {
     		this.logger.error("got error " + error);
     		throw new AppError("saveItem - failed ", 500);

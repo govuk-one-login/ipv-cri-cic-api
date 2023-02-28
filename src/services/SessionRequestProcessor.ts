@@ -1,21 +1,18 @@
-import { Response, GenericServerError, UnauthorizedResponse, SuccessSessionResponse, UnauthorizedResponseWithRedirect, SECURITY_HEADERS } from "../utils/Response";
+import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
-import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
-import { Jwt } from "../utils/IVeriCredential";
-import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { JweDecryptor } from "../utils/jwe/JweDecryptor";
-import { KmsPublicKeyGetter } from "../utils/jwe/PublicKeyGetter";
-import { JwksJwtAdapter } from "../utils/jwe/JwksJwtAdapter";
-import { GcmDecryptor } from "../utils/jwe/adapters/GcmDecryptor";
-import { RsaDecryptor } from "../utils/jwe/adapters/RsaDecryptor";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
+import { JweDecryptor } from "./security/jwe-decrypter";
+import { KMSClient, GetPublicKeyCommand, GetPublicKeyCommandOutput } from "@aws-sdk/client-kms";
+import { fromEnv } from "@aws-sdk/credential-providers";
+import { JwtVerifier } from "./security/jwt-verifier";
+import { jwtUtils } from "../utils/JwtUtils";
+import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 
 const config = {
 	CLIENT_CONFIG: process.env.CLIENT_CONFIG,
@@ -23,8 +20,10 @@ const config = {
 	ISSUER: process.env.ISSUER,
 	SESSION_TABLE: process.env.SESSION_TABLE,
 	KMS_KEY_ARN: process.env.KMS_KEY_ARN,
-	ENCRYPTION_KEY_IDS: process.env.ENCRYPTION_KEY_IDS,
+	ENCRYPTION_KEY_IDS: process.env.ENCRYPTION_KEY_IDS || "",
 };
+
+export const kmsClient = new KMSClient({ region: process.env.REGION, credentials: fromEnv() });
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
 
@@ -36,17 +35,12 @@ export class SessionRequestProcessor {
 
 	private readonly cicService: CicService;
 
-	private readonly gcmAdapter: GcmDecryptor;
+	private readonly jweDecryptor: JweDecryptor;
+
+	private readonly jwtVerifier: JwtVerifier;
 
 	private readonly kmsAdapter: KmsJwtAdapter;
 
-	private readonly rsaDecryptorAdapter: RsaDecryptor;
-
-	private readonly jweDecryptor: JweDecryptor;
-
-	private readonly publicKeyGetter: KmsPublicKeyGetter;
-
-	private readonly jwtAdapter: JwksJwtAdapter;
 
 	constructor(logger: Logger, metrics: Metrics) {
 		if (!config.SESSION_TABLE) {
@@ -64,12 +58,12 @@ export class SessionRequestProcessor {
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
 		this.cicService = CicService.getInstance(config.SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.gcmAdapter = new GcmDecryptor();
-		this.kmsAdapter = new KmsJwtAdapter(config.ENCRYPTION_KEY_IDS);
-		this.rsaDecryptorAdapter = new RsaDecryptor(this.kmsAdapter);
-		this.jweDecryptor = new JweDecryptor(this.rsaDecryptorAdapter, this.gcmAdapter);
-		this.publicKeyGetter = new KmsPublicKeyGetter();
-		this.jwtAdapter = new JwksJwtAdapter(this.publicKeyGetter);
+		this.jweDecryptor = new JweDecryptor();
+		this.kmsAdapter = new KmsJwtAdapter(config.KMS_KEY_ARN);
+		this.jwtVerifier = new JwtVerifier({
+			jwtSigningAlgorithm: 'RSA-OAEP-256',
+			publicSigningJwk: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEK1JjY55Zfjohl1TgKJ9uKJNZ9elFTNS1o3KVKviO2ZXFBGwLGGFyvhX3/UYheSbx4WqvxxES81eJR9yuSvOfpA==',
+	}, this.logger );
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
@@ -80,292 +74,76 @@ export class SessionRequestProcessor {
 	}
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+		const deserialisedRequestBody = JSON.parse(event.body as string);
+		const requestBodyClientId = deserialisedRequestBody.client_id;
+		const clientIpAddress = event.headers["x-forwarded-for"];
 
-		let queryStringParams;
-		if (event.queryStringParameters === null || Object.keys(event.queryStringParameters).length === 0) {
-			this.logger.error("INVALID_REQUEST", {
-				fieldName: "queryParams",
-				value: "",
-				reason: "No query string params present",
-			});
-			return {
-				statusCode: HttpCodesEnum.UNAUTHORIZED,
-				headers: SECURITY_HEADERS,
-				body: JSON.stringify({
-					redirect: null,
-					message: "Invalid request: No query string params",
-				}),
-			};
-		} else {
-			queryStringParams = event.queryStringParameters;
-		}
+		// const configClient = JSON.parse(config.CLIENT_CONFIG).find(c => c.clientId === requestBodyClientId);;
 
-		let ipAddress, jwksEndpoint;
-
-		if (event.headers["x-forwarded-for"] == null || event.headers["x-forwarded-for"] === undefined) {
-			this.logger.error("SOURCE_IP_MISSING", {
-				fieldName: "sourceIp",
-				value: ipAddress,
-				reason: "Undefined sourceIp",
-			});
-		} else {
-			ipAddress = event.headers["x-forwarded-for"];
-		}
-
-		const clientId = queryStringParams.client_id;
-
-		if (clientId == null) {
-			this.logger.error("INVALID_REQUEST", {
-				fieldName: "clientId",
-				value: clientId,
-				reason: "Empty ClientID",
-			});
-			return UnauthorizedResponse("Invalid request: Missing clientID");
-		}
-
-		const configClient = JSON.parse(config.CLIENT_CONFIG).find(c => c.clientId === clientId);
-
-		if (configClient === undefined) {
-			this.logger.error("UNREGISTERED_CLIENT_ID", {
-				fieldName: "clientId",
-				value: clientId,
-				reason: "clientId is not registered",
-			});
-			return UnauthorizedResponse(`Invalid request: Client Id not registered ${clientId}`);
-		}
-
-		if (configClient.jwksEndpoint == null) {
-			this.logger.error("INVALID_ENVIRONMENT_VARIABLE", { envVar: "clients.jwksEndpoint" });
-			return GenericServerError;
-		}
-
-		if (configClient.redirectUri == null) {
-			this.logger.error("INVALID_ENVIRONMENT_VARIABLE", { envVar: "clients.redirectUri" });
-			return GenericServerError;
-		}
-
-		try { jwksEndpoint = new URL(configClient.jwksEndpoint); } catch (error) {
-			this.logger.error("INVALID_ENVIRONMENT_VARIABLE", { envVar: "clients.jwksEndpoint", value: configClient.jwksEndpoint });
-			return GenericServerError;
-		}
-		const client = {
-			clientId,
-			redirectUri: configClient.redirectUri,
-			jwksEndpoint,
-		};
-
-		if (queryStringParams.request_uri != null) {
-			this.logger.error("INVALID_REQUEST", {
-				fieldName: "request_uri",
-				value: queryStringParams.request_uri,
-				reason: "request uri is not expected to be present",
-			});
-			return UnauthorizedResponse("Invalid request: Request uri not supported");
-		}
-
-		const requestJwe = queryStringParams.request ?? null;
-
-		console.log('requestJwe', requestJwe);
-		if (requestJwe === null) {
-			this.logger.error("INVALID_REQUEST", {
-				fieldName: "request_jwe",
-				value: requestJwe,
-				reason: "request jwe is undefined or null",
-			});
-			return UnauthorizedResponse("Invalid request: Missing request query parameter");
-		}
-
+		//Decrypt -- START
 		let urlEncodedJwt;
 		try { 
-			urlEncodedJwt = await this.jweDecryptor.decrypt(requestJwe);
+			urlEncodedJwt = await this.jweDecryptor.decrypt(deserialisedRequestBody.request);
 			console.log("urlEncodedJwt", urlEncodedJwt);
 		} catch (error) {
 			this.logger.debug("FAILED_DECRYPTING_JWE", { error });
 		}
+		//Decrypt -- END
 
-		// const keyGetter = await this.publicKeyGetter.getPublicKey('017ee0fc-f90c-4a56-b5b3-70c42807f626');
-		let parsedJwt: Jwt;
-
+		let parsedJwt;
 		try {
-			parsedJwt = this.jwtAdapter.decode(urlEncodedJwt);
+			const [header, payload, signature] = urlEncodedJwt.split(".");
+			parsedJwt = {
+				header: JSON.parse(jwtUtils.base64DecodeToString(header)),
+				payload: JSON.parse(jwtUtils.base64DecodeToString(payload)),
+				signature,
+			};
 			console.log("parsedJwt", parsedJwt);
 		} catch (error) {
 			this.logger.debug("FAILED_DECODING_JWT", { error });
-			return UnauthorizedResponse("Invalid request: Rejected jwt");
 		}
 
-		const jwtPayload = parsedJwt.payload;
-		console.log("jwtPayload", jwtPayload);
+		const jwtPayload = parsedJwt.payload
 
-		const redirectUri = jwtPayload.redirect_uri ?? null;
-		if (redirectUri === null) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "redirect_uri",
-				value: redirectUri,
-				reason: "Missing required value redirect_uri in jwt",
-			});
-			return UnauthorizedResponse("Invalid request: Missing redirect uri");
-		}
+		const output : GetPublicKeyCommandOutput = await kmsClient.send(
+				new GetPublicKeyCommand({
+					KeyId: "63ca7025-70db-4265-8643-35aec68f3d0f"
+				}))
+		
+		console.log('output', output);
 
-		const state = jwtPayload.state ?? null;
-		if (state === null) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "jwtPayload.state",
-				value: state,
-				reason: "Missing state in jwt",
-			});
-			return GenericServerError;
-		}
-
-		if (redirectUri !== client.redirectUri) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "jwt redirect_uri",
-				value: redirectUri,
-				reason: "JWT claims did not include a valid redirect_uri",
-			});
-			return UnauthorizedResponse("Invalid request: Redirect uri not registered");
-		}
-
-		if (!(this.validationHelper.isJwtComplete(jwtPayload))) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "jwt payload keys",
-				value: Object.keys(jwtPayload),
-				reason: "Missing fields in jwt",
-			});
-			return UnauthorizedResponseWithRedirect({
-				jwtPayload,
-				error: "invalid_request",
-				errorDescription: "Missing fields in jwt",
-			},
-			);
-		}
-
-		if (!(this.validationHelper.isClientIdInJwtValid(queryStringParams, jwtPayload))) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "jwt and queryParam clientId",
-				value: { jwt: jwtPayload.client_id, queryParam: queryStringParams.client_id },
-				reason: "Value in JWT does not match query params",
-			});
-			return UnauthorizedResponseWithRedirect({
-				jwtPayload,
-				error: "invalid_request",
-				errorDescription: "invalid client_id in jwt",
-			});
-		}
-
-		if (!(this.validationHelper.isResponseTypeQueryParamValid(queryStringParams))) {
-			this.logger.error("INVALID_REQUEST", {
-				fieldName: "response type",
-				value: queryStringParams.response_type,
-				reason: "Invalid response_type in query params",
-			});
-			return UnauthorizedResponseWithRedirect({
-				jwtPayload,
-				error: "unsupported_response_type",
-				errorDescription: "invalid response_type in query params",
-			});
-		}
-
-		if (!(this.validationHelper.isResponseTypeInJwtValid(queryStringParams, jwtPayload))) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "jwt response_type",
-				value: jwtPayload.response_type,
-				reason: "Invalid response_type in jwt",
-			});
-			return UnauthorizedResponseWithRedirect({
-				jwtPayload,
-				error: "invalid_request",
-				errorDescription: "invalid response_type in jwt",
-			});
-		}
-
-		if (this.validationHelper.isJwtNotYetValid(jwtPayload)) {
-			this.logger.error("INVALID_DECODED_JWT", {
-				fieldName: "jwt payload - nbf",
-				value: jwtPayload.nbf,
-				reason: "jwt not yet valid",
-			});
-			return UnauthorizedResponseWithRedirect({
-				jwtPayload,
-				error: "invalid_request",
-				errorDescription: "jwt not yet valid",
-			});
-		}
-
-		if (this.validationHelper.isJwtExpired(jwtPayload)) {
-			this.logger.error("EXPIRED_JWT", {
-				fieldName: "jwt payload - exp",
-				value: jwtPayload.exp,
-				reason: "jwt has expired",
-			});
-			return UnauthorizedResponseWithRedirect({
-				jwtPayload,
-				error: "invalid_request",
-				errorDescription: "expired jwt",
-			});
-		}
-
-		const sessionId: string = randomUUID();
 		try {
-			if (await this.cicService.getSessionById(sessionId)) {
-				this.logger.error("SESSION_ALREADY_EXISTS", { fieldName: "sessionId", value: sessionId, reason: "sessionId already exists in the database" });
-				return GenericServerError;
+			const isValidJws = await this.kmsAdapter.verify(urlEncodedJwt)
+			if (!isValidJws) {
+				this.logger.debug('FAILED_VERIFYING_JWT', {})
 			}
-		} catch (err) {
-			this.logger.error("UNEXPECTED_ERROR_SESSION_EXISTS", { error: err });
-			return GenericServerError;
+		} catch (error) {
+			console.log('UNEXPECTED_ERROR_VERIFYING_JWT', { error: error })
+			this.logger.debug('UNEXPECTED_ERROR_VERIFYING_JWT', { error: error })
 		}
 
-		const session = {
-			authSessionId: sessionId,
-			authSessionState: "CIC_SESSION_CREATED",
-			subjectIdentifier: jwtPayload.sub ?? "",
-			redirectUri: jwtPayload.redirect_uri,
-			issuer: jwtPayload.iss ?? "",
-			timeToLive: absoluteTimeNow() + config.AUTH_SESSION_TTL,
-			issuedOn: Date.now(),
-			state: jwtPayload.state,
-			clientId: jwtPayload.client_id,
-			journeyId: jwtPayload.govuk_signin_journey_id,
-			// clientSessionId: jwtPayload["govuk_signin_journey_id"] as string,
-			clientIpAddress: ipAddress,
-			abortReason: "",
-			expiryDate: Date.now() + config.AUTH_SESSION_TTL * 1000,
+		const sessionRequestSummary = {
+					clientId: jwtPayload["client_id"] as string,
+					clientIpAddress: clientIpAddress as string,
+					clientSessionId: jwtPayload["govuk_signin_journey_id"] as string,
+					persistentSessionId: jwtPayload["persistent_session_id"] as string,
+					redirectUri: jwtPayload["redirect_uri"] as string,
+					state: jwtPayload["state"] as string,
+					subject: jwtPayload.sub as string,
+					expiryDate: Date.now() + config.AUTH_SESSION_TTL * 1000,
 		};
+		console.log('sessionRequestSummary', sessionRequestSummary);
+		
+		const sessionId: string = await this.cicService.createAuthSession(sessionRequestSummary);
+		console.log('sessionId', sessionId);
 
-		try {
-			await this.cicService.createAuthSession(session);
-		} catch (error) {
-			this.logger.error("FAILED_CREATING_SESSION", { error });
-			return GenericServerError;
-		}
-
-		try {
-			await this.cicService.sendToTXMA(JSON.stringify({
-				event_name: "CIC_CRI_START",
-				...{
-					user: {
-						user_id: session.subjectIdentifier,
-						session_id: session.authSessionId,
-						govuk_signin_journey_id: session.journeyId,
-						ip_address: ipAddress,
-					},
-					client_id: session.clientId,
-					timestamp: absoluteTimeNow(),
-					component_id: config.ISSUER,
-				},
-			}));
-		} catch (error) {
-			this.logger.error("FAILED_TO_WRITE_TXMA", {
-				session,
-				issues: config.ISSUER,
-				reason: "Auth session successfully created. Failed to send DCMAW_CRI_START event to TXMA",
-				error,
-			});
-			return GenericServerError;
-		}
-
-		this.logger.info("COMPLETED");
-		return SuccessSessionResponse(session.authSessionId, state, redirectUri);
+		return {
+				statusCode: 201,
+				body: JSON.stringify({
+						session_id: sessionId,
+						state: jwtPayload.state,
+						redirect_uri: jwtPayload.redirect_uri,
+				}),
+		};
 	}
 }

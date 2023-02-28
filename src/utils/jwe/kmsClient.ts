@@ -1,6 +1,8 @@
 import AWS from "aws-sdk";
 import { KMSClient } from "@aws-sdk/client-kms";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
+import { fromEnv } from "@aws-sdk/credential-providers";
+
 
 export const v2KmsClient = new AWS.KMS({
 	region: process.env.REGION,
@@ -18,3 +20,4 @@ export const v3KmsClient = new KMSClient({
 	}),
 });
 
+export const kmsClient = new KMSClient({ region: process.env.REGION, credentials: fromEnv() });
