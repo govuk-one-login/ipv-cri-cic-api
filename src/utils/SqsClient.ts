@@ -2,8 +2,6 @@ import { SQSClient } from "@aws-sdk/client-sqs";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import AWSXRay from "aws-xray-sdk-core";
 
-// import dotenv from 'dotenv'
-// dotenv.config()
 AWSXRay.setContextMissingStrategy("LOG_ERROR");
 
 const sqsClientRaw = new SQSClient({
