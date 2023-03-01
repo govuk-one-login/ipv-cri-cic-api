@@ -18,48 +18,32 @@ const logger = new Logger({
 	serviceName: "CIC",
 });
 const metrics = new Metrics({ namespace: "CIC" });
-class Session implements ISessionItem {
-	accessToken = "123";
 
-	accessTokenExpiryDate = 0;
-
-	attemptCount = 0;
-
-	authorizationCodeExpiryDate = 0;
-
-	clientId = "ipv-core-stub";
-
-	clientIpAddress = "51.149.8.130";
-
-	clientSessionId = "aa995cfb-5f85-4934-959b-6719a657c8bd";
-
-	createdDate = 1675443004;
-
-	expiryDate = 221848913376;
-
-	persistentSessionId = "ce44066e-e6a4-4434-9fe5-e09821be50c1";
-
-	redirectUri = "http://localhost:8085/callback";
-
-	state = "Y@atr";
-
-	subject = "urn:fdc:gov.uk:2022:d1bdf4c6-1358-4bb3-8fea-bf6b330fd7fa";
-
-	authorizationCode = "1234";
-
-	sessionId = "01333e01-dde3-412f-a484-e9f23b06be3e";
-
-	date_of_birth = "";
-
-	date_of_expiry = "";
-
-	document_selected = "";
-
-	full_name = "";
-
-	authSessionState = AuthSessionState.CIC_SESSION_CREATED;
+function getMockSessionItem() : ISessionItem {
+	const sess: ISessionItem = {
+		sessionId : "sdfsdg",
+		clientId: "ipv-core-stub",
+		accessToken: "AbCdEf123456",
+		clientSessionId: "sdfssg",
+		authorizationCode: "",
+		authorizationCodeExpiryDate: 0,
+		redirectUri: "http://localhost:8085/callback",
+		accessTokenExpiryDate: 0,
+		expiryDate: 221848913376,
+		createdDate: 1675443004,
+		state: "Y@atr",
+		subject: "sub",
+		persistentSessionId: "sdgsdg",
+		clientIpAddress: "127.0.0.1",
+		attemptCount: 1,
+		full_name: "test user",
+		date_of_birth: "09-08-1961",
+		document_selected: "Passport",
+		date_of_expiry: "23-04-1027",
+		authSessionState: AuthSessionState.CIC_SESSION_CREATED,
+	};
+	return sess;
 }
-
 
 describe("ClaimedIdRequestProcessor", () => {
 	beforeAll(() => {
@@ -73,7 +57,7 @@ describe("ClaimedIdRequestProcessor", () => {
 	});
 
 	it("Return successful response with 200 OK when session is found", async () => {
-		const sess = new Session();
+		const sess = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
@@ -84,7 +68,7 @@ describe("ClaimedIdRequestProcessor", () => {
 	});
 
 	it("Return 401 when session is expired", async () => {
-		const sess = new Session();
+		const sess = getMockSessionItem();
 		sess.expiryDate = 1675458564;
 		mockCicService.getSessionById.mockResolvedValue(sess);
 

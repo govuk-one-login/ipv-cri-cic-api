@@ -89,9 +89,7 @@ export class ValidationHelper {
 	}
 
 	isValidUUID(code: string): boolean {
-		const regexUUID =
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-		return regexUUID.test(code);
+		return Constants.REGEX_UUID.test(code);
 	}
 
 }
