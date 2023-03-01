@@ -4,5 +4,6 @@
 export enum ResourcesEnum {
 	CLAIMEDIDENTITY = "/claimedIdentity",
 	USERINFO = "/userInfo",
+	SESSION = "/session",
 	AUTHORIZATION = "/authorization",
 }

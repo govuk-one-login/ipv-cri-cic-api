@@ -85,6 +85,7 @@ export class AuthorizationRequestProcessor {
 				});
 			} catch (error) {
 				this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.");
+				return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to write TXMA event");
 			}
 
 			const cicResp = new CicResponse({

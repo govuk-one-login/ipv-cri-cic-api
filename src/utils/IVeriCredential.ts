@@ -51,8 +51,38 @@ export interface Jwks {
 	keys: Jwk[];
 }
 export interface Jwt {
+	redirect_uri: null;
 	header: JwtHeader;
 	payload: JwtPayload;
 	signature: string;
 	jwk?: Jwk;
+}
+
+export interface JWKSBody {
+	keys: Jwk[];
+}
+
+export class JarPayload implements JwtPayload {
+  redirect_uri?: string;
+
+  client_id?: string;
+
+  response_type?: "code";
+
+  scope?: string;
+
+  state?: string;
+
+  nonce?: string;
+}
+
+export type kid = string;
+
+export class JsonWebTokenError extends Error {
+  inner?: unknown;
+
+  constructor(message: string, error?: unknown) {
+  	super(message);
+  	this.inner = error;
+  }
 }

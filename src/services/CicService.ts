@@ -1,8 +1,9 @@
+/* eslint-disable no-console */
 import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AppError } from "../utils/AppError";
-import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import {DynamoDBDocument, GetCommand, PutCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
@@ -101,8 +102,71 @@ export class CicService {
     		this.logger.info({ message: "updated authorizationCode in dynamodb" });
     	} catch (e: any) {
     		this.logger.error({ message: "got error setting auth code", e });
+    		throw new AppError("updateItem - failed ", 500);
+    	}
+    }
+
+    async createAuthSession(session: ISessionItem): Promise<string> {
+    	const putSessionCommand = new PutCommand({
+    		TableName: this.tableName,
+    		Item: {
+    			session
+    		},
+    	});
+    	this.logger.info("saving session data in dynamodb" + JSON.stringify(putSessionCommand));
+
+    	try {
+    		await this.dynamo.send(putSessionCommand);
+    		this.logger.info("updated CIC data in dynamodb" + JSON.stringify(putSessionCommand));
+    		return putSessionCommand?.input?.Item?.sessionId;
+    	} catch (error) {
+    		this.logger.error("got error " + error);
+    		throw new AppError("saveItem - failed ", 500);
     		throw new AppError("Failed to set authorization code ", HttpCodesEnum.SERVER_ERROR);
     	}
+    }
+
+    async savePersonIdentity(sharedClaims: PersonIdentity, sessionId: string, expiryDate: number): Promise<string> {
+    	const addresses = sharedClaims.address?.map((currentAddress) => ({
+    		uprn: currentAddress.uprn,
+    		organisationName: currentAddress.organisationName,
+    		departmentName: currentAddress.departmentName,
+    		subBuildingName: currentAddress.subBuildingName,
+    		buildingNumber: currentAddress.buildingNumber,
+    		buildingName: currentAddress.buildingName,
+    		dependentStreetName: currentAddress.dependentStreetName,
+    		streetName: currentAddress.streetName,
+    		addressCountry: currentAddress.addressCountry,
+    		postalCode: currentAddress.postalCode,
+    		addressLocality: currentAddress.addressLocality,
+    		dependentAddressLocality: currentAddress.dependentAddressLocality,
+    		doubleDependentAddressLocality: currentAddress.doubleDependentAddressLocality,
+    		validFrom: currentAddress.validFrom,
+    		validUntil: currentAddress.validUntil,
+    	}));
+
+    	const birthDates = sharedClaims.birthDate?.map((bd) => ({ value: bd.value }));
+
+    	const names = sharedClaims.name?.map((currentName) => ({
+    		nameParts: currentName?.nameParts?.map((currentNamePart) => ({
+    			type: currentNamePart.type,
+    			value: currentNamePart.value,
+    		})),
+    	}));
+    	const personIdentityItem = {
+    		sessionId,
+    		addresses,
+    		birthDates,
+    		expiryDate,
+    		names,
+    	};
+
+    	const putSessionCommand = new PutCommand({
+    		TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+    		Item: personIdentityItem,
+    	});
+    	await this.dynamo.send(putSessionCommand);
+    	return putSessionCommand?.input?.Item?.sessionId;
     }
 
     async sendToTXMA(event: TxmaEvent): Promise<void> {
