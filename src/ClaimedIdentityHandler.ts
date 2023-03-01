@@ -30,11 +30,11 @@ class ClaimedIdentity implements LambdaInterface {
 				if (event.httpMethod === HttpVerbsEnum.POST) {
 					let sessionId;
 					try {
-						logger.info("Event received", {event});
+						logger.info("Event received", { event });
 						if (event.headers) {
 							sessionId = event.headers[Constants.X_SESSION_ID];
 							if (sessionId) {
-								logger.info({message: "Session id", sessionId});
+								logger.info({ message: "Session id", sessionId });
 								if (!Constants.REGEX_UUID.test(sessionId)) {
 									return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
 								}
@@ -51,7 +51,7 @@ class ClaimedIdentity implements LambdaInterface {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 						}
 					} catch (err: any) {
-						logger.error({message: "An error has occurred.", err});
+						logger.error({ message: "An error has occurred.", err });
 						if (err instanceof AppError) {
 							return new Response(err.statusCode, err.message);
 						}

@@ -2,12 +2,13 @@ import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestPro
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { VALID_CLAIMEDID } from "../data/events";
+import { VALID_CLAIMEDID } from "../data/cic-events";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
+import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 
 let claimedIdRequestProcessorTest: ClaimedIdRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -56,7 +57,7 @@ class Session implements ISessionItem {
 
 	full_name = "";
 
-	authSessionState = "";
+	authSessionState = AuthSessionState.CIC_SESSION_CREATED;
 }
 
 
