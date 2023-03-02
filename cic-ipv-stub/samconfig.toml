@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "dca-test-client"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8qhe1payfv0l"
+s3_prefix = "dca-test-client"
+region = "eu-west-2"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
