@@ -42,7 +42,7 @@ export interface JwtPayload {
 	jti?: string | undefined;
 }
 export interface JWKSBody {
-	keys: Jwk[]
+	keys: Jwk[];
 }
 export interface Jwk extends JsonWebKey {
 	alg: Algorithm;
