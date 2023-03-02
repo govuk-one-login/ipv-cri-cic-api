@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  infra-l2-sqs
+
+  TxMA queue
+
+Parameters:
+  Environment:
+    Description: "The environment type"
+    Type: "String"
+    Default: dev
+    AllowedValues:
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+  CodeSigningConfigArn:
+    Type: String
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: "none"
+
+  PermissionsBoundary:
+    Type: String
+    Description: >
+      The ARN of the permissions boundary to apply to any role created by the template
+    Default: "none"
+
+  KmsPendingWindowInDays:
+    Type: Number
+    Description: Number of days to retain KMS in pending deletion state when deleted
+    Default: 30
+
+Conditions:
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+
+Resources:
+  TxMASQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 345600
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref TxMAKeyAlias
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "TxMASQSQueueDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+
+#    TxMASQSQueuePolicy:
+#      Type: AWS::SQS::QueuePolicy
+#      Properties:
+#        Queues:
+#          - !Ref TxMASQSQueue
+#        PolicyDocument:
+#          Version: "2012-10-17"
+#          Statement:
+#            - Effect: "Allow"
+#              Action:
+#                - "sqs:DeleteMessage"
+#                - "sqs:GetQueueAttributes"
+#                - "sqs:ChangeMessageVisibility"
+#                - "sqs:ReceiveMessage"
+#              Resource:
+#                - !GetAtt TxMASQSQueue.Arn
+#              Principal:
+#                AWS: "*"
+
+
+  TxMASQSQueueDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        MessageRetentionPeriod: 259200 # three days
+        KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+
+  TxMAKMSEncryptionKey:
+      Type: AWS::KMS::Key
+      # KMS Key manually rotated.
+      # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
+      Properties:
+        Description: A KMS Key for encrypting the SQS Queue for TxMA
+        Enabled: true
+        KeyPolicy:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              Action:
+                - "kms:*"
+              Resource:
+                - "*"
+            - Effect: Allow
+              Principal:
+                AWS: "*"
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource:
+                - "*"
+        KeySpec: SYMMETRIC_DEFAULT
+        KeyUsage: ENCRYPT_DECRYPT
+        MultiRegion: false
+        PendingWindowInDays: 7
+        Tags:
+          - Key: KeyType
+            Value: Encryption Key
+          - Key: Environment
+            Value: !Sub ${Environment}
+
+  TxMAKeyAlias:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName: !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
+        TargetKeyId: !Ref TxMAKMSEncryptionKey
+
+Outputs:
+#  SessionTableName:
+#    Description: "The name of the DynamoDB Session table"
+#    Value: !Ref SessionTable
+#    Export:
+#      Name: !Sub "${AWS::StackName}-session-table-name"
+  TxMASQSQueue:
+    Description: "The Arn of the Q"
+    Value: !GetAtt TxMASQSQueue.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-txma-queue-arn"
+  TxMAKMSEncryptionKey:
+    Description: "The Arn of the Q encryption key"
+    Value: !GetAtt TxMAKMSEncryptionKey.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-txma-queue-key-arn"
+  TxMAQueueUrl:
+    Description: "The Url of the Q"
+    Value: !Ref TxMASQSQueue
+    Export:
+      Name: !Sub "${AWS::StackName}-txma-queue-url"
+#  SessionTableKeyId:
+#    Description: "The Id of the session table encryption key"
+#    Value: !Ref SessionTableKey
+#    Export:
+#      Name: !Sub "${AWS::StackName}-session-table-key-id"
+#  SessionTableKeyAlias:
+#    Description: "The Alias of the session table encryption key"
+#    Value: !Ref SessionTableKeyAlias
+

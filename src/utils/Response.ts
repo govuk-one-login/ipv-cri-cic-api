@@ -1,5 +1,5 @@
 import { HttpCodesEnum } from "./HttpCodesEnum";
-import { JwtPayload } from "./IVeriCredential";
+
 export class Response {
 	constructor(
 		public statusCode: number,
@@ -23,7 +23,7 @@ export const GenericServerError = {
 	body: "Internal server error",
 };
 
-export const UnauthorizedResponse = (errorDescription: string) => {
+export const unauthorizedResponse = (errorDescription: string) => {
 	return {
 		statusCode: HttpCodesEnum.UNAUTHORIZED,
 		headers: SECURITY_HEADERS,
@@ -31,44 +31,5 @@ export const UnauthorizedResponse = (errorDescription: string) => {
 			redirect: null,
 			message: errorDescription,
 		}),
-	};
-};
-
-export const UnauthorizedResponseWithRedirect = (params:
-													 {
-														 errorDescription: string;
-														 error: string;
-														 jwtPayload: JwtPayload;
-													 },
-) => {
-	const { error, errorDescription } = params;
-	const redirectUri: string = params.jwtPayload?.redirect_uri ?? null;
-	const state: string = params.jwtPayload?.state ?? null;
-	if (redirectUri === null) {
-		return GenericServerError;
-	} else {
-		return {
-			statusCode: HttpCodesEnum.UNAUTHORIZED,
-			headers: SECURITY_HEADERS,
-			body: JSON.stringify({
-				redirect: `${redirectUri}?error=${error}&error_description=${encodeURIComponent(errorDescription)}&state=${state}`,
-				message: errorDescription,
-			}),
-		};
-	}
-};
-
-//TODO: Include full name and DOB from shared_claims (Optional)
-export const SuccessSessionResponse = (sessionId: string, state: string, redirect_uri: string) => {
-	const responseBody = {
-		session_id: sessionId,
-		state,
-		redirect_uri,
-	};
-
-	return {
-		statusCode: HttpCodesEnum.OK,
-		headers: SECURITY_HEADERS,
-		body: JSON.stringify(responseBody),
 	};
 };
