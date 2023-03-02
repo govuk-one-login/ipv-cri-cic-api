@@ -85,25 +85,15 @@ export class AuthorizationRequestProcessor {
 			// 	});
 			// } catch (error) {
 			// 	this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.");
-			// 	return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to write TXMA event");
 			// }
 
-			// const authorizationResponse = {
-			// 	state: {
-			// 		value: session?.state,
-			// 	},
-			// 	authorizationCode: {
-			// 		value: authorizationCode,
-			// 	},
-			// 	redirectionURI: session?.redirectUri,
-			// };
-			const cicResp = new CicResponse({
-				 authorizationCode: {
-				value: authorizationCode,
-			},
+			const cicResp = {
+				authorizationCode: {
+					value: authorizationCode,
+				},
 				redirect_uri: session?.redirectUri,
 				state: session?.state,
-			});
+			};
 
 			return new Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
 		} else {
