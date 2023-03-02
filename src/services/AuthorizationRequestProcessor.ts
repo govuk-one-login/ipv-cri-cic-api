@@ -87,11 +87,13 @@ export class AuthorizationRequestProcessor {
 				this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.");
 			}
 
-			const cicResp = new CicResponse({
-				authorizationCode,
+			const cicResp = {
+				authorizationCode: {
+					value: authorizationCode,
+				},
 				redirect_uri: session?.redirectUri,
 				state: session?.state,
-			});
+			};
 
 			return new Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
 		} else {

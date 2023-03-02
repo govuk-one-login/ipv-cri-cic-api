@@ -62,7 +62,9 @@ describe("AuthorizationRequestProcessor", () => {
 		const cicResp = new CicResponse(JSON.parse(out.body));
 
 		expect(out.body).toEqual(JSON.stringify({
-			authorizationCode: `${cicResp.authorizationCode}`,
+			authorizationCode: {
+				value:`${cicResp.authorizationCode.value}`,
+			},
 			redirect_uri: "http://localhost:8085/callback",
 			state: "Y@atr",
 		}));
@@ -108,7 +110,9 @@ describe("AuthorizationRequestProcessor", () => {
 		const cicResp = new CicResponse(JSON.parse(out.body));
 
 		expect(out.body).toEqual(JSON.stringify({
-			authorizationCode: `${cicResp.authorizationCode}`,
+			authorizationCode: {
+				value:`${cicResp.authorizationCode.value}`,
+			},
 			redirect_uri: "http://localhost:8085/callback",
 			state: "Y@atr",
 		}));

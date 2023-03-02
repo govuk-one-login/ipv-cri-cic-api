@@ -6,7 +6,7 @@ export class CicResponse {
 		this.state = data.state;
 	}
 
-  authorizationCode: string;
+  authorizationCode: { value: string };
 
   redirect_uri?: string;
 
