@@ -7,7 +7,7 @@ import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import crypto from "crypto";
-import AWS from "@aws-sdk/client-kms";
+import * as AWS from "@aws-sdk/client-kms";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
