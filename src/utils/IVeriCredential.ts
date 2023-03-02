@@ -41,6 +41,9 @@ export interface JwtPayload {
 	iat?: number | undefined;
 	jti?: string | undefined;
 }
+export interface JWKSBody {
+	keys: Jwk[]
+}
 export interface Jwk extends JsonWebKey {
 	alg: Algorithm;
 	kid: string;
@@ -56,3 +59,4 @@ export interface Jwt {
 	signature: string;
 	jwk?: Jwk;
 }
+
