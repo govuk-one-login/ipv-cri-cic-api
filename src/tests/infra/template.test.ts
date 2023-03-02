@@ -49,8 +49,8 @@ describe("Infra", () => {
 		});
 	});
 
-	it("There are 2 lambdas defined, all with a specific permission:", () => {
-		const lambdaCount = 2;
+	it("There are 3 lambdas defined, all with a specific permission:", () => {
+		const lambdaCount = 3;
 		template.resourceCountIs("AWS::Serverless::Function", lambdaCount);
 		template.resourceCountIs("AWS::Lambda::Permission", lambdaCount);
 	});

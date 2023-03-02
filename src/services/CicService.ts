@@ -3,9 +3,11 @@ import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AppError } from "../utils/AppError";
-import { DynamoDBDocument, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, GetCommand, QueryCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
+import { Constants } from "../utils/Constants";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 export class CicService {
     readonly tableName: string;
@@ -97,6 +99,46 @@ export class CicService {
     	} catch (e: any) {
     		this.logger.error({ message: "got error setting auth code", e });
     		throw new AppError("updateItem - failed ", 500);
+    	}
+    }
+
+    async getSessionByAuthorizationCode(code: string | undefined): Promise<ISessionItem | undefined> {
+    	const params: QueryCommandInput = {
+    		TableName: this.tableName,
+    		IndexName: Constants.AUTHORIZATION_CODE_INDEX_NAME,
+    		KeyConditionExpression: "authorizationCode = :authorizationCode",
+    		ExpressionAttributeValues: {
+    			":authorizationCode": code,
+    		},
+    	};
+
+    	const sessionItem = await this.dynamo.query(params);
+
+    	if (!sessionItem?.Items || sessionItem?.Items?.length !== 1) {
+    		throw new AppError("Error retrieving Session by authorization code", HttpCodesEnum.SERVER_ERROR);
+    	}
+
+    	return sessionItem.Items[0] as ISessionItem;
+    }
+
+    async updateSessionWithAccessTokenDetails(sessionId: string, accessTokenExpiryDate: number): Promise<void> {
+    	const updateAccessTokenDetailsCommand = new UpdateCommand({
+    		TableName: this.tableName,
+    		Key: { sessionId },
+    		UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
+    		ExpressionAttributeValues: {
+    			":authSessionState": AuthSessionState.CIC_ACCESS_TOKEN_ISSUED,
+    			":accessTokenExpiryDate": accessTokenExpiryDate,
+    		},
+    	});
+
+    	this.logger.info({ message: "updating Access token details in dynamodb", updateAccessTokenDetailsCommand });
+    	try {
+    		await this.dynamo.send(updateAccessTokenDetailsCommand);
+    		this.logger.info({ message: "updated Access token details in dynamodb" });
+    	} catch (error) {
+    		this.logger.error({ message: "got error saving Access token details", error });
+    		throw new AppError("updateItem - failed: got error saving Access token details", HttpCodesEnum.SERVER_ERROR);
     	}
     }
 }

@@ -345,6 +345,80 @@ Resources:
       FunctionName: !Ref UserInfoFunction
       Principal: apigateway.amazonaws.com
 
+  ## AccessToken
+  TokenFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: TokenFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "Access-Token-${AWS::StackName}"
+      Handler: AccessTokenHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AccessTokenHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:Sign
+              Resource:
+                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Events:
+        userInfo:
+          Type: Api
+          Properties:
+            Path: /token
+            Method: post
+            RestApiId: !Ref CICRestApi
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - AccessTokenHandler.ts
+
+  TokenFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/Access-Token-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  TokenFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref TokenFunctionLogGroup
+
+  TokenFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TokenFunction
+      Principal: apigateway.amazonaws.com
+
 Outputs:
   CICApiGatewayId:
     Description: "API GatewayID of the CIC CRI API"

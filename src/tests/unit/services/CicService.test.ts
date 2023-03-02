@@ -13,6 +13,7 @@ const logger = new Logger({
 let cicService: CicService;
 const tableName = "MYTABLE";
 const sessionId = "SESSID";
+const authCode = "AUTHCODE";
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const SESSION_RECORD = require("../data/db_record.json");
 
@@ -52,6 +53,14 @@ describe("Cic Service", () => {
 	it("should throw 500 if request fails when setting AuthorizationCode", async () => {
 		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
 		return expect(cicService.setAuthorizationCode(FAILURE_VALUE, randomUUID())).rejects.toThrow(expect.objectContaining({
+			statusCode: HttpCodesEnum.SERVER_ERROR,
+		}));
+	});
+
+	it("should throw 500 if request fails during update Session data with access token details", async () => {
+		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+
+		return expect(cicService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,
 		}));
 	});

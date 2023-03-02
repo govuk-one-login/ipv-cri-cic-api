@@ -70,7 +70,7 @@ export class UserInfoRequestProcessor {
     	let session :ISessionItem | undefined;
     	try {
     		session = await this.cicService.getSessionById(sub as string);
-    		this.logger.debug({ message :"Found Session: " + JSON.stringify(session) });
+    		this.logger.info({ message :"Found Session: " + JSON.stringify(session) });
     		if (!session) {
     			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the sessionId: ${sub}`);
     		}

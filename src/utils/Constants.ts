@@ -10,6 +10,8 @@ export class Constants {
 
     static readonly USERINFO_LOGGER_SVC_NAME = "UserInfoHandler";
 
+    static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
+
     static readonly DEBUG = "DEBUG";
 
     static readonly INFO = "INFO";
@@ -27,4 +29,20 @@ export class Constants {
     static readonly CLAIMED_IDENTITY_CREDENTIAL_TYPE = "ClaimedIdentityCredential";
 
     static readonly VERIFIABLE_CREDENTIAL = "VerifiableCredential";
+
+    static readonly CODE = "code";
+
+    static readonly REDIRECT_URL = "redirect_uri";
+
+    static readonly GRANT_TYPE = "grant_type";
+
+    static readonly AUTHORIZATION_CODE = "authorization_code";
+
+    static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
+
+    static readonly TOKEN_EXPIRY_SECONDS = 3600;
+
+    static readonly CREDENTIAL_EXPIRY = 15638400;
+
+    static readonly REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 }
