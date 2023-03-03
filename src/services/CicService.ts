@@ -8,6 +8,9 @@ import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { sqsClient } from "../utils/SqsClient";
+import { TxmaEvent } from "../utils/TxmaEvent";
 
 export class CicService {
     readonly tableName: string;
@@ -59,13 +62,14 @@ export class CicService {
     	const saveCICCommand: any = new UpdateCommand({
     		TableName: this.tableName,
     		Key: { sessionId },
-    		UpdateExpression: "SET full_name = :full_name, date_of_birth = :date_of_birth, document_selected = :document_selected, date_of_expiry =:date_of_expiry",
+    		UpdateExpression: "SET full_name = :full_name, date_of_birth = :date_of_birth, document_selected = :document_selected, date_of_expiry =:date_of_expiry, authSessionState = :authSessionState",
 
     		ExpressionAttributeValues: {
     			":full_name": cicData.full_name,
     			":date_of_birth": cicData.date_of_birth,
     			":document_selected": cicData.document_selected,
     			":date_of_expiry": cicData.date_of_expiry,
+    			":authSessionState": AuthSessionState.CIC_DATA_RECEIVED,
     		},
     	});
 
@@ -75,7 +79,7 @@ export class CicService {
     		this.logger.info({ message: "updated CIC data in dynamodb" });
     	} catch (error) {
     		this.logger.error({ message: "got error saving CIC data", error });
-    		throw new AppError("updateItem - failed ", 500);
+    		throw new AppError("Failed to set claimed identity data ", HttpCodesEnum.SERVER_ERROR);
     	}
     }
 
@@ -84,10 +88,11 @@ export class CicService {
     	const updateSessionCommand = new UpdateCommand({
     		TableName: this.tableName,
     		Key: { sessionId },
-    		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry",
+    		UpdateExpression: "SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry, authSessionState = :authSessionState",
     		ExpressionAttributeValues: {
     			":authCode": uuid,
     			":authCodeExpiry": getAuthorizationCodeExpirationEpoch(process.env.AUTHORIZATION_CODE_TTL),
+    			":authSessionState": AuthSessionState.CIC_AUTH_CODE_ISSUED,
     		},
     	});
 
@@ -98,7 +103,24 @@ export class CicService {
     		this.logger.info({ message: "updated authorizationCode in dynamodb" });
     	} catch (e: any) {
     		this.logger.error({ message: "got error setting auth code", e });
-    		throw new AppError("updateItem - failed ", 500);
+    		throw new AppError("Failed to set authorization code ", HttpCodesEnum.SERVER_ERROR);
+    	}
+    }
+
+    async sendToTXMA(event: TxmaEvent): Promise<void> {
+    	const messageBody = JSON.stringify(event);
+    	const params = {
+    		MessageBody: messageBody,
+    		QueueUrl: process.env.TXMA_QUEUE_URL,
+    	};
+
+    	this.logger.info({ message: "Sending message to TxMA", messageBody });
+    	try {
+    		await sqsClient.send(new SendMessageCommand(params));
+    		this.logger.info("Sent message to TxMA");
+    	} catch (error) {
+    		this.logger.error("got error " + error);
+    		throw new AppError("sending event - failed ", HttpCodesEnum.SERVER_ERROR);
     	}
     }
 

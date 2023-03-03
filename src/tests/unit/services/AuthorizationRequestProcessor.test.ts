@@ -1,22 +1,19 @@
-import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { VALID_CLAIMEDID } from "../data/cic-events";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
+import { AuthorizationRequestProcessor } from "../../../services/AuthorizationRequestProcessor";
+import { VALID_AUTHCODE } from "../data/auth-events";
 
-let claimedIdRequestProcessorTest: ClaimedIdRequestProcessor;
+let authorizationRequestProcessorTest: AuthorizationRequestProcessor;
 const mockCicService = mock<CicService>();
 
-const logger = new Logger({
-	logLevel: "DEBUG",
-	serviceName: "CIC",
-});
+const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem() : ISessionItem {
@@ -40,30 +37,42 @@ function getMockSessionItem() : ISessionItem {
 		date_of_birth: "09-08-1961",
 		document_selected: "Passport",
 		date_of_expiry: "23-04-1027",
-		authSessionState: AuthSessionState.CIC_SESSION_CREATED,
+		authSessionState: AuthSessionState.CIC_DATA_RECEIVED,
 	};
 	return sess;
 }
 
-describe("ClaimedIdRequestProcessor", () => {
+describe("AuthorizationRequestProcessor", () => {
 	beforeAll(() => {
-		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor(logger, metrics);
+		authorizationRequestProcessorTest = new AuthorizationRequestProcessor(logger, metrics);
 		// @ts-ignore
-		claimedIdRequestProcessorTest.cicService = mockCicService;
+		authorizationRequestProcessorTest.cicService = mockCicService;
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
 	});
 
-	it("Return successful response with 200 OK when session is found", async () => {
+	it("Return successful response with 200 OK when auth code", async () => {
 		const sess = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+
+		const cicResp = new CicResponse(JSON.parse(out.body));
+
+		expect(out.body).toEqual(JSON.stringify({
+			authorizationCode: {
+				value:`${cicResp.authorizationCode.value}`,
+			},
+			redirect_uri: "http://localhost:8085/callback",
+			state: "Y@atr",
+		}));
+
 		// eslint-disable-next-line @typescript-eslint/unbound-method
-		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toBe("");
+		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 
@@ -72,7 +81,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		sess.expiryDate = 1675458564;
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
@@ -83,11 +92,37 @@ describe("ClaimedIdRequestProcessor", () => {
 	it("Return 401 when session with that session id not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: 1234");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+	});
+
+	it("Return 200 when write to txMA fails", async () => {
+		const sess = getMockSessionItem();
+		mockCicService.getSessionById.mockResolvedValue(sess);
+		mockCicService.sendToTXMA.mockRejectedValue({});
+
+		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+
+		const cicResp = new CicResponse(JSON.parse(out.body));
+
+		expect(out.body).toEqual(JSON.stringify({
+			authorizationCode: {
+				value:`${cicResp.authorizationCode.value}`,
+			},
+			redirect_uri: "http://localhost:8085/callback",
+			state: "Y@atr",
+		}));
+
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.");
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 });

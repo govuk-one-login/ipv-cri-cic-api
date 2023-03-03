@@ -89,9 +89,7 @@ export class ValidationHelper {
 	}
 
 	isValidUUID(code: string): boolean {
-		const regexUUID = Constants.REGEX_UUID;
-		const isValidUUID = regexUUID.test(code);
-		return isValidUUID;
+		return Constants.REGEX_UUID.test(code);
 	}
 
 }

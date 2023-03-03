@@ -1,6 +1,8 @@
 export class Constants {
 
-    static readonly SESSION_ID = "x-govuk-signin-session-id";
+    static readonly X_SESSION_ID = "x-govuk-signin-session-id";
+
+    static readonly SESSION_ID = "session-id";
 
     static readonly CLAIMEDID_METRICS_SVC_NAME = "ClaimedIdentity";
 
