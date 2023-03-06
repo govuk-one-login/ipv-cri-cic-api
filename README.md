@@ -79,3 +79,11 @@ Hello world%
 Unit Tests:  `npm run test:unit`
 Infrastructure Unit Tests: `npm run test:infra`
 Run tests against a CloudFormation stack deployed into AWS: `STACK_NAME=cic-backend-api npm run test:e2e` (Work in progress)
+
+# Generating JWKS
+
+The public JWKS is not generated automatically when deploying a stack. In order to run the E2E tests, or to successfully call the ./wellknown/jwks endpoint, the key needs to be generated. It can be done as follows:
+
+```bash
+aws lambda invoke --function-name JsonWebKeys-<STACK-NAME> response.json
+```
