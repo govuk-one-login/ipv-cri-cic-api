@@ -352,6 +352,7 @@ Resources:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -375,6 +376,17 @@ Resources:
                 - kms:Sign
               Resource:
                 Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
       Events:
         userInfo:
           Type: Api

@@ -6,30 +6,27 @@ import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
 
-const ISSUER = process.env.ISSUER;
-
 export class VerifiableCredentialService {
     readonly tableName: string;
 
     readonly logger: Logger;
 
+	readonly issuer: string;
+
     private readonly kmsJwtAdapter: KmsJwtAdapter;
 
     private static instance: VerifiableCredentialService;
 
-    constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, logger: Logger ) {
-    	if (!ISSUER) {
-    		logger.error("Environment variable ISSUER is not configured");
-    		throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
-    	}
+    constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger ) {
+    	this.issuer = issuer;
     	this.tableName = tableName;
     	this.logger = logger;
     	this.kmsJwtAdapter = kmsJwtAdapter;
     }
 
-    static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, logger: Logger): VerifiableCredentialService {
+    static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger): VerifiableCredentialService {
     	if (!VerifiableCredentialService.instance) {
-    		VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, logger);
+    		VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger);
     	}
     	return VerifiableCredentialService.instance;
     }
@@ -41,8 +38,8 @@ export class VerifiableCredentialService {
     		.build();
     	const result = {
     		iat: now,
-    		iss: ISSUER,
-    		aud: ISSUER,
+    		iss: this.issuer,
+    		aud: this.issuer,
     		sub: subject,
     		nbf: now,
     		exp: now + Constants.CREDENTIAL_EXPIRY,
