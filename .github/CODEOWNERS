@@ -1,0 +1,4 @@
+# This is the CODEOWNERS file. These owners will be the default owners for everything in the DI-IPV-CRI-CIC-API repository
+# The following below will be requested for review when someone opens a pull request.
+
+* @alphagov/di-ipv-cri-cic-api-codeowners
