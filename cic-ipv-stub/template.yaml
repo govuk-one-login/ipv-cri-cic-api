@@ -20,7 +20,7 @@ Parameters:
     Type: String
     Default: "none"
     Description: >
-      The ARN of the Code Signing Config to use, provided by the deployment pipeline. This is mandatory if your using Lambda create function permissions
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline. Mandatory if using Lambda create function permissions.
   Environment:
     Description: "The environment type"
     Type: "String"
@@ -33,11 +33,11 @@ Parameters:
       # - "production" EXPLICITLY CONFIGURED TO NOT GO TO PRODUCTION
     ConstraintDescription: must be dev, build, staging, or integration
   BackendStack:
-    Description: The Stack name of the Backend stack we currently testing
+    Description: The stack name of the API stack under test
     Default: backend-api
     Type: String
   FrontendStack:
-    Description: The Stack name of the Frontend stack we currently testing
+    Description: The stack name of the Frontend stack under test
     Default: frontend
     Type: String
   VpcStackName:
@@ -48,7 +48,7 @@ Parameters:
     Default: platform-vpc
     Type: String
   PermissionsBoundary:
-    Description: "The ARN of the permissions boundary to apply when creating IAM roles. this is mandatory"
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
     Type: String
     Default: "none"
 
@@ -387,7 +387,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "IPVStubRedirect-${AWS::StackName}"
-      Handler: docCheckCallback.handler
+      Handler: callback.handler
       CodeUri: src/handlers/
       Role: !GetAtt IPVStubLambdaRole.Arn
     Metadata:
@@ -397,7 +397,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - docCheckCallback.ts
+          - callback.ts
 
   IPVStubRedirectFunctionPermission:
     Type: AWS::Lambda::Permission
