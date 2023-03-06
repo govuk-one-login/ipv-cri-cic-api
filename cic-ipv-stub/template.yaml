@@ -34,18 +34,18 @@ Parameters:
     ConstraintDescription: must be dev, build, staging, or integration
   BackendStack:
     Description: The stack name of the API stack under test
-    Default: backend-api
+    Default: cic-cri-api
     Type: String
   FrontendStack:
     Description: The stack name of the Frontend stack under test
-    Default: frontend
+    Default: cic-cri-front
     Type: String
   VpcStackName:
     Description: >
       The name of the stack that defines the VPC in which this container will
       run. This should stop anyone not on the GDS VPN or internal to AWS from 
       calling this stuff.
-    Default: platform-vpc
+    Default: vpc-cri
     Type: String
   PermissionsBoundary:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
@@ -296,8 +296,7 @@ Resources:
           JWKS_URI: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/.well-known/jwks.json"
           OIDC_FRONT_BASE_URI: !Sub
             - "${ImportDCAFrontUrl}"
-            - ImportDCAFrontUrl:
-                Fn::ImportValue: !Sub "${FrontendStack}-CICFrontUrl"
+            - ImportDCAFrontUrl: "https://fjl1azpsvc.execute-api.eu-west-2.amazonaws.com"
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -445,10 +444,7 @@ Resources:
       Description: The Base URI from backend stack to test
       Name: !Sub "/${Environment}/${AWS::StackName}/API/PROVIDER_BASE_URI"
       Type: String
-      Value: !Sub
-        - "${ImportProviderStack}"
-        - ImportProviderStack:
-            Fn::ImportValue: !Sub "${BackendStack}-apigateway-url-execute-url"
+      Value: "https://unb2uhs7rl.execute-api.eu-west-2.amazonaws.com/dev/"
       Tags:
         APP: !Sub dcmaw-${AWS::StackName}
 
