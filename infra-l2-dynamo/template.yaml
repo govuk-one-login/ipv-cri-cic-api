@@ -83,7 +83,6 @@ Resources:
               - "sessionId"
               - "redirectUri"
               - "clientId"
-              - "authSessionState"
             ProjectionType: "INCLUDE"
       TimeToLiveSpecification:
         AttributeName: expiryDate
