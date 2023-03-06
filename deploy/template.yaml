@@ -168,6 +168,48 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
 
+  JsonWebKeysBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-jwks-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  JWKSBucketRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: AccessJWKSjson
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:Get*"
+                Resource:
+                  - !Sub "arn:aws:s3:::${JsonWebKeysBucket}/.well-known/jwks.json"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
   ### Start of API Gateway definition.
 
   CICRestApi:
@@ -611,6 +653,61 @@ Resources:
         - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
+
+  JsonWebKeysFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "JsonWebKeysLogGroup"
+    Properties:
+      FunctionName: !Sub "JsonWebKeys-${AWS::StackName}"
+      CodeUri: ../src/
+      Handler: JwksHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - IsProdLikeEnvironment
+        - 80
+        - !Ref AWS::NoValue
+      Policies:
+        - AWSXRayDaemonWriteAccess
+        - S3WritePolicy:
+            BucketName: !Ref JsonWebKeysBucket
+        - S3ReadPolicy:
+            BucketName: !Ref JsonWebKeysBucket
+        - Statement:
+            - Sid: KMSSignPolicy
+              Effect: Allow
+              Action:
+                - kms:GetPublicKey
+              Resource:
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+      Environment:
+        Variables:
+          JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
+          SIGNING_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          ENCRYPTION_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - JwksHandler.ts
+
+  JsonWebKeysLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/JsonWebKeys-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  JsonWebKeysFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt JsonWebKeysFunction.Arn
+      Principal: events.amazonaws.com
 
 Outputs:
   CICApiGatewayId:

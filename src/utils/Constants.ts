@@ -14,6 +14,8 @@ export class Constants {
 
     static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
 
+    static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
+
     static readonly DEBUG = "DEBUG";
 
     static readonly INFO = "INFO";

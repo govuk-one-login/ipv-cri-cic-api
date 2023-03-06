@@ -498,92 +498,88 @@ paths:
         passthroughBehavior: "when_no_match"
         contentHandling: "CONVERT_TO_TEXT"
         type: "aws_proxy"
-#  /.well-known/jwks.json:
-#    get:
-#      operationId: getWellKnownJwksJson
-#      summary: Retrieve the signing public keys for JWTs issued by `POST /userinfo`.
-#      description: >-
-#        Return the current valid public keys used to sign JWTs issued by the service as a JSON Web Key Set
-#      tags:
-#        - Backend - CI CRI specific
-#      responses:
-#        "200":
-#          description: "OK - key ring returned"
-#          headers:
-#            Access-Control-Allow-Origin:
-#              schema:
-#                type: "string"
-#            Cache-Control:
-#              example: "max-age=3600, must-revalidate"  # consumers can use a cached key for up to 1 hour
-#              description: see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-#              schema:
-#                type: "string"
-#            Content-Type:
-#              schema:
-#                type: "string"
-#            Strict-Transport-Security:
-#              schema:
-#                type: "string"
-#            X-Content-Type-Options:
-#              schema:
-#                type: "string"
-#            X-Frame-Options:
-#              schema:
-#                type: "string"
-#            Content-Security-Policy:
-#              schema:
-#                type: "string"
-#            Feature-Policy:
-#              schema:
-#                type: "string"
-#            Referrer-Policy:
-#              schema:
-#                type: "string"
-#          content:
-#            application/json:
-#              schema:
-#                $ref: "#/components/schemas/JWKSFile"
-#        "500":
-#          description: "Internal Server Error"
-#          headers:
-#            Access-Control-Allow-Origin:
-#              schema:
-#                type: "string"
-#            Cache-Control:
-#              schema:
-#                type: "string"
-#            Content-Type:
-#              schema:
-#                type: "string"
-#            Strict-Transport-Security:
-#              schema:
-#                type: "string"
-#            X-Content-Type-Options:
-#              schema:
-#                type: "string"
-#            X-Frame-Options:
-#              schema:
-#                type: "string"
-#            Content-Security-Policy:
-#              schema:
-#                type: "string"
-#            Feature-Policy:
-#              schema:
-#                type: "string"
-#            Referrer-Policy:
-#              schema:
-#                type: "string"
-#    x-amazon-apigateway-request-validator: "both"
-#    x-amazon-apigateway-integration:
-#      httpMethod: "GET"
-#      uri:
-#        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClaimedIdentityFunction.Arn}:live/invocations
-#      responses:
-#        default:
-#          statusCode: "200"
-#      passthroughBehavior: "when_no_match"
-#      contentHandling: "CONVERT_TO_TEXT"
-#      type: "aws_proxy"
+
+  /.well-known/jwks.json:
+    get:
+      operationId: getWellKnownJwksJson
+      summary: Retrieve the signing public keys for JWTs issued by `POST /userinfo`.
+      description: >-
+        Return the current valid public keys used to sign JWTs issued by the service as a JSON Web Key Set
+      tags:
+        - Backend - CI CRI specific
+      responses:
+        "200":
+          description: >-
+            OK - key ring returned
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JWKSFile"
+        "400":
+          description: 400 response
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+        "500":
+          description: Internal Server Error
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+      x-amazon-apigateway-request-validator: "both"
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        credentials:
+          Fn::GetAtt: [ "JWKSBucketRole", "Arn" ]
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:s3:path/${JsonWebKeysBucket}/.well-known/jwks.json"
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws"
 #
 #  /txmaEvent:
 #    post:
