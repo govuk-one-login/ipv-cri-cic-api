@@ -18,10 +18,7 @@ const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdap
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
 
 
-const logger = new Logger({
-	logLevel: "DEBUG",
-	serviceName: "CIC",
-});
+const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem() : ISessionItem {
@@ -73,6 +70,8 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "ipv-core-stub",
@@ -176,4 +175,25 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 	});
 
+	it("Return successful response with 200 OK when write to txMA fails", async () => {
+		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockCicService.sendToTXMA.mockRejectedValue({});
+		// @ts-ignore
+		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
+
+		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.");
+
+
+		expect(out.body).toEqual(JSON.stringify({
+			sub: "ipv-core-stub",
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
+		}));
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+	});
 });

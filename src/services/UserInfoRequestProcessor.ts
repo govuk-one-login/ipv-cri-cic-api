@@ -12,9 +12,11 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
+import { buildCoreEventFields } from "../utils/TxmaEvent";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
+const ISSUER = process.env.ISSUER!;
 
 export class UserInfoRequestProcessor {
     private static instance: UserInfoRequestProcessor;
@@ -32,12 +34,8 @@ export class UserInfoRequestProcessor {
     private readonly verifiableCredentialService: VerifiableCredentialService;
 
     constructor(logger: Logger, metrics: Metrics) {
-    	if (!SESSION_TABLE) {
-    		logger.error("Environment variable SESSION_TABLE is not configured");
-    		throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
-    	}
-    	if (!KMS_KEY_ARN) {
-    		logger.error("Environment variable KMS_KEY_ARN is not configured");
+    	if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN) {
+    		logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN is not configured");
     		throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
     	}
     	this.logger = logger;
@@ -45,7 +43,7 @@ export class UserInfoRequestProcessor {
     	this.metrics = metrics;
     	this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
     	this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN);
-    	this.verifiableCredentialService = VerifiableCredentialService.getInstance(SESSION_TABLE, this.kmsJwtAdapter, this.logger);
+    	this.verifiableCredentialService = VerifiableCredentialService.getInstance(SESSION_TABLE, this.kmsJwtAdapter, ISSUER, this.logger);
     }
 
     static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
@@ -98,6 +96,17 @@ export class UserInfoRequestProcessor {
     			this.logger.error({ message :"Error generating signed verifiable credential jwt: " + error.message });
     			return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the verifiableCredential Jwt");
     		}
+    	}
+    	// Add metric and send TXMA event to the sqsqueue
+    	this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
+    	try {
+    		await this.cicService.sendToTXMA({
+    			event_name: "CIC_CRI_VC_ISSUED",
+    			...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+
+    		});
+    	} catch (error) {
+    		this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.");
     	}
     	return new Response(HttpCodesEnum.OK, JSON.stringify({
     		sub: session.clientId,

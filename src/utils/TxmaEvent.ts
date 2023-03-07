@@ -4,7 +4,8 @@ import { absoluteTimeNow } from "./DateTimeUtils";
 
 export type TxmaEventName =
 	"CIC_CRI_START"
-	| "CIC_CRI_AUTH_CODE_ISSUED";
+	| "CIC_CRI_AUTH_CODE_ISSUED"
+	| "CIC_CRI_VC_ISSUED";
 
 export interface TxmaUser {
 	"user_id": string;
