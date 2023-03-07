@@ -1,4 +1,3 @@
-import { CicSession } from "../models/CicSession";
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -6,7 +5,6 @@ import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
-import { CicResponse } from "../utils/CicResponse";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
@@ -30,18 +28,9 @@ export class AuthorizationRequestProcessor {
 	private readonly cicService: CicService;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE) {
-			logger.error("Environment variable SESSION_TABLE is not configured");
-			throw new AppError( "Service incorrectly configured", 500);
-		}
-		if (!TXMA_QUEUE_URL) {
-			logger.error("Environment variable TXMA_QUEUE_URL is not configured");
-			throw new AppError( "Service incorrectly configured", 500);
-		}
-
-		if (!ISSUER) {
-			logger.error("Environment variable ISSUER is not configured");
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
+		if (!SESSION_TABLE || !TXMA_QUEUE_URL || !ISSUER) {
+			logger.error("Environment variable SESSION_TABLE or TXMA_QUEUE_URL or ISSUER is not configured");
+			throw new AppError( "Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
 		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
