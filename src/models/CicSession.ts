@@ -1,17 +1,24 @@
-import { IsISO8601, IsNotEmpty, IsString } from "class-validator";
+import {
+	ArrayNotEmpty,
+	IsArray,
+	IsISO8601,
+	IsNotEmpty,
+	IsString,
+} from "class-validator";
 import { ICicSession } from "./ISessionItem";
 
 export class CicSession implements ICicSession {
 	constructor(data: CicSession) {
-		this.full_name = data.full_name!;
+		this.given_names = data.given_names!;
+		this.family_names = data.family_names!;
 		this.date_of_birth = data.date_of_birth!;
 		this.document_selected = data.document_selected!;
 		this.date_of_expiry = data.date_of_expiry!;
 	}
 
-  @IsString()
-  @IsNotEmpty()
-  full_name: string;
+  @IsArray()
+  @ArrayNotEmpty()
+  given_names: string [];
 
   @IsISO8601()
   @IsNotEmpty()
@@ -24,4 +31,8 @@ export class CicSession implements ICicSession {
   @IsISO8601()
   @IsNotEmpty()
   date_of_expiry: string;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  family_names: string [];
 }

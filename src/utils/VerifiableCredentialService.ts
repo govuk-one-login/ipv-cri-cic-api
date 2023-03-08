@@ -34,7 +34,9 @@ export class VerifiableCredentialService {
     async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem | undefined, getNow: () => number): Promise<string> {
     	const now = getNow();
     	const subject = sessionItem?.clientId as string;
-    	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(sessionItem?.full_name, sessionItem?.date_of_birth, sessionItem?.document_selected, sessionItem?.date_of_expiry)
+    	const givenNames = sessionItem?.given_names.join(" ");
+    	const famiyNames = sessionItem?.family_names.join(" ");
+    	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(givenNames, famiyNames, sessionItem?.date_of_birth, sessionItem?.document_selected, sessionItem?.date_of_expiry)
     		.build();
     	const result = {
     		iat: now,
@@ -46,6 +48,7 @@ export class VerifiableCredentialService {
     		vc: verifiedCredential,
     	};
 
+    	this.logger.debug({ message: "Verified Credential jwt: " }, JSON.stringify(result));
     	try {
     		// Sign the VC
     		const signedVerifiedCredential = await this.kmsJwtAdapter.sign(result);
@@ -58,7 +61,7 @@ export class VerifiableCredentialService {
 class VerifiableCredentialBuilder {
     private readonly credential: VerifiedCredential;
 
-    constructor(full_name: string | undefined, date_of_birth: string | undefined, document_selected: string | undefined, date_of_expiry: string | undefined) {
+    constructor(given_names: string | undefined, family_names: string | undefined, date_of_birth: string | undefined, document_selected: string | undefined, date_of_expiry: string | undefined) {
     	this.credential = {
     		"@context": [
     			Constants.W3_BASE_CONTEXT,
@@ -70,7 +73,18 @@ class VerifiableCredentialBuilder {
     		],
     		credentialSubject: {
     			fullName: [
-    				{ value: full_name }],
+    				{
+    					nameParts: [
+    						{
+    							type: "GivenName",
+    							value: given_names,
+    						},
+    						{
+    							type: "FamilyName",
+    							value: family_names,
+    						},
+    					],
+    				}],
     			dateOfBirth: date_of_birth,
     			documentType: document_selected,
     			dateOfExpiry: date_of_expiry,
