@@ -9,9 +9,7 @@ on:
       - reopened
       - ready_for_review
       - synchronize
-    paths-ignore:
-      - 'infra-l2-dynamo/**'
-      - 'infra-l2-kms/**'
+    paths:
       - 'cic-ipv-stub/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -32,7 +30,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./src/
+        working-directory: ./cic-ipv-stub/
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3

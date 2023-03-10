@@ -138,7 +138,7 @@ Resources:
       AuthorizationType: NONE
       RestApiId: !Ref IPVStubApiGw
       ResourceId: !Ref RedirectPath
-      HttpMethod: GET
+      HttpMethod: POST
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
@@ -378,7 +378,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/JwksFunction-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/lambda/IPVStubJWKS-${AWS::StackName}"
 
   #----------------------------
   IPVStubRedirectFunction:
@@ -410,7 +410,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/IPVStubRedirectFunction-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/lambda/IPVStubRedirect-${AWS::StackName}"
 
   IPVStubKMSSigningKey:
     Type: AWS::KMS::Key
@@ -501,19 +501,8 @@ Outputs:
     Value: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
     Export:
       Name: !Sub "${AWS::StackName}-APIGWExecuteUrl"
-  RedirectUri:
-    Description: "Redirect url of the IPV stub"
-    Value: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/redirect"
+  APIGWID:
+    Description: "The ID of the API Gateway"
+    Value: !Ref IPVStubApiGw
     Export:
-      Name: !Sub "${AWS::StackName}-TestRedirectUri"
-  IPVStubId:
-    Description: "The ClientID of the IPV stub"
-    Value: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-    Export:
-      Name: !Sub "${AWS::StackName}-IPVStubId"
-  JwksEndpoint:
-    Description: "The Jwks endpoint of the IPVStub"
-    Value: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/.well-known/jwks.json"
-    Export:
-      Name: !Sub "${AWS::StackName}-JwksEndpoint"
-
+      Name: !Sub "${AWS::StackName}-APIGWID"

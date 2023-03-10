@@ -14,11 +14,12 @@ export function getConfig (): { signingKey: string | null } {
   return { signingKey: process.env.SIGNING_KEY ?? null }
 }
 
+const { signingKey } = getConfig()
+
 export const handler = async (): Promise<APIGatewayProxyResult> => {
   const jwks: Jwks = {
     keys: []
   }
-  const { signingKey } = getConfig()
   if (signingKey != null) {
     const signingKeyId = signingKey.split('/').pop() ?? ''
     const formattedKey = await getAsJwk(signingKeyId)
