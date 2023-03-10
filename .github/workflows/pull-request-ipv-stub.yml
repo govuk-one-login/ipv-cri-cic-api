@@ -30,7 +30,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./cic-ipv-stub/
+        working-directory: cic-ipv-stub
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -73,7 +73,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./deploy/
+        working-directory: cic-ipv-stub
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -88,7 +88,7 @@ jobs:
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.GH_VALIDATE_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GH_IPV_STUB_VALIDATE_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Cache SAM builds
