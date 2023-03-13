@@ -1,31 +1,72 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-import AWS from 'aws-sdk'
+import { KMSClient, SignCommand } from '@aws-sdk/client-kms'
 import crypto from 'node:crypto'
 import { util } from 'node-jose'
 import format from 'ecdsa-sig-formatter'
+import { NodeHttpHandler } from '@aws-sdk/node-http-handler'
 import { JarPayload, Jwks, JwtHeader } from '../auth.types'
 import axios from 'axios'
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const config = getConfig(event.body)
+export const v3KmsClient = new KMSClient({
+  region: process.env.REGION ?? 'eu-west-2',
+  requestHandler: new NodeHttpHandler({
+    connectionTimeout: 29000,
+    socketTimeout: 29000
+  }),
+  maxAttempts: 2
+})
 
-  const webcrypto = crypto.webcrypto as unknown as Crypto
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const config = getConfig()
+  const overrides = event.body !== null ? JSON.parse(event.body) : null
+  if (overrides?.target != null) {
+    config.oidcUri = overrides.target
+  }
+  const defaultClaims = {
+    name: [
+      {
+        nameParts: [
+          {
+            value: 'Frederick',
+            type: 'GivenName'
+          },
+          {
+            value: 'Joseph',
+            type: 'GivenName'
+          },
+          {
+            value: 'Flintstone',
+            type: 'FamilyName'
+          }
+        ]
+      }
+    ],
+    birthDate: [
+      {
+        value: '1960-02-02'
+      }
+    ],
+    email: 'example@testemail.com'
+  }
   const iat = Math.floor(Date.now() / 1000)
+  const webcrypto = crypto.webcrypto as unknown as Crypto
   const payload: JarPayload = {
     sub: crypto.randomUUID(),
     redirect_uri: config.redirectUri,
     response_type: 'code',
-    govuk_signin_journey_id: crypto.randomBytes(5).toString('hex'),
+    govuk_signin_journey_id: new TextDecoder().decode(webcrypto.getRandomValues(new Uint8Array(16))),
     aud: config.oidcUri,
     iss: 'https://ipv.core.account.gov.uk',
     client_id: config.clientId,
     state: new TextDecoder().decode(webcrypto.getRandomValues(new Uint8Array(16))),
     iat,
     nbf: iat - 1,
-    exp: iat + (3 * 60)
+    exp: iat + (3 * 60),
+    shared_claims: overrides?.shared_claims != null
+      ? overrides.shared_claims
+      : defaultClaims
   }
   const signedJwt = await sign(payload, config.signingKey)
-
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config)
   const request = await encrypt(signedJwt, publicEncryptionKey)
 
@@ -40,23 +81,21 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 }
 
-export function getConfig (body: string | null): { redirectUri: string, jwksUri: string, clientId: string, signingKey: string, oidcUri: string } {
+export function getConfig (): { redirectUri: string, jwksUri: string, clientId: string, signingKey: string, oidcUri: string } {
   if (process.env.REDIRECT_URI == null ||
-        process.env.JWKS_URI == null ||
-        process.env.CLIENT_ID == null ||
-        process.env.SIGNING_KEY == null ||
-        process.env.OIDC_FRONT_BASE_URI == null) {
+    process.env.JWKS_URI == null ||
+    process.env.CLIENT_ID == null ||
+    process.env.SIGNING_KEY == null ||
+    process.env.OIDC_FRONT_BASE_URI == null) {
     throw new Error('Missing configuration')
   }
-
-  const requestBody = body !== null ? JSON.parse(body) : null
 
   return {
     redirectUri: process.env.REDIRECT_URI,
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
-    oidcUri: requestBody?.target !== null ? requestBody.target : process.env.OIDC_FRONT_BASE_URI
+    oidcUri: process.env.OIDC_FRONT_BASE_URI
   }
 }
 
@@ -77,18 +116,13 @@ async function sign (payload: JarPayload, keyId: string): Promise<string> {
     payload: util.base64url.encode(Buffer.from(JSON.stringify(payload)), 'utf8'),
     signature: ''
   }
-  const v2KmsClient = new AWS.KMS({
-    region: process.env.REGION ?? 'eu-west-2',
-    httpOptions: { timeout: 29000, connectTimeout: 5000 },
-    maxRetries: 2,
-    retryDelayOptions: { base: 200 }
-  })
-  const res = await v2KmsClient.sign({
-    Message: Buffer.from(`${tokenComponents.header}.${tokenComponents.payload}`),
+
+  const res = await v3KmsClient.send(new SignCommand({
     KeyId: kid,
     SigningAlgorithm: alg,
-    MessageType: 'RAW'
-  }).promise()
+    MessageType: 'RAW',
+    Message: Buffer.from(`${tokenComponents.header}.${tokenComponents.payload}`)
+  }))
   if (res?.Signature == null) {
     throw res as unknown as AWS.AWSError
   }
@@ -132,8 +166,8 @@ async function encrypt (plaintext: string, publicEncryptionKey: CryptoKey): Prom
   const ciphertext: Uint8Array = encrypted.slice(0, -16)
 
   return `${protectedHeader}.` +
-        `${util.base64url.encode(Buffer.from((new Uint8Array(encryptedKey))))}.` +
-        `${util.base64url.encode(Buffer.from(new Uint8Array(initialisationVector)))}.` +
-        `${util.base64url.encode(Buffer.from(ciphertext))}.` +
-        `${util.base64url.encode(Buffer.from(tag))}`
+    `${util.base64url.encode(Buffer.from((new Uint8Array(encryptedKey))))}.` +
+    `${util.base64url.encode(Buffer.from(new Uint8Array(initialisationVector)))}.` +
+    `${util.base64url.encode(Buffer.from(ciphertext))}.` +
+    `${util.base64url.encode(Buffer.from(tag))}`
 }

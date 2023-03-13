@@ -1,22 +1,11 @@
 import { APIGatewayProxyResult } from 'aws-lambda'
-import AWS from 'aws-sdk'
 import { createPublicKey } from 'node:crypto'
 import { JsonWebKey, Jwks } from '../auth.types'
-
-export const v2KmsClient = new AWS.KMS({
-  region: process.env.REGION ?? 'eu-west-2',
-  httpOptions: { timeout: 29000, connectTimeout: 5000 },
-  maxRetries: 2,
-  retryDelayOptions: { base: 200 }
-})
-
-export function getConfig (): { signingKey: string | null } {
-  return { signingKey: process.env.SIGNING_KEY ?? null }
-}
-
-const { signingKey } = getConfig()
+import { GetPublicKeyCommand, KMSClient } from '@aws-sdk/client-kms'
+import { NodeHttpHandler } from '@aws-sdk/node-http-handler'
 
 export const handler = async (): Promise<APIGatewayProxyResult> => {
+  const { signingKey } = getConfig()
   const jwks: Jwks = {
     keys: []
   }
@@ -33,14 +22,27 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
   }
 }
 
+const v3KmsClient = new KMSClient({
+  region: process.env.REGION ?? 'eu-west-2',
+  requestHandler: new NodeHttpHandler({
+    connectionTimeout: 29000,
+    socketTimeout: 29000
+  }),
+  maxAttempts: 2
+})
+
+function getConfig (): { signingKey: string | null } {
+  return { signingKey: process.env.SIGNING_KEY ?? null }
+}
+
 const getAsJwk = async (keyId: string): Promise<JsonWebKey | null> => {
   let publicSigningKey
   try {
-    publicSigningKey = await v2KmsClient.getPublicKey({ KeyId: keyId }).promise()
+    publicSigningKey = await v3KmsClient.send(
+      new GetPublicKeyCommand({ KeyId: keyId }))
   } catch (error) {
     console.warn('Failed to fetch key from KMS', { error })
   }
-
   const map = getKeySpecMap(publicSigningKey?.KeySpec)
   if (
     publicSigningKey != null &&
@@ -50,7 +52,7 @@ const getAsJwk = async (keyId: string): Promise<JsonWebKey | null> => {
   ) {
     const use = publicSigningKey.KeyUsage === 'ENCRYPT_DECRYPT' ? 'enc' : 'sig'
     const publicKey = createPublicKey({
-      key: publicSigningKey.PublicKey as Buffer,
+      key: Buffer.from(publicSigningKey.PublicKey),
       type: 'spki',
       format: 'der'
     })
