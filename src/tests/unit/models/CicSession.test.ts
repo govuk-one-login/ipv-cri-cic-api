@@ -12,7 +12,7 @@ describe("CicSession", () => {
 		const cicSession = new CicSession({
 			full_name: "Frederick Joseph Flintstone",
 			date_of_birth: "1970-01-01",
-			document_selected: "driversPermit",
+			document_selected: "brp",
 			date_of_expiry: "1970-01-01",
 		});
 
@@ -23,7 +23,7 @@ describe("CicSession", () => {
 		const cicSession = new CicSession({
 			full_name: "",
 			date_of_birth: "1970-01-01",
-			document_selected: "driversPermit",
+			document_selected: "brp",
 			date_of_expiry: "1970-01-01",
 		});
 
@@ -34,7 +34,7 @@ describe("CicSession", () => {
 		const cicSession = new CicSession({
 			full_name: "Frederick Joseph Flintstone",
 			date_of_birth: "",
-			document_selected: "driversPermit",
+			document_selected: "brp",
 			date_of_expiry: "1970-01-01",
 		});
 
@@ -56,7 +56,7 @@ describe("CicSession", () => {
 		const cicSession = new CicSession({
 			full_name: "Frederick Joseph Flintstone ",
 			date_of_birth: "1970-01-01",
-			document_selected: "driversPermit",
+			document_selected: "brp",
 			date_of_expiry: "",
 		});
 
@@ -67,7 +67,7 @@ describe("CicSession", () => {
 		const cicSession = new CicSession({
 			full_name: "Frederick Joseph Flintstone ",
 			date_of_birth: "date_of_birth",
-			document_selected: "driversPermit",
+			document_selected: "brp",
 			date_of_expiry: "1970-01-01",
 		});
 
@@ -78,7 +78,7 @@ describe("CicSession", () => {
 		const cicSession = new CicSession({
 			full_name: "Frederick Joseph Flintstone ",
 			date_of_birth: "1970-01-01",
-			document_selected: "driversPermit",
+			document_selected: "brp",
 			date_of_expiry: "date_of_expiry",
 		});
 
