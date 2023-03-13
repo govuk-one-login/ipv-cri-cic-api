@@ -5,26 +5,24 @@
 
 export default {
   transform: {
-    '^.+\\.ts?$': [
-      'esbuild-jest',
+    "^.+\\.ts?$": [
+      "esbuild-jest",
       {
-        sourcemap: true
-      }
-    ]
+        sourcemap: true,
+      },
+    ],
   },
   clearMocks: true,
-  reporters: [
-    'default'
-  ],
+  reporters: ["default"],
   collectCoverageFrom: [
-    './**/*.ts',
-    '!./**/tests/**/*.ts',
-    '!./tests/**/*.ts',
-    '!./jest.config.ts'
+    "./**/*.ts",
+    "!./**/tests/**/*.ts",
+    "!./tests/**/*.ts",
+    "!./jest.config.ts",
   ],
   collectCoverage: true,
-  coverageDirectory: 'coverage',
-  coverageProvider: 'v8',
-  testMatch: ['**/*.test.ts'],
-  testEnvironment: 'node'
-}
+  coverageDirectory: "coverage",
+  coverageProvider: "v8",
+  testMatch: ["**/*.test.ts"],
+  testEnvironment: "node",
+};
