@@ -1,8 +1,6 @@
 import { KMSClient, GetPublicKeyCommand } from '@aws-sdk/client-kms'
 import { handler } from '../handlers/jsonWebKeys'
 import { mockClient } from 'aws-sdk-client-mock'
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
 
 describe('JWKS Endpoint', () => {
   beforeEach(() => {

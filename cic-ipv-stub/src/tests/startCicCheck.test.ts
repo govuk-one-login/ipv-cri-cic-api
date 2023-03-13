@@ -4,7 +4,6 @@ import { expect, jest, it, beforeEach, afterEach, describe } from '@jest/globals
 import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
 import startDefault from '../events/startDefault.json'
-import startCustom from '../events/startCustom.json'
 import axios from 'axios'
 import { KMSClient, SignCommand } from '@aws-sdk/client-kms'
 
@@ -34,6 +33,7 @@ const mockJwks = {
 
 describe('Start CIC Check Endpoint', () => {
   beforeEach(() => {
+    // TODO: Make response fixed for stronger test assertions
     // webcrypto.getRandomValues = () => {
     //     return new Uint8Array([ 197, 213, 5, 202, 58, 74, 45, 36, 122, 168, 27, 155, 70, 15, 9, 123, 11, 241, 205, 87, 23, 13, 32, 168, 12, 73, 48, 158, 96, 159, 247, 211 ])
     // }

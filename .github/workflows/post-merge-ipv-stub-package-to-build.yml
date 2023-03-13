@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
+    paths:
       - 'cic-ipv-stub/**'
 
   # Allows you to run this workflow manually from the Actions tab
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./cic-ipv-stub/
+        working-directory: cic-ipv-stub
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -34,7 +34,7 @@ jobs:
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.BUILD_CRI_V1_GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.BUILD_IPV_STUB_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM Validate
@@ -46,7 +46,7 @@ jobs:
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
         with:
-            artifact-bucket-name: ${{ secrets.BUILD_CRI_V1_ARTIFACT_SOURCE_BUCKET_NAME }}
+            artifact-bucket-name: ${{ secrets.BUILD_IPV_STUB_ARTIFACT_SOURCE_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
             working-directory: cic-ipv-stub
             template-file: template.yaml

@@ -67,7 +67,6 @@ describe('IPV Stub Infrastructure', () => {
 
   it('API execute URL is in Outputs', () => {
     template.hasOutput('*', {
-      // @ts-expect-error
       Export: { Name: { 'Fn::Sub': '${AWS::StackName}-APIGWExecuteUrl' } },
       Value: { 'Fn::Sub': 'https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/' }
     })
