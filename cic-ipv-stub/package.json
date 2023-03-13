@@ -33,7 +33,7 @@
   },
   
   "scripts": {
-    "test": "./node_modules/.bin/jest --testPathPattern=tests/",
-    "lint": "./node_modules/.bin/ts-standard"
+    "test:unit": "./node_modules/.bin/jest --testPathPattern=tests/",
+    "lint:check": "./node_modules/.bin/ts-standard"
   }
 }
