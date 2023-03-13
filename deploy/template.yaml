@@ -30,6 +30,14 @@ Parameters:
     Type: String
     Default: "vpc-cri"
     Description: The name of the VPC stack deployed.
+  L2DynamoStackName:
+    Type: String
+    Default: "cic-cri-ddb"
+    Description: The name of the L2 DynamoDB stack deployed.
+  L2KMSStackName:
+    Type: String
+    Default: "cic-cri-kms"
+    Description: The name of the L2 DynamoDB stack deployed.
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -50,17 +58,42 @@ Mappings:
       apiTracingEnabled: false
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.dev.account.gov.uk'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
     build:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.build.account.gov.uk'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
     staging:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.staging.account.gov.uk'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
     integration:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.integration.account.gov.uk'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
     production:
-      EXAMPLE: 1 # Just here as null values not allowed in tempaltes
+      ISSUER: 'https://review-c.account.gov.uk'
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+  TxMAAccounts:
+    # EVENTS is used to egress to TxMA.
+    dev:
+      AUDIT: arn:aws:iam::725018305812:root
+      EVENTS: arn:aws:iam::248098332657:root
+    build:
+      AUDIT: arn:aws:iam::761029721660:root
+      EVENTS: arn:aws:iam::750703655225:root
+    staging:
+      AUDIT: arn:aws:iam::778587367904:root
+      EVENTS: arn:aws:iam::178023842775:root
+    integration:
+      AUDIT: arn:aws:iam::423448613278:root
+      EVENTS: arn:aws:iam::729485541398:root
+    production:
+      AUDIT: arn:aws:iam::348043515437:root
+      EVENTS: arn:aws:iam::451773080033:root
 
 Conditions:
+  CreateDevResources: !Equals
+    - !Ref Environment
+    - dev
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -111,11 +144,12 @@ Globals:
         AWS_STACK_NAME: !Sub ${AWS::StackName} # The AWS Stack Name, as passed into the template.
         POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
+        ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
         SECRET_PREFIX: !If [
-            UseSecretPrefix,
-            !Ref SecretPrefix,
-            !Ref AWS::StackName,
-          ] # What is this? @TODO
+          UseSecretPrefix,
+          !Ref SecretPrefix,
+          !Ref AWS::StackName,
+        ] # What is this? @TODO
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
 
@@ -134,6 +168,48 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
 
+  JsonWebKeysBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-jwks-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  JWKSBucketRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: AccessJWKSjson
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:Get*"
+                Resource:
+                  - !Sub "arn:aws:s3:::${JsonWebKeysBucket}/.well-known/jwks.json"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
   ### Start of API Gateway definition.
 
   CICRestApi:
@@ -147,74 +223,12 @@ Resources:
       EndpointConfiguration:
         Type: REGIONAL
       DefinitionBody:
-        openapi: "3.0.1"
-        info:
-          version: "0.2"
-          title: !Sub "${AWS::StackName} - CIC Credential Issuer Private API"
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './cic-spec.yaml'
+        OpenApiVersion: 3.0.1
 
-        paths:
-          /claimedIdentity:
-            post:
-              parameters:
-                - in: header
-                  name: "session_id"
-                  schema:
-                    type: string
-                  required: true
-              responses:
-                "400":
-                  description: "400 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/Error"
-                "500":
-                  description: "500 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/Error"
-                "200":
-                  description: "200 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/SessionId"
-              x-amazon-apigateway-request-validator: "both"
-              x-amazon-apigateway-integration:
-                httpMethod: "POST"
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClaimedIdentityFunction.Arn}:live/invocations
-                responses:
-                  default:
-                    statusCode: "200"
-                passthroughBehavior: "when_no_match"
-                contentHandling: "CONVERT_TO_TEXT"
-                type: "aws_proxy"
-
-        components:
-          schemas:
-            Error:
-              title: "Error Schema"
-              type: "object"
-              properties:
-                message:
-                  type: "string"
-            SessionId:
-              in: header
-              name: x-govuk-signin-session-id
-              schema:
-                type: string
-                format: uuid
-              example: 44444444-4444-4444-4444-444444444444
-              description: >-
-                `sessionId` as returned by `POST /session` endpoint
-              required: true
-
-        x-amazon-apigateway-request-validators:
-          both:
-            validateRequestBody: true
-            validateRequestParameters: true
 
       TracingEnabled: true
       Tags:
@@ -249,7 +263,7 @@ Resources:
 
   ### End of API Gateway definition.
 
-  ### Function Definition
+  ### Function Definition
 
   # ClaimedIdentity
   ClaimedIdentityFunction:
@@ -261,10 +275,26 @@ Resources:
       CodeUri: ../src/
       Environment:
         Variables:
-          POWERTOOLS_SERVICE_NAME: F2F CRI
+          POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
+          SESSION_TABLE:
+             Fn::ImportValue:
+               !Sub "${L2DynamoStackName}-session-table-name"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+             KeyId:
+               Fn::ImportValue:
+                 !Sub "${L2DynamoStackName}-session-table-key-id"
+
       Events:
         claimedIdentity:
           Type: Api
@@ -306,6 +336,390 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref ClaimedIdentityFunction
       Principal: apigateway.amazonaws.com
+
+  ## UserInfo
+  UserInfoFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: UserInfoFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "User-Info-${AWS::StackName}"
+      Handler: UserInfoHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: UserInfoHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:Verify
+                - kms:Sign
+              Resource:
+                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        userInfo:
+          Type: Api
+          Properties:
+            Path: /userInfo
+            Method: post
+            RestApiId: !Ref CICRestApi
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - UserInfoHandler.ts
+
+  UserInfoFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/User-Info-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  UserInfoFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref UserInfoFunctionLogGroup
+
+  UserInfoFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref UserInfoFunction
+      Principal: apigateway.amazonaws.com
+
+  ## AccessToken
+  TokenFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: TokenFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "Access-Token-${AWS::StackName}"
+      Handler: AccessTokenHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AccessTokenHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:Sign
+              Resource:
+                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Events:
+        userInfo:
+          Type: Api
+          Properties:
+            Path: /token
+            Method: post
+            RestApiId: !Ref CICRestApi
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - AccessTokenHandler.ts
+
+  TokenFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/Access-Token-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  TokenFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref TokenFunctionLogGroup
+
+  TokenFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TokenFunction
+      Principal: apigateway.amazonaws.com
+
+  AuthorizationFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AuthorizationFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "CIC-Authorization-${AWS::StackName}"
+      Handler: AuthorizationCodeHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AuthorizationCodeHandler
+          SESSION_TABLE:
+            Fn::ImportValue:
+              !Sub "${L2DynamoStackName}-session-table-name"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        authorization:
+          Type: Api
+          Properties:
+            Path: /authorization
+            Method: get
+            RestApiId: !Ref CICRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - AuthorizationCodeHandler.ts
+
+  AuthorizationFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/CIC-Authorization-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  AuthorizationFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref AuthorizationFunctionLogGroup
+
+  AuthorizationFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthorizationFunction
+      Principal: apigateway.amazonaws.com
+
+
+  TxMASQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, MESSAGERETENTIONPERIODDAYS]
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref TxMAKeyAlias
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "TxMASQSQueueDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+
+  TxMASQSQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref TxMASQSQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:ReceiveMessage"
+            Resource:
+              - !GetAtt TxMASQSQueue.Arn
+            Principal:
+              AWS:
+                - !FindInMap [TxMAAccounts, !Ref Environment, EVENTS]
+
+  TxMASQSQueueDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 259200 # three days
+      KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+
+  TxMAKMSEncryptionKey:
+    Type: AWS::KMS::Key
+    # KMS Key manually rotated.
+    # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
+    Properties:
+      Description: A KMS Key for encrypting the SQS Queue for TxMA
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: Allow
+            Principal:
+              AWS: !FindInMap [TxMAAccounts, !Ref Environment, EVENTS]
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:GenerateDataKey"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  TxMAKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        - CreateDevResources
+        - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
+        - alias/TxMAKMSEncryptionKey
+      TargetKeyId: !Ref TxMAKMSEncryptionKey
+
+  JsonWebKeysFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "JsonWebKeysLogGroup"
+    Properties:
+      FunctionName: !Sub "JsonWebKeys-${AWS::StackName}"
+      CodeUri: ../src/
+      Handler: JwksHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - IsProdLikeEnvironment
+        - 80
+        - !Ref AWS::NoValue
+      Policies:
+        - AWSXRayDaemonWriteAccess
+        - S3WritePolicy:
+            BucketName: !Ref JsonWebKeysBucket
+        - S3ReadPolicy:
+            BucketName: !Ref JsonWebKeysBucket
+        - Statement:
+            - Sid: KMSSignPolicy
+              Effect: Allow
+              Action:
+                - kms:GetPublicKey
+              Resource:
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+      Environment:
+        Variables:
+          JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
+          SIGNING_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          ENCRYPTION_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - JwksHandler.ts
+
+  JsonWebKeysLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/JsonWebKeys-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  JsonWebKeysFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt JsonWebKeysFunction.Arn
+      Principal: events.amazonaws.com
 
 Outputs:
   CICApiGatewayId:

@@ -1,7 +1,7 @@
-import { Template, Capture, Match } from '@aws-cdk/assertions';
-const { schema } = require('yaml-cfn');
-import { readFileSync } from 'fs';
-import { load } from 'js-yaml';
+import { Template, Capture, Match } from "@aws-cdk/assertions";
+const { schema } = require("yaml-cfn");
+import { readFileSync } from "fs";
+import { load } from "js-yaml";
 
 // https://docs.aws.amazon.com/cdk/v2/guide/testing.html <--- how to use this file
 
@@ -49,8 +49,8 @@ describe("Infra", () => {
 		});
 	});
 
-	it("There are 1 lambdas defined, all with a specific permission:", () => {
-		const lambdaCount = 1;
+	it("There are 5 lambdas defined, all with a specific permission:", () => {
+		const lambdaCount = 5;
 		template.resourceCountIs("AWS::Serverless::Function", lambdaCount);
 		template.resourceCountIs("AWS::Lambda::Permission", lambdaCount);
 	});

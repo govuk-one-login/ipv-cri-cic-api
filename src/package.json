@@ -4,7 +4,6 @@
     "description": "OneLogin CIC CRI",
     "repository": "https://github.com/alphagov/di-ipv-cri-cic-api",
     "author": "GDS",
-    "main": "ClaimedIdentityHandler.ts",
     "license": "MIT",
     "dependencies": {
         "@aws-lambda-powertools/logger": "1.5.1",
@@ -13,6 +12,9 @@
         "@aws-sdk/credential-providers": "3.245.0",
         "@aws-sdk/lib-dynamodb": "3.150.0",
         "@aws-sdk/client-kms": "^3.262.0",
+        "aws-xray-sdk-core": "^3.4.1",
+        "@aws-sdk/client-sqs": "^3.276.0",
+        "@aws-sdk/client-s3": "^3.120.0",
         "axios": ">=0.21.1",
         "class-validator": "0.14.0",
         "esbuild": "0.14.14",
@@ -22,10 +24,9 @@
     "scripts": {
         "unit": "./node_modules/.bin/jest --testPathPattern=tests/unit",
         "test:unit": "npm run compile && npm run unit",
-        "lint:fix": "./node_modules/.bin/ts-standard --fix",
+        "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c .eslintrc.js --ext .ts .",
         "compile": "./node_modules/.bin/tsc",
         "lint": "eslint --output-file ./reports/eslint/reportFile.html --format html -c .eslintrc.js --ext .ts ./",
-        "lint:check": "./node_modules/.bin/ts-standard",
         "test:e2e": "./node_modules/.bin/jest --testMatch '**/e2e/?(*.)test.ts' --passWithNoTests",
         "test:infra": "./node_modules/.bin/jest --testMatch '**/infra/?(*.)test.ts' "
     },

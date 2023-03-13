@@ -21,7 +21,7 @@ permissions:
   id-token: write
   contents: read
 
-env: # Only adding the variables in that are required for 
+env: # Only adding the variables in that are required for
   AWS_REGION: eu-west-2
 
 jobs:
@@ -63,7 +63,7 @@ jobs:
         run: npm install
 
       - name: Run lint
-        run: npm run lint:check
+        run: npm run lint
 
       - name: Run Tests
         run: npm run test:unit
@@ -86,11 +86,11 @@ jobs:
         uses: aws-actions/setup-sam@v2
         with:
           version: 1.70.0
-        
+
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.GH_VALIDATE_ROLE_ARN }}
+          role-to-assume: ${{ secrets.CRI_CIC_GH_VALIDATE_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Cache SAM builds
