@@ -1,6 +1,5 @@
-
 AWSTemplateFormatVersion: "2010-09-09"
-Transform: 'AWS::Serverless-2016-10-31'
+Transform: "AWS::Serverless-2016-10-31"
 
 Parameters:
   CodeSigningConfigArn:
@@ -21,7 +20,7 @@ Parameters:
     ConstraintDescription: must be dev, build, staging, or integration
   BackendStack:
     Description: The stack name of the API stack under test
-    Default: cic-cri-api
+    Default: backend-main
     Type: String
   FrontendStack:
     Description: The stack name of the Frontend stack under test
@@ -38,19 +37,19 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
     Type: String
     Default: "none"
-  
+
 Mappings:
   Configuration:
     dev:
-      IPVStubID: '5C584572'
+      IPVStubID: "5C584572"
     build:
-      IPVStubID: 'BD7B2A5D'
+      IPVStubID: "BD7B2A5D"
     staging:
-      IPVStubID: '9CDA6F61'
+      IPVStubID: "9CDA6F61"
     integration:
-      IPVStubID: 'AE140E43'
+      IPVStubID: "AE140E43"
     production:
-      IPVStubID: 'C910A762'
+      IPVStubID: "C910A762"
 
 Conditions:
   CreateDevResources: !Equals
@@ -92,11 +91,11 @@ Resources:
                   - !GetAtt IPVStubKMSSigningKey.Arn
               - Effect: Allow
                 Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
                 Resource:
-                  - 'arn:aws:logs:*:*:*'
+                  - "arn:aws:logs:*:*:*"
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -112,7 +111,7 @@ Resources:
                 - lambda.amazonaws.com
 
   IPVStubApiGw:
-    Type: 'AWS::ApiGateway::RestApi'
+    Type: "AWS::ApiGateway::RestApi"
     Properties:
       Name: !Sub IPVStub-${Environment}-${AWS::StackName}
       Description: !Sub "Claimed Identity Credential Issuer (CIC) IPVStub API. ${AWS::StackName}"
@@ -142,13 +141,13 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri:  !Join
-          - ''
-          - - 'arn:'
-            - !Ref 'AWS::Partition'
-            - ':apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
+        Uri: !Join
+          - ""
+          - - "arn:"
+            - !Ref "AWS::Partition"
+            - ":apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
             - !GetAtt IPVStubRedirectFunction.Arn
             - /invocations
         IntegrationResponses:
@@ -188,13 +187,13 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri:  !Join
-          - ''
-          - - 'arn:'
-            - !Ref 'AWS::Partition'
-            - ':apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
+        Uri: !Join
+          - ""
+          - - "arn:"
+            - !Ref "AWS::Partition"
+            - ":apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
             - !GetAtt JwksFunction.Arn
             - /invocations
         IntegrationResponses:
@@ -226,12 +225,12 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Join
-          - ''
-          - - 'arn:'
-            - !Ref 'AWS::Partition'
-            - ':apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
+          - ""
+          - - "arn:"
+            - !Ref "AWS::Partition"
+            - ":apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
             - !GetAtt StartCICCheckFunction.Arn
             - /invocations
         IntegrationResponses:
@@ -247,7 +246,7 @@ Resources:
       - RedirectMethodGet
       - JwksMethodGet
       - StartCICMethodGet
-    Type: 'AWS::ApiGateway::Deployment'
+    Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref IPVStubApiGw
       Description: This resource deploys an API Gateway RestApi resource to a stage so that clients can call the API over the internet
@@ -281,7 +280,7 @@ Resources:
   StartCICCheckFunction:
     DependsOn:
       - StartCICCheckFunctionLogGroup
-    Type:  AWS::Serverless::Function
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "StartCICCheckFunction-${AWS::StackName}"
       Handler: startCicCheck.handler
@@ -295,9 +294,9 @@ Resources:
             - testRedirectUri: !Ref IPVStubApiGw
           JWKS_URI: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/.well-known/jwks.json"
           OIDC_FRONT_BASE_URI: !Sub
-          - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/"
-          - ImportProviderStack:
-              Fn::ImportValue: !Sub "${FrontendStack}-CICFrontGatewayId"
+            - "https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com"
+            - ImportProviderStack:
+                Fn::ImportValue: !Sub "${FrontendStack}-CICFrontGatewayId"
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -423,7 +422,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Action:
               - "kms:*"
             Resource:
@@ -438,7 +437,7 @@ Resources:
         - Key: Environment
           Value: !Sub ${Environment}
 
-# SSMParameter for .env variable
+  # SSMParameter for .env variable
   ProviderBaseUri:
     Type: AWS::SSM::Parameter
     Properties:
@@ -494,15 +493,14 @@ Resources:
       Tags:
         APP: !Sub cic-${AWS::StackName}
 
-
 Outputs:
-  APIGWExecuteUrl:
+  IPVStubExecuteUrl:
     Description: "API Gateway endpoint URL for the environment stage"
     Value: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
     Export:
-      Name: !Sub "${AWS::StackName}-APIGWExecuteUrl"
-  APIGWID:
+      Name: !Sub "${AWS::StackName}-IPVStubExecuteUrl"
+  IPVStubApiGw:
     Description: "The ID of the API Gateway"
     Value: !Ref IPVStubApiGw
     Export:
-      Name: !Sub "${AWS::StackName}-APIGWID"
+      Name: "cic-cri-IPVStubApiGw"

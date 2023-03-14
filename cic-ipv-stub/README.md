@@ -2,7 +2,7 @@
 If there are requirements for data contract changes between IPV Core and CRIs, then please do not use the default stack to build and deploy and instead use a different stack with
 similar naming convention - i.e 
 ``` bash
-sam build && sam deploy --stack-name did-ipv-stub-<YOUR_IDENTIFIER>
+sam build && sam deploy --stack-name cic-ipv-stub-<YOUR_IDENTIFIER> --resolve-s3
 ```
 
 ## Setup notes
