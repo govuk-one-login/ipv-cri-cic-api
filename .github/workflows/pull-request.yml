@@ -1,4 +1,4 @@
-name: Pull Request CI
+name: Pull Request CI - Backend API
 on:
   # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
   pull_request:

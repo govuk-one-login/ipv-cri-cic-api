@@ -1,4 +1,4 @@
-name: Pull Request CI
+name: Pull Request CI - IPV Stub
 on:
   # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
   pull_request:
@@ -100,6 +100,9 @@ jobs:
 
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
+
+      - name: Install dependencies
+        run: npm install 
 
       - name: SAM Build
         run: sam build -t template.yaml

@@ -1,2 +1,4 @@
-node_modules
-coverage
+.aws-sam/
+samconfig.toml
+node_modules/
+results/
