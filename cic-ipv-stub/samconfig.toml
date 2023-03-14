@@ -2,11 +2,11 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "dca-test-client"
+stack_name = "dca-test-viveakTest"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1jxb6ns1xevo7"
-s3_prefix = "dca-test-client"
+s3_prefix = "dca-test-viveakTest"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = BackendStack=\"cic-cri-api\""
+parameter_overrides = "BackendStack=\"backend-viveak\""
 image_repositories = []

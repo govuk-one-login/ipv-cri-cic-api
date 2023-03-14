@@ -13,6 +13,7 @@ import "aws-sdk-client-mock-jest";
 import startDefault from "../events/startDefault.json";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
+import format from "ecdsa-sig-formatter";
 
 jest.setTimeout(30000);
 
@@ -51,11 +52,21 @@ describe("Start CIC Check Endpoint", () => {
     axios.get = jest.fn()<() => Promise<object>>;
     axios.get.mockResolvedValue({ data: mockJwks });
 
+    // format.derToJose = jest.fn();
+
     const kmsClient = mockClient(KMSClient);
     kmsClient.on(SignCommand).resolves({
-      Signature:
-        "MEQCIDFOuMwnJRri5vbFVrwSwQP2JJa/qTmynuB9txk4nmfzAiAvHJ9D1YZY+9YsiQevt5GaAmqX5zaGvr2QIMFuJWKsJg==",
+      Signature: new Uint8Array([
+        197, 213, 5, 202, 58, 74, 45, 36, 122, 168, 27, 155, 70, 15, 9, 123, 11,
+        241, 205, 87, 23, 13, 32, 168, 12, 73, 48, 158, 96, 159, 247, 211,
+      ]),
     });
+
+    jest
+      .spyOn(format, "derToJose")
+      .mockReturnValue(
+        "PmBhykH4w94xj3dSDSR-tE5XSh60SjKAP6hHGc6c_fx7ia87hEkKgfhSTCT000RaDhH0MaV47FsUjztCb0m1qg"
+      );
   });
 
   afterEach(() => {

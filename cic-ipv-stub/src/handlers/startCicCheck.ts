@@ -83,7 +83,7 @@ export const handler = async (
       request,
       responseType: "code",
       clientId: config.clientId,
-      AuthorizeLocation: `${config.oidcUri}/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
+      AuthorizeLocation: `${config.oidcUri}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
     }),
   };
 };

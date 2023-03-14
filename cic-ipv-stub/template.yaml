@@ -295,7 +295,7 @@ Resources:
             - testRedirectUri: !Ref IPVStubApiGw
           JWKS_URI: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/.well-known/jwks.json"
           OIDC_FRONT_BASE_URI: !Sub
-          - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
+          - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/"
           - ImportProviderStack:
               Fn::ImportValue: !Sub "${FrontendStack}-CICFrontGatewayId"
       Policies:

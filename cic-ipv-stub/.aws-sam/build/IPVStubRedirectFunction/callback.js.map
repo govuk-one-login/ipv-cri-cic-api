@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../src/handlers/callback.ts"],
+  "sourcesContent": ["import { APIGatewayProxyEvent, APIGatewayProxyResult } from \"aws-lambda\";\n\nexport const handler = async (\n  event: APIGatewayProxyEvent\n): Promise<APIGatewayProxyResult> => {\n  if (event.queryStringParameters?.error != null) {\n    return {\n      statusCode: 200,\n      body: \"Authorisation Grant Failed. See logs for details\",\n    };\n  } else {\n    return {\n      statusCode: 200,\n      body: \"Authorization Granted. See logs for details\",\n    };\n  }\n};\n"],
+  "mappings": "yaAAA,IAAAA,EAAA,GAAAC,EAAAD,EAAA,aAAAE,IAAA,eAAAC,EAAAH,GAEO,IAAME,EAAU,MACrBE,GAEIA,EAAM,uBAAuB,OAAS,KACjC,CACL,WAAY,IACZ,KAAM,kDACR,EAEO,CACL,WAAY,IACZ,KAAM,6CACR",
+  "names": ["callback_exports", "__export", "handler", "__toCommonJS", "event"]
+}
