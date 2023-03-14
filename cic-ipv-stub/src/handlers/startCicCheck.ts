@@ -162,7 +162,7 @@ async function sign(payload: JarPayload, keyId: string): Promise<string> {
     throw res as unknown as AWS.AWSError;
   }
   tokenComponents.signature = format.derToJose(
-    res.Signature.toString("base64url"),
+    Buffer.from(res.Signature),
     "ES256"
   );
   return `${tokenComponents.header}.${tokenComponents.payload}.${tokenComponents.signature}`;

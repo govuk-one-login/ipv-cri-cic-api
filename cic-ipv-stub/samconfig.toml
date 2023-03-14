@@ -8,4 +8,5 @@ s3_prefix = "dca-test-client"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
+parameter_overrides = BackendStack=\"cic-cri-api\""
 image_repositories = []
