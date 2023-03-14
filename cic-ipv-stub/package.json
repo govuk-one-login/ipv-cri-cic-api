@@ -38,6 +38,10 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/jest --testPathPattern=tests/",
-    "lint": "./node_modules/.bin/eslint '*.ts'"
-  }
+    "lint": "./node_modules/.bin/eslint '*.ts'",
+    "compile": "./node_modules/.bin/tsc"
+  },
+  "engines": {
+    "node": "^18.0.0"
+}
 }

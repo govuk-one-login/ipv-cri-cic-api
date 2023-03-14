@@ -1,19 +1,6 @@
 
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: 'AWS::Serverless-2016-10-31'
-
-Mappings:
-  Configuration:
-    dev:
-      IPVStubID: '5C584572'
-    build:
-      IPVStubID: 'BD7B2A5D'
-    staging:
-      IPVStubID: '9CDA6F61'
-    integration:
-      IPVStubID: 'AE140E43'
-    production:
-      IPVStubID: 'C910A762'
 
 Parameters:
   CodeSigningConfigArn:
@@ -51,6 +38,19 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
     Type: String
     Default: "none"
+  
+Mappings:
+  Configuration:
+    dev:
+      IPVStubID: '5C584572'
+    build:
+      IPVStubID: 'BD7B2A5D'
+    staging:
+      IPVStubID: '9CDA6F61'
+    integration:
+      IPVStubID: 'AE140E43'
+    production:
+      IPVStubID: 'C910A762'
 
 Conditions:
   CreateDevResources: !Equals
