@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "cic-ipv-stub"
+s3_prefix = "cic-ipv-stub"
+region = "eu-west-2"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "BackendStack=\"backend-main\""
+image_repositories = []
