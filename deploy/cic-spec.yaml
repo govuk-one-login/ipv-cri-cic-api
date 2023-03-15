@@ -796,14 +796,19 @@ components:
           description: claimed Date of Birth
         document_selected:
           type: string
-          example: driversPermit
+          example: brp
           description: >-
             specifies which of the available supported document types the user elected to present for offline
             verification
           enum:
-            - driversPermit
-            - passport
-            - biometricResidentsPermit
+            - ukPassport
+            - ukPhotocardDl
+            - brp
+            - otherPassport
+            - euPhotocardDl
+            - euIdentityCard
+            - citizenCard
+            - youngScotNationalEntitlementCard
         date_of_expiry:
           type: string
           format: date
