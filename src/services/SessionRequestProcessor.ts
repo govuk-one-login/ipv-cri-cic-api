@@ -20,6 +20,13 @@ interface ClientConfig {
 	clientId: string;
 	redirectUri: string;
 }
+
+const SESSION_TABLE = process.env.SESSION_TABLE;
+const CLIENT_CONFIG = process.env.CLIENT_CONFIG;
+const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
+const AUTH_SESSION_TTL = process.env.AUTH_SESSION_TTL;
+const ISSUER = process.env.ISSUER;
+
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
 
@@ -34,19 +41,10 @@ export class SessionRequestProcessor {
 	private readonly validationHelper: ValidationHelper;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		
-		if (!process.env.SESSION_TABLE) {
-			logger.error("Environment variable SESSION_TABLE is not configured");
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		} else if (!process.env.CLIENT_CONFIG) {
-			logger.error("Environment variable CLIENT_CONFIG is not configured");
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		} else if (!process.env.ENCRYPTION_KEY_IDS) {
-			logger.error("Environment variable ENCRYPTION_KEY_IDS is not configured");
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		} else if (!process.env.AUTH_SESSION_TTL) {
-			logger.error("Environment variable ENCRYPTION_KEY_IDS is not configured");
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
+
+		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL || !ISSUER ) {
+			logger.error("Environment variable SESSION_TABLE or CLIENT_CONFIG or ENCRYPTION_KEY_IDS or AUTH_SESSION_TTL is not configured");
+			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
 		}
 
 		this.logger = logger;
@@ -54,8 +52,8 @@ export class SessionRequestProcessor {
 
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
-		this.cicService = CicService.getInstance(process.env.SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(process.env.ENCRYPTION_KEY_IDS );
+		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
+		this.kmsDecryptor = new KmsJwtAdapter(ENCRYPTION_KEY_IDS);
 		this.validationHelper = new ValidationHelper();
 	}
 
@@ -73,8 +71,8 @@ export class SessionRequestProcessor {
 
 
 		let configClient;
-		if (process.env.CLIENT_CONFIG) {
-			const config = JSON.parse(process.env.CLIENT_CONFIG) as ClientConfig[];
+		if (CLIENT_CONFIG) {
+			const config = JSON.parse(CLIENT_CONFIG) as ClientConfig[];
 			configClient = config.find(c => c.clientId === requestBodyClientId);
 		} else {
 			this.logger.error("MISSING_CLIENT_CONFIG");
@@ -141,7 +139,7 @@ export class SessionRequestProcessor {
 			clientId: jwtPayload.client_id,
 			clientSessionId: jwtPayload.govuk_signin_journey_id as string,
 			redirectUri: jwtPayload.redirect_uri,
-			expiryDate: Date.now() + Number(process.env.AUTH_SESSION_TTL) * 1000,
+			expiryDate: Date.now() + Number(AUTH_SESSION_TTL) * 1000,
 			createdDate: Date.now(),
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
@@ -170,12 +168,12 @@ export class SessionRequestProcessor {
 		try {
 			await this.cicService.sendToTXMA({
 				event_name: "CIC_CRI_START",
-				...buildCoreEventFields(session, process.env.ISSUER as string, session.clientIpAddress, absoluteTimeNow),
+				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress, absoluteTimeNow),
 			});
 		} catch (error) {
 			this.logger.error("FAILED_TO_WRITE_TXMA", {
 				session,
-				issues: process.env.ISSUER,
+				issues: ISSUER,
 				reason: "Auth session successfully created. Failed to send DCMAW_CRI_START event to TXMA",
 				error,
 			});

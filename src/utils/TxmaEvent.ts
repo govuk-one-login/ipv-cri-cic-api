@@ -33,7 +33,7 @@ export const buildCoreEventFields = (session: ISessionItem, issuer: string, sour
 		user: {
 			user_id: session.clientId,
 			persistent_session_id: session.persistentSessionId,
-			transaction_id: session.persistentSessionId,
+			transaction_id: "",
 			session_id: session.sessionId,
 			govuk_signin_journey_id: session.clientSessionId,
 			ip_address: sourceIp,

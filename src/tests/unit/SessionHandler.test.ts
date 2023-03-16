@@ -1,6 +1,6 @@
 import { lambdaHandler } from "../../SessionHandler";
 import { mock } from "jest-mock-extended";
-import { VALID_SESSION } from "./data/cic-events";
+import { VALID_SESSION } from "./data/session-events";
 import { SessionRequestProcessor } from "../../services/SessionRequestProcessor";
 
 const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();

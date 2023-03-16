@@ -20,7 +20,7 @@ Parameters:
     ConstraintDescription: must be dev, build, staging, or integration
   BackendStack:
     Description: The stack name of the API stack under test
-    Default: cic-cri-api
+    Default: backend-main
     Type: String
   FrontendStack:
     Description: The stack name of the Frontend stack under test

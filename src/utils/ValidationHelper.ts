@@ -4,7 +4,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { ISessionItem } from "../models/ISessionItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
-import { APIGatewayProxyEvent, APIGatewayProxyEventQueryStringParameters } from "aws-lambda";
+import { APIGatewayProxyEvent } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
 import { Constants } from "./Constants";
 import { JwtPayload } from "./IVeriCredential";
