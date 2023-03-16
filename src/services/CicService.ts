@@ -62,10 +62,11 @@ export class CicService {
     	const saveCICCommand: any = new UpdateCommand({
     		TableName: this.tableName,
     		Key: { sessionId },
-    		UpdateExpression: "SET full_name = :full_name, date_of_birth = :date_of_birth, document_selected = :document_selected, date_of_expiry =:date_of_expiry, authSessionState = :authSessionState",
+    		UpdateExpression: "SET given_names = :given_names, family_names = :family_names, date_of_birth = :date_of_birth, document_selected = :document_selected, date_of_expiry =:date_of_expiry, authSessionState = :authSessionState",
 
     		ExpressionAttributeValues: {
-    			":full_name": cicData.full_name,
+    			":given_names": cicData.given_names,
+    			":family_names": cicData.family_names,
     			":date_of_birth": cicData.date_of_birth,
     			":document_selected": cicData.document_selected,
     			":date_of_expiry": cicData.date_of_expiry,

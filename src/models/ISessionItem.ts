@@ -1,5 +1,6 @@
 export interface ICicSession {
-	full_name: string;
+	given_names: string [];
+	family_names: string [];
 	date_of_birth: string;
 	document_selected: string;
 	date_of_expiry: string;

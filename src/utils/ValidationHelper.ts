@@ -33,18 +33,31 @@ export class ValidationHelper {
 		});
 	}
 
-	private validateUserData(data: string | undefined, errmsg: string, logger: Logger): boolean {
+	private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
 		let isValid = true;
-		if (data == null || data === undefined || data.trim().length === 0) {
-			logger.info({ message :"UserInfo missing: ", errmsg });
+		if (data === null || data === undefined ) {
 			isValid = false;
+		} else {
+			if (typeof data === "string") {
+				if (data.trim().length === 0) {
+					isValid = false;
+				}
+			} else {
+				if (data.length === 0) {
+					isValid = false;
+				}
+			}
+		}
+		if (!isValid) {
+			logger.info({ message :"UserInfo missing: ", errmsg });
 		}
 		return isValid;
 	}
 
 	validateUserInfo(session: ISessionItem, logger: Logger): boolean {
 		let isValid = true;
-		if (!this.validateUserData(session.full_name, "Full Name is missing", logger) ||
+		if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
+			!this.validateUserData(session.family_names, "Family names is missing", logger) ||
 			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger) ||
 			!this.validateUserData(session.document_selected, "Document selection type is missing", logger) ||
 			!this.validateUserData(session.date_of_expiry, "Expiry Date is missing", logger)) {

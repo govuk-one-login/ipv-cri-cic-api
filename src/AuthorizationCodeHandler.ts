@@ -10,9 +10,9 @@ import { HttpVerbsEnum } from "./utils/HttpVerbsEnum";
 import { Constants } from "./utils/Constants";
 import { AuthorizationRequestProcessor } from "./services/AuthorizationRequestProcessor";
 
-const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CLAIMEDID_METRICS_NAMESPACE;
+const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : Constants.DEBUG;
-const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.CLAIMEDID_LOGGER_SVC_NAME;
+const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.AUTHORIZATION_LOGGER_SVC_NAME;
 
 const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,

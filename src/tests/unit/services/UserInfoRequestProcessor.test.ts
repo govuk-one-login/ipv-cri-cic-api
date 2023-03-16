@@ -38,7 +38,8 @@ function getMockSessionItem() : ISessionItem {
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
 		attemptCount: 1,
-		full_name: "test user",
+		given_names: ["given", "name"],
+		family_names: ["family", "name"],
 		date_of_birth: "09-08-1961",
 		document_selected: "Passport",
 		date_of_expiry: "23-04-1027",
@@ -134,7 +135,8 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it.each([
-		"full_name",
+		"given_names",
+		"family_names",
 		"date_of_birth",
 		"document_selected",
 		"date_of_expiry",

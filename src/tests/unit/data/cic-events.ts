@@ -1,6 +1,6 @@
 export const VALID_CLAIMEDID = {
 	httpMethod: "POST",
-	body: '{"full_name": "TestUser","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
+	body: '{"given_names": "Test User","family_names": "family name","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
 	headers: { "x-govuk-signin-session-id": "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},
@@ -50,7 +50,7 @@ export const VALID_CLAIMEDID = {
 
 export const UNSUPPORTED_CLAIMEDID = {
 	httpMethod: "GET",
-	body: '{"full_name": "TestUser","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
+	body: '{"given_names": "Test User","family_names": "family name","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
 	headers: { session_id: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},
@@ -100,7 +100,7 @@ export const UNSUPPORTED_CLAIMEDID = {
 
 export const RESOURCE_NOT_FOUND = {
 	httpMethod: "POST",
-	body: '{"full_name": "TestUser","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
+	body: '{"given_names": "Test User","family_names": "family name","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
 	headers: { session_id: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},
