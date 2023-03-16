@@ -1,4 +1,4 @@
-name: Deploy Main to Build Env
+name: Deploy IPV Stub to Build Env
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
@@ -53,6 +53,6 @@ jobs:
         uses: alphagov/di-devplatform-upload-action@v3
         with:
             artifact-bucket-name: ${{ secrets.BUILD_IPV_STUB_ARTIFACT_SOURCE_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
+            signing-profile-name: ${{ secrets.BUILD_CRI_CIC_SIGNING_PROFILE_NAME }}
             working-directory: cic-ipv-stub
             template-file: template.yaml

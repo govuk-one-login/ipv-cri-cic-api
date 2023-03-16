@@ -1,4 +1,4 @@
-name: Deploy Main to Dev Env
+name: Deploy IPV Stub to Dev Env
 on:
   push:
     branches:
@@ -50,6 +50,6 @@ jobs:
         uses: alphagov/di-devplatform-upload-action@v3
         with:
             artifact-bucket-name: ${{ secrets.DEV_IPV_STUB_ARTIFACT_SOURCE_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.DEV_SIGNING_PROFILE_NAME }}
+            signing-profile-name: ${{ secrets.DEV_CRI_CIC_SIGNING_PROFILE_NAME }}
             working-directory: cic-ipv-stub
             template-file: template.yaml
