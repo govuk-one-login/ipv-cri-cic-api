@@ -51,20 +51,15 @@ export const handler = async (
     email: "example@testemail.com",
   };
   const iat = Math.floor(Date.now() / 1000);
-  const webcrypto = crypto.webcrypto as unknown as Crypto;
   const payload: JarPayload = {
     sub: crypto.randomUUID(),
     redirect_uri: config.redirectUri,
     response_type: "code",
-    govuk_signin_journey_id: new TextDecoder().decode(
-      webcrypto.getRandomValues(new Uint8Array(16))
-    ),
+    govuk_signin_journey_id: crypto.randomBytes(16).toString("hex"),
     aud: config.oidcUri,
     iss: "https://ipv.core.account.gov.uk",
     client_id: config.clientId,
-    state: new TextDecoder().decode(
-      webcrypto.getRandomValues(new Uint8Array(16))
-    ),
+    state: crypto.randomBytes(16).toString("hex"),
     iat,
     nbf: iat - 1,
     exp: iat + 3 * 60,

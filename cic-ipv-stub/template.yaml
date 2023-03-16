@@ -55,6 +55,11 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
   UsePermissionsBoundary:
     Fn::Not:
       - Fn::Equals:
@@ -70,9 +75,9 @@ Globals:
     Tags:
       API: !Sub ${AWS::StackName}-test-resource
     CodeSigningConfigArn: !If
-      - CreateDevResources
-      - !Ref AWS::NoValue
+      - UseCodeSigning
       - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
 
 Resources:
   IPVStubLambdaRole:
@@ -289,14 +294,9 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-          REDIRECT_URI: !Sub
-            - "https://${testRedirectUri}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/redirect"
-            - testRedirectUri: !Ref IPVStubApiGw
-          JWKS_URI: !Sub "https://${IPVStubApiGw}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/.well-known/jwks.json"
-          OIDC_FRONT_BASE_URI: !Sub
-            - "https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com"
-            - ImportProviderStack:
-                Fn::ImportValue: !Sub "${FrontendStack}-CICFrontGatewayId"
+          REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
+          JWKS_URI: !Sub "https://api.review-c.${Environment}.account.gov.uk/.well-known/jwks.json"
+          OIDC_FRONT_BASE_URI: !Sub  "https://review-c.${Environment}.account.gov.uk"
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -503,4 +503,4 @@ Outputs:
     Description: "The ID of the API Gateway"
     Value: !Ref IPVStubApiGw
     Export:
-      Name: "cic-cri-IPVStubApiGw"
+      Name: "cic-cri-IPVStubApiGw-viveak"
