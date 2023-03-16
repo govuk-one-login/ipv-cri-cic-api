@@ -8,11 +8,13 @@ export class Constants {
 
     static readonly CLAIMEDID_LOGGER_SVC_NAME = "ClaimedIdHandler";
 
-    static readonly CLAIMEDID_METRICS_NAMESPACE = "CIC-CRI";
+    static readonly CIC_METRICS_NAMESPACE = "CIC-CRI";
 
     static readonly USERINFO_LOGGER_SVC_NAME = "UserInfoHandler";
 
     static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
+
+    static readonly AUTHORIZATION_LOGGER_SVC_NAME = "AuthorizationCodeHandler";
 
     static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
 
