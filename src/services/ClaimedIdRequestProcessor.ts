@@ -2,11 +2,9 @@ import { CicSession } from "../models/CicSession";
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
-import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
-import { CicResponse } from "../utils/CicResponse";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
@@ -49,6 +47,9 @@ export class ClaimedIdRequestProcessor {
 		try {
 			this.logger.debug("IN processRequest");
 			const bodyParsed = JSON.parse(event.body as string);
+			// Convert given_names and family_names string into string[]
+			bodyParsed.given_names = bodyParsed.given_names.split(" ");
+			bodyParsed.family_names = bodyParsed.family_names.split(" ");
 			cicSession = new CicSession(bodyParsed);
 			await this.validationHelper.validateModel(cicSession, this.logger);
 			this.logger.debug({ message: "CIC Session is", cicSession });

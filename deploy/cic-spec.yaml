@@ -780,15 +780,20 @@ components:
       type: object
       additionalProperties: false
       required:
-        - full_name
+        - given_names
+        - family_names
         - date_of_birth
         - document_selected
         - date_of_expiry
       properties:
-        full_name:
+        given_names:
           type: string
-          example: Frederick Joseph Flintstone
-          description: claimed full legal name
+          example: Frederick Joseph
+          description: claimed given legal name
+        family_names:
+          type: string
+          example: Flintstone
+          description: claimed family legal name
         date_of_birth:
           type: string
           format: date
