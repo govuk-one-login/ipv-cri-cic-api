@@ -503,4 +503,4 @@ Outputs:
     Description: "The ID of the API Gateway"
     Value: !Ref IPVStubApiGw
     Export:
-      Name: "cic-cri-IPVStubApiGw-viveak"
+      Name: "cic-cri-IPVStubApiGw"
