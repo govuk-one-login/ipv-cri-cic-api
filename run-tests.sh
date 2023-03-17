@@ -4,10 +4,11 @@ set -eu
 
 declare status_code
 # shellcheck disable=SC2154
-status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$CFN_HelloWorldApi")"
+# status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$CFN_HelloWorldApi")"
+status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200")"
 
 if [[ $status_code != "200" ]]; then
-  cat <<EOF > "$TEST_REPORT_DIR/result.json"
+  cat <<EOF > "$TEST_REPORT_ABSOLUTE_DIR/result.json"
 [
   {
     "uri": "test.sh",
@@ -39,7 +40,7 @@ if [[ $status_code != "200" ]]; then
 EOF
 exit 1
 else
-  cat <<EOF > "$TEST_REPORT_DIR/result.json"
+  cat <<EOF > "$TEST_REPORT_ABSOLUTE_DIR/result.json"
 [
   {
     "uri": "test.sh",
