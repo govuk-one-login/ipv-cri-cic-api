@@ -110,11 +110,12 @@ export function getConfig(): {
 }
 
 async function getPublicEncryptionKey(config: {
+  jwksUri: string;
   oidcUri: string;
 }): Promise<CryptoKey> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
   const oidcProviderJwks = (
-    await axios.get(`${config.oidcUri}/.well-known/jwks.json`)
+    await axios.get(config.jwksUri ?? `${config.oidcUri}/.well-known/jwks.json`)
   ).data as Jwks;
   const publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
