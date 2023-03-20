@@ -34,8 +34,8 @@ export class VerifiableCredentialService {
     async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem | undefined, getNow: () => number): Promise<string> {
     	const now = getNow();
     	const subject = sessionItem?.clientId as string;
-    	const givenNames = sessionItem?.given_names.join(" ");
-    	const famiyNames = sessionItem?.family_names.join(" ");
+    	const givenNames = sessionItem?.given_names?.join(" ");
+    	const famiyNames = sessionItem?.family_names?.join(" ");
     	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(givenNames, famiyNames, sessionItem?.date_of_birth, sessionItem?.document_selected, sessionItem?.date_of_expiry)
     		.build();
     	const result = {
