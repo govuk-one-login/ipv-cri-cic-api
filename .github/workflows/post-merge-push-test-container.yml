@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./deploy/
+        working-directory: deploy
     steps:
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
