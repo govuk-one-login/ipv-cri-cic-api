@@ -6,7 +6,7 @@ on:
       - main
       - F2F-134
     paths:
-      - deploy/tests
+      - deploy/tests/**
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
