@@ -11,6 +11,6 @@ COPY . /
 WORKDIR /
 RUN chmod +x run-tests.sh
 
-RUN cd /lambdas && yarn install
+# RUN cd /lambdas && yarn install
 
 ENTRYPOINT ["/run-tests.sh"]
