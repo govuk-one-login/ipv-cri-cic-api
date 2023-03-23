@@ -43,7 +43,6 @@ export class VerifiableCredentialService {
     		nbf: now,
     		iss: this.issuer,
     		iat: now,
-    		exp: now + Constants.CREDENTIAL_EXPIRY,
     		jti: randomUUID(),
     		vc: verifiedCredential,
     	};

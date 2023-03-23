@@ -5,7 +5,6 @@ export const VALID_VC = {
 	"iss": "https://XXX-c.env.account.gov.uk",
 	"sub": "sub",
 	"nbf": 1667385481,
-	"exp": 1667392681,
 	"jti": "uuid",
 	"vc": {
 		"@context": [

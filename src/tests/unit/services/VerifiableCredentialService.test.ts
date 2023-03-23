@@ -71,7 +71,6 @@ describe("Issuing verified credentials", () => {
 		const expectedJwt = VALID_VC;
 		expectedJwt.iat = absoluteTimeNow();
 		expectedJwt.nbf = absoluteTimeNow();
-		expectedJwt.exp = expectedJwt.iat + Constants.CREDENTIAL_EXPIRY;
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
