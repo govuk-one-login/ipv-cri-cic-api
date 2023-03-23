@@ -5,6 +5,7 @@ import { ISessionItem } from "../models/ISessionItem";
 import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
+import { randomUUID } from "crypto";
 
 export class VerifiableCredentialService {
     readonly tableName: string;
@@ -43,6 +44,7 @@ export class VerifiableCredentialService {
     		iss: this.issuer,
     		iat: now,
     		exp: now + Constants.CREDENTIAL_EXPIRY,
+    		jti: randomUUID(),
     		vc: verifiedCredential,
     	};
 

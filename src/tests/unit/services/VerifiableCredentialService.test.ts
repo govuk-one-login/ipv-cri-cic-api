@@ -13,6 +13,8 @@ import {
 import { VALID_VC } from "../data/verified_credential";
 import { Constants } from "../../../utils/Constants";
 import { VALID_USERINFO } from "../data/userInfo-events";
+import { randomUUID } from "crypto";
+import { ValidationHelper } from "../../../utils/ValidationHelper";
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -75,9 +77,21 @@ describe("Issuing verified credentials", () => {
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-
 		const actualJwt = JSON.parse(JSON.parse(out.body)["https://vocab.account.gov.uk/v1/credentialJWT"]);
+		//Setting the actualJwt jti to mock value to pass test
+		actualJwt.jti = "uuid";
 		expect(actualJwt).toEqual(expectedJwt);
+	});
+
+	it("Verify jti claim in the generated VC is a valid UUID", async () => {
+		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		// @ts-ignore
+		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
+
+		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		const actualJwt = JSON.parse(JSON.parse(out.body)["https://vocab.account.gov.uk/v1/credentialJWT"]);
+		expect(new ValidationHelper().isValidUUID(actualJwt.jti)).toBeTruthy();
 	});
 
 	it.each([

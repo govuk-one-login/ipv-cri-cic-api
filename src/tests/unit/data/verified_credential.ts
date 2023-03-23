@@ -6,6 +6,7 @@ export const VALID_VC = {
 	"sub": "sub",
 	"nbf": 1667385481,
 	"exp": 1667392681,
+	"jti": "uuid",
 	"vc": {
 		"@context": [
 			Constants.W3_BASE_CONTEXT,
