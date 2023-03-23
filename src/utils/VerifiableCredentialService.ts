@@ -36,7 +36,7 @@ export class VerifiableCredentialService {
     	const now = getNow();
     	const subject = sessionItem?.subject as string;
     	const nameParts = this.buildVcNamePart(sessionItem?.given_names, sessionItem?.family_names);
-    	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, sessionItem?.date_of_birth, sessionItem?.document_selected, sessionItem?.date_of_expiry)
+    	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, sessionItem?.date_of_birth)
     		.build();
     	const result = {
     		sub: subject,
@@ -67,10 +67,10 @@ export class VerifiableCredentialService {
     			},
     		);
     	});
-    	family_names?.forEach((givenName)=>{
+    	family_names?.forEach((familyName)=>{
     		parts.push(
     			{
-    				value: givenName,
+    				value: familyName,
     				type: "FamilyName",
     			},
     		);
@@ -81,7 +81,7 @@ export class VerifiableCredentialService {
 class VerifiableCredentialBuilder {
     private readonly credential: VerifiedCredential;
 
-    constructor(nameParts: object[], date_of_birth: string | undefined, document_selected: string | undefined, date_of_expiry: string | undefined) {
+    constructor(nameParts: object[], date_of_birth: string | undefined) {
     	this.credential = {
     		"@context": [
     			Constants.W3_BASE_CONTEXT,
