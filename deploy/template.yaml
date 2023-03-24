@@ -808,7 +808,7 @@ Resources:
         InvocationLevel:
           Type: Schedule
           Properties:
-            Schedule: cron(0 * * * *)
+            Schedule: cron(0 0 ? * * *)
             
       Environment:
         Variables:
