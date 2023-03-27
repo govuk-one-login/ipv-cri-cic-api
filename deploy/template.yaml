@@ -820,15 +820,6 @@ Resources:
         EntryPoints:
           - JwksHandler.ts
 
-  JwksCustomResource:
-    Type: "AWS::CloudFormation::CustomResource"
-    Properties:
-      ServiceToken: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${JsonWebKeysFunction}"
-      StackName: !Ref 'AWS::StackName'
-    DependsOn: 
-      - JsonWebKeysFunction
-      - JsonWebKeysBucket
-    
   JsonWebKeysLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
