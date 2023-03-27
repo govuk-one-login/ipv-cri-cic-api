@@ -4,8 +4,11 @@ on:
   push:
     branches:
       - main
-    paths:
-      - deploy/tests/**
+      - F2F-134e
+    paths-ignore:
+      - 'infra-l2-dynamo/**'
+      - 'infra-l2-kms/**'
+      - 'infra-l2-waf/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
