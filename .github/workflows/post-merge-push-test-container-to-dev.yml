@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - F2F-134e
     paths-ignore:
       - 'infra-l2-dynamo/**'
       - 'infra-l2-kms/**'
