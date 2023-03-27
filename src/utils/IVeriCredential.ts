@@ -1,8 +1,6 @@
 export interface CredentialSubject {
-	fullName: object[];
-	dateOfBirth: string | undefined;
-	documentType: string | undefined;
-	dateOfExpiry: string | undefined;
+	name: object[];
+	birthDate: object[];
 }
 export interface VerifiedCredential {
 	"@context": string[];

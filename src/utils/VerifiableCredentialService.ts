@@ -5,6 +5,7 @@ import { ISessionItem } from "../models/ISessionItem";
 import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
+import { randomUUID } from "crypto";
 
 export class VerifiableCredentialService {
     readonly tableName: string;
@@ -33,22 +34,20 @@ export class VerifiableCredentialService {
 
     async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem | undefined, getNow: () => number): Promise<string> {
     	const now = getNow();
-    	const subject = sessionItem?.clientId as string;
-    	const givenNames = sessionItem?.given_names?.join(" ");
-    	const famiyNames = sessionItem?.family_names?.join(" ");
-    	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(givenNames, famiyNames, sessionItem?.date_of_birth, sessionItem?.document_selected, sessionItem?.date_of_expiry)
+    	const subject = sessionItem?.subject as string;
+    	const nameParts = this.buildVcNamePart(sessionItem?.given_names, sessionItem?.family_names);
+    	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, sessionItem?.date_of_birth)
     		.build();
     	const result = {
-    		iat: now,
-    		iss: this.issuer,
-    		aud: this.issuer,
     		sub: subject,
     		nbf: now,
-    		exp: now + Constants.CREDENTIAL_EXPIRY,
+    		iss: this.issuer,
+    		iat: now,
+    		jti: randomUUID(),
     		vc: verifiedCredential,
     	};
 
-    	this.logger.debug({ message: "Verified Credential jwt: " }, JSON.stringify(result));
+    	this.logger.info({ message: "Verified Credential jwt: " }, JSON.stringify(result));
     	try {
     		// Sign the VC
     		const signedVerifiedCredential = await this.kmsJwtAdapter.sign(result);
@@ -57,11 +56,32 @@ export class VerifiableCredentialService {
     		throw new AppError( "Failed to sign Jwt", HttpCodesEnum.SERVER_ERROR);
     	}
     }
+
+    buildVcNamePart(given_names: string[] | undefined, family_names: string[] | undefined): object[] {
+    	const parts:object[] = [];
+    	given_names?.forEach((givenName)=>{
+    		parts.push(
+    			{
+    				value: givenName,
+    				type: "GivenName",
+    			},
+    		);
+    	});
+    	family_names?.forEach((familyName)=>{
+    		parts.push(
+    			{
+    				value: familyName,
+    				type: "FamilyName",
+    			},
+    		);
+    	});
+    	return parts;
+    }
 }
 class VerifiableCredentialBuilder {
     private readonly credential: VerifiedCredential;
 
-    constructor(given_names: string | undefined, family_names: string | undefined, date_of_birth: string | undefined, document_selected: string | undefined, date_of_expiry: string | undefined) {
+    constructor(nameParts: object[], date_of_birth: string | undefined) {
     	this.credential = {
     		"@context": [
     			Constants.W3_BASE_CONTEXT,
@@ -69,25 +89,14 @@ class VerifiableCredentialBuilder {
     		],
     		type: [
     			Constants.VERIFIABLE_CREDENTIAL,
-    			Constants.CLAIMED_IDENTITY_CREDENTIAL_TYPE,
+    			Constants.IDENTITY_ASSERTION_CREDENTIAL,
     		],
     		credentialSubject: {
-    			fullName: [
+    			name: [
     				{
-    					nameParts: [
-    						{
-    							type: "GivenName",
-    							value: given_names,
-    						},
-    						{
-    							type: "FamilyName",
-    							value: family_names,
-    						},
-    					],
+    					nameParts,
     				}],
-    			dateOfBirth: date_of_birth,
-    			documentType: document_selected,
-    			dateOfExpiry: date_of_expiry,
+    			birthDate: [{ value: date_of_birth }],
     		},
     	};
     }
@@ -95,4 +104,5 @@ class VerifiableCredentialBuilder {
     build(): VerifiedCredential {
     	return this.credential;
     }
+
 }
