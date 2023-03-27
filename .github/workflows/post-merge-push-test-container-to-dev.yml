@@ -23,9 +23,6 @@ jobs:
   deploy-test-container-to-dev-ecr:
     name: Validate & Deploy Test Container to Dev Envrionment ECR
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: deploy/tests
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
