@@ -1,9 +1,14 @@
 # 0001 - JSON Web Key Set bootstrapping
 
 ## Status
-In Progress
+Complete
 
 ## Decision
+
+Option 2: Scheduled execution. 
+We'll use an EventBridge schedule to generate the JSON web key set every hour on the hour.
+
+The longer term preference is to use Custom Resources. This isn't currently possible because our L1 stack contains resources managed by DevPlatform which not include the permissions for the use of custom resources. This work has been requested and will be available once PLAT-998 is included in a release. To switch we'll need to upgrade our platform to that version.
 
 ## Context
 
