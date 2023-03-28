@@ -31,3 +31,5 @@ See [the developer guide for automating updates to serverless apps](https://docs
 
 ## Consequences
 This removes manual steps in our deployment process and ensures the JWKS file we provide is kept up to date with any changes in configuration we make to the lambda which generates our JWKS.
+
+Changes to the underlying keys will take up to 60 mins to be shown in the well-known endpoint. For a normal key rotation this is mitigated by the fact that we should always have a safe overlap period as we rotate keys. For an unplanned immediate key rotation, e.g. due to compromise, to mitigate this we may trigger the lambda manually in Production via the AWS console.
