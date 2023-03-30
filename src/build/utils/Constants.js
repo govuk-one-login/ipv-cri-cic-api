@@ -1,0 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Constants = void 0;
+class Constants {
+}
+exports.Constants = Constants;
+Constants.X_SESSION_ID = "x-govuk-signin-session-id";
+Constants.SESSION_ID = "session-id";
+Constants.CLAIMEDID_METRICS_SVC_NAME = "ClaimedIdentity";
+Constants.CLAIMEDID_LOGGER_SVC_NAME = "ClaimedIdHandler";
+Constants.CIC_METRICS_NAMESPACE = "CIC-CRI";
+Constants.USERINFO_LOGGER_SVC_NAME = "UserInfoHandler";
+Constants.ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
+Constants.AUTHORIZATION_LOGGER_SVC_NAME = "AuthorizationCodeHandler";
+Constants.JWKS_LOGGER_SVC_NAME = "JwksHandler";
+Constants.DEBUG = "DEBUG";
+Constants.INFO = "INFO";
+Constants.WARN = "WARN";
+Constants.ERROR = "ERROR";
+Constants.BEARER = "Bearer";
+Constants.W3_BASE_CONTEXT = "https://www.w3.org/2018/credentials/v1";
+Constants.DI_CONTEXT = "https://vocab.account.gov.uk/contexts/identity-v1.jsonld";
+Constants.IDENTITY_ASSERTION_CREDENTIAL = "IdentityAssertionCredential";
+Constants.VERIFIABLE_CREDENTIAL = "VerifiableCredential";
+Constants.CODE = "code";
+Constants.REDIRECT_URL = "redirect_uri";
+Constants.GRANT_TYPE = "grant_type";
+Constants.AUTHORIZATION_CODE = "authorization_code";
+Constants.AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
+Constants.TOKEN_EXPIRY_SECONDS = 3600;
+Constants.REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
