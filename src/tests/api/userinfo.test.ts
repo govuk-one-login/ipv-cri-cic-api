@@ -29,7 +29,7 @@ describe("Happy Path Post UserInfo", () => {
 		const response = await userInfoPost(tokenResponse.data.access_token);
 		console.log("Response XYZ", response);
         
-		assert200OK(response.status, response.statusText);
+		assert200OK({ status: response.status, statusText: response.statusText });
 
 	});
 

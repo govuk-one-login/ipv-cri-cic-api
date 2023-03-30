@@ -23,7 +23,7 @@ describe("Happy Path Post Claimed Identity", () => {
 			"Slim", "Pickens", "1970-03-26", "brp", "2024-03-31", sessionId,
 		);
  
-		assert200OK(response.status, response.statusText);
+		assert200OK({ status: response.status, statusText: response.statusText });
 
 	});
 

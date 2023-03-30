@@ -1,4 +1,4 @@
-export function assert200OK(status: number, statusText: string): void {
+export function assert200OK({ status, statusText }: { status: number; statusText: string; }): void {
 	expect(status).toBe(200);
 	expect(statusText).toBe("OK");
 }

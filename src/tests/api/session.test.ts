@@ -16,7 +16,7 @@ describe("Happy Path Get SessionID", () => {
 
 		const response = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 
-		assert200OK(response.status, response.statusText);
+		assert200OK({ status: response.status, statusText: response.statusText });
 	});
 
 });

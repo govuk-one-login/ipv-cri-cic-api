@@ -7,7 +7,7 @@ describe("Happy Path Get WellKnown", () => {
 		const response = await wellKnownGet();
          
         
-		assert200OK(response.status, response.statusText);
+		assert200OK({ status: response.status, statusText: response.statusText });
 
 	});
 

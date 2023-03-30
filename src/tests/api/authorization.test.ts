@@ -24,7 +24,7 @@ describe("Happy Path Post Authorization", () => {
 		console.log("SessionId abc: ", sessionId);
 		const response = await authorizationGet(sessionId);
 		console.log("response abc: ", response);
-		assert200OK(response.status, response.statusText);
+		assert200OK({ status: response.status, statusText: response.statusText });
 
 	});
 
