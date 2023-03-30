@@ -8,7 +8,7 @@ import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 export class AccessTokenRequestValidationHelper {
     private readonly validationHelper: ValidationHelper;
-
+	
     constructor() {
     	this.validationHelper = new ValidationHelper();
     }
@@ -27,7 +27,7 @@ export class AccessTokenRequestValidationHelper {
     	if (!grant_type || grant_type !== Constants.AUTHORIZATION_CODE) {
     		throw new AppError("Invalid grant_type parameter", HttpCodesEnum.UNAUTHORIZED);
     	}
-
+		
     	if (!this.validationHelper.isValidUUID(code)) {
     		throw new AppError("AuthorizationCode must be a valid uuid", HttpCodesEnum.UNAUTHORIZED);
     	}
@@ -43,7 +43,7 @@ export class AccessTokenRequestValidationHelper {
 
     	if (!isValidRedirectUri) {
     		throw new AppError(
-    			`Invalid request: redirect uri ${redirectUri} does not match configuration uri ${sessionItem.redirectUri}`,
+    		 	`Invalid request: redirect uri ${redirectUri} does not match configuration uri ${sessionItem.redirectUri}`,
     			HttpCodesEnum.UNAUTHORIZED);
     	}
     	// Validate if the AuthSessionState is CIC_AUTH_CODE_ISSUED

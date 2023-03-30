@@ -19,7 +19,7 @@ import { AppError } from "../../../utils/AppError";
 
 let accessTokenRequestProcessorTest: AccessTokenRequestProcessor;
 const mockCicService = mock<CicService>();
-let mockSession : ISessionItem;
+let mockSession: ISessionItem;
 jest.mock("../../../utils/KmsJwtAdapter");
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsSigningTokenJwtAdapter();
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
@@ -32,11 +32,11 @@ const logger = new Logger({
 const metrics = new Metrics({ namespace: "CIC" });
 const ENCODED_REDIRECT_URI = encodeURIComponent("http://localhost:8085/callback");
 const AUTHORIZATION_CODE = randomUUID();
-let request : APIGatewayProxyEvent;
+let request: APIGatewayProxyEvent;
 
-function getMockSessionItem() : ISessionItem {
+function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
-		sessionId : "b0668808-67ce-8jc7-a2fc-132b81612111",
+		sessionId: "b0668808-67ce-8jc7-a2fc-132b81612111",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
 		clientSessionId: "sdfssg",
@@ -54,8 +54,6 @@ function getMockSessionItem() : ISessionItem {
 		given_names: ["given", "name"],
 		family_names: ["family", "name"],
 		date_of_birth: "09-08-1961",
-		document_selected: "Passport",
-		date_of_expiry: "23-04-1027",
 		authSessionState: AuthSessionState.CIC_AUTH_CODE_ISSUED,
 	};
 	return sess;
@@ -106,7 +104,7 @@ describe("AccessTokenRequestProcessor", () => {
 		[`grant_type=authorization_code&redirect_uri=${ENCODED_REDIRECT_URI}`, "Invalid request: Missing code parameter"],
 		[`code=${AUTHORIZATION_CODE}&redirect_uri=${ENCODED_REDIRECT_URI}`, "Invalid grant_type parameter"],
 		[`code=${AUTHORIZATION_CODE}&grant_type=authorization_code`, "Invalid request: Missing redirect_uri parameter"],
-	])("When parameters are not provided in the body, it returns 401 Unauthorized response", async (body, errMsg ) => {
+	])("When parameters are not provided in the body, it returns 401 Unauthorized response", async (body, errMsg) => {
 		request.body = body;
 		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
 

@@ -77,8 +77,19 @@ Hello world%
 ### Tests
 
 Unit Tests:  `npm run test:unit`
+API Tests: `npm run test:api`
 Infrastructure Unit Tests: `npm run test:infra`
 Run tests against a CloudFormation stack deployed into AWS: `STACK_NAME=cic-backend-api npm run test:e2e` (Work in progress)
+
+## .env.example
+
+This file contains an example of the environment variables that this project requires. To use it, copy the file to `.env` and replace the values with your actual sensitive information.
+To copy the file, run the following command in your terminal:
+```console
+cp .env.example .env
+```
+Then, open the `.env` file and replace ALL the values with your actual sensitive information.
+Note: The `.env` file should not be committed to the repository, as it contains sensitive information.
 
 # Generating JWKS
 

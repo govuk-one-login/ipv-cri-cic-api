@@ -1,6 +1,6 @@
 export const RESOURCE_NOT_FOUND = {
 	httpMethod: "POST",
-	body: '{"given_names": "Test User","family_names": "family name","date_of_birth": "1970-01-01", "document_selected": "UK Passport", "date_of_expiry": "2027-01-01"}',
+	body: '{"given_names": "Test User","family_names": "family name","date_of_birth": "1970-01-01"}',
 	headers: { session_id: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},

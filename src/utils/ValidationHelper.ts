@@ -36,7 +36,7 @@ export class ValidationHelper {
 
 	private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
 		let isValid = true;
-		if (data === null || data === undefined ) {
+		if (data === null || data === undefined) {
 			isValid = false;
 		} else {
 			if (typeof data === "string") {
@@ -50,7 +50,7 @@ export class ValidationHelper {
 			}
 		}
 		if (!isValid) {
-			logger.info({ message :"UserInfo missing: ", errmsg });
+			logger.info({ message: "UserInfo missing: ", errmsg });
 		}
 		return isValid;
 	}
@@ -59,9 +59,7 @@ export class ValidationHelper {
 		let isValid = true;
 		if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
 			!this.validateUserData(session.family_names, "Family names is missing", logger) ||
-			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger) ||
-			!this.validateUserData(session.document_selected, "Document selection type is missing", logger) ||
-			!this.validateUserData(session.date_of_expiry, "Expiry Date is missing", logger)) {
+			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger)) {
 			isValid = false;
 		}
 		return isValid;
@@ -70,11 +68,11 @@ export class ValidationHelper {
 	async eventToSubjectIdentifier(jwtAdapter: KmsJwtAdapter, event: APIGatewayProxyEvent): Promise<string> {
 		const headerValue = event.headers.authorization ?? event.headers.Authorization;
 		if (headerValue === null || headerValue === undefined) {
-			throw new AppError( "Missing header: Authorization header value is missing or invalid auth_scheme", HttpCodesEnum.UNAUTHORIZED);
+			throw new AppError("Missing header: Authorization header value is missing or invalid auth_scheme", HttpCodesEnum.UNAUTHORIZED);
 		}
 		const authHeader = event.headers.Authorization as string;
 		if (authHeader !== null && !authHeader.includes(Constants.BEARER)) {
-			throw new AppError( "Missing header: Authorization header is not of Bearer type access_token", HttpCodesEnum.UNAUTHORIZED);
+			throw new AppError("Missing header: Authorization header is not of Bearer type access_token", HttpCodesEnum.UNAUTHORIZED);
 
 		}
 		const token = headerValue.replace(/^Bearer\s+/, "");
@@ -82,7 +80,7 @@ export class ValidationHelper {
 		try {
 			isValidJwt = await jwtAdapter.verify(token);
 		} catch (err) {
-			throw new AppError( "Failed to verify signature", HttpCodesEnum.UNAUTHORIZED);
+			throw new AppError("Failed to verify signature", HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		if (!isValidJwt) {
@@ -96,7 +94,7 @@ export class ValidationHelper {
 		}
 
 		if (jwt?.payload?.sub == null) {
-			throw new AppError( "sub missing", HttpCodesEnum.UNAUTHORIZED);
+			throw new AppError("sub missing", HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		return jwt.payload.sub;
@@ -130,7 +128,7 @@ export class ValidationHelper {
 			return `JWT validation/verification failed: Unable to retrieve redirect URI for client_id: ${requestBodyClientId}`;
 		} else if (expectedRedirectUri !== jwtPayload.redirect_uri) {
 			return `JWT validation/verification failed: Redirect uri ${jwtPayload.redirect_uri} does not match configuration uri ${expectedRedirectUri}`;
-		} 
+		}
 
 		return "";
 	};

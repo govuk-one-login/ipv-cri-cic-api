@@ -16,3 +16,4 @@ To check if there are any linting issues, run `npm lint`. If there are any criti
 will fail prompting developer to fix those issues. The report will be present under `reports` folder as an
 html file. Once those critical errors are fixed, re running `npm lint` should not return any errors.
 In order to fix some simple formatting issues, one can run `npm lint:fix` which should fix most of those automatically.
+
