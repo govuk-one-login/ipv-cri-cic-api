@@ -2,5 +2,7 @@
 node_modules/**
 **/node_modules/**
 coverage
-src/build
+**/build/**
+
+### Logs ###
 .DS_Store
