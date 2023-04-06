@@ -4,5 +4,9 @@ node_modules/**
 coverage
 **/build/**
 
+
 ### Logs ###
 **/.DS_Store
+
+### Environment ###
+**/.env
