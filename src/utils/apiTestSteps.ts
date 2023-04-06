@@ -1,6 +1,7 @@
 import axios from "axios";
 import { constants } from "./ApiConstants";
 import { assertStatusCode, post, get } from "../utils/apiHelper";
+import { jwtUtils } from "./JwtUtils";
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 
 export async function startStubServiceAndReturnSessionId(): Promise<any> {
@@ -81,3 +82,40 @@ export async function wellKnownGet():Promise<any> {
 		return error.response;
 	} 
 }
+
+export function validateJwtToken(responseString:any, data:any):void {
+	const [rawHead, rawBody, signature] = JSON.stringify(getJwtTokenUserInfo(responseString)).split(".");
+	validateRawHead(rawHead);
+	validateRawBody(rawBody, data);
+}
+
+function getJwtTokenUserInfo(responseString:any): any {
+	try {
+		const matches = responseString.match(/\[(.*?)\]/g);
+		const result = [];
+		if (matches) {
+		  for (let i = 0; i < matches.length; ++i) {
+				const match = matches[i];
+				result.push(match.substring(1, match.length - 1));
+		  }
+		}
+		return JSON.stringify(result);
+	} catch (error: any) {
+		console.log(`Error response getting JWT Token from /userInfo endpoint: ${error}`);
+		return error.response;
+	}  
+}
+
+function validateRawHead(rawHead:any): void {
+	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
+	expect(decodeRawHead.alg).toBe("ES256");
+	expect(decodeRawHead.typ).toBe("JWT");
+}
+
+function validateRawBody(rawBody:any, data: any): void {
+	const decodedRawBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
+	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[0].value).toBe(data.firstName);
+	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[1].value).toBe(data.lastName);
+	expect(decodedRawBody.vc.credentialSubject.birthDate[0].value).toBe(data.dateOfBirth);
+}
+

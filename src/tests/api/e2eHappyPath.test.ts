@@ -1,5 +1,5 @@
 import { assertStatusCode } from "../../utils/apiHelper";
-import { authorizationGet, sessionPost, stubStartPost, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost } from "../../utils/apiTestSteps";
+import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken } from "../../utils/apiTestSteps";
 import * as dataSlim from "../../data/happyPathSlim.json";
 import * as dataBjorn from "../../data/happyPathBjörn.json";
 
@@ -25,16 +25,9 @@ describe("E2E Happy Path Tests Slim", () => {
 		assertStatusCode(201, tokenResponse.status, tokenResponse.statusText);
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
+		validateJwtToken(JSON.stringify(userInfoResponse.data), dataSlim);
 		assertStatusCode(200, userInfoResponse.status, userInfoResponse.statusText);
 	});
-
-
-	it("E2E Happy Path Journey - Well Known", async () => {
-		// Well Known
-		const wellKnownResponse = await wellKnownGet();
-		assertStatusCode(200, wellKnownResponse.status, wellKnownResponse.statusText);
-	});
-
 
 });
 
@@ -59,7 +52,16 @@ describe("E2E Happy Path Tests Björn", () => {
 		assertStatusCode(201, tokenResponse.status, tokenResponse.statusText);
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
+		validateJwtToken(JSON.stringify(userInfoResponse.data), dataBjorn);
 		assertStatusCode(200, userInfoResponse.status, userInfoResponse.statusText);
 	});
 
+});
+
+describe("E2E Happy Path Well Known Endpoint", () => {
+	it("E2E Happy Path Journey - Well Known", async () => {
+		// Well Known
+		const wellKnownResponse = await wellKnownGet();
+		assertStatusCode(200, wellKnownResponse.status, wellKnownResponse.statusText);
+	});
 });
