@@ -26,4 +26,3 @@ export function assertResponseMessage(request: any, expectedValue: any):void {
 export function assertResponseData(request: any, expectedValue: any):void {
 	expect(request.data).toBe(expectedValue);
 }
-ß
