@@ -7,7 +7,6 @@ const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 export async function startStubServiceAndReturnSessionId(): Promise<any> {
 	const stubResponse = await stubStartPost();
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
-
 	return postRequest;
 }
 
@@ -87,6 +86,13 @@ export function validateJwtToken(responseString:any, data:any):void {
 	const [rawHead, rawBody, signature] = JSON.stringify(getJwtTokenUserInfo(responseString)).split(".");
 	validateRawHead(rawHead);
 	validateRawBody(rawBody, data);
+}
+
+
+export function validateWellKnownReponse(response:any):void {
+	expect(response.keys).toHaveLength(2);
+	expect(response.keys[0].use).toBe("sig");
+	expect(response.keys[1].use).toBe("enc");
 }
 
 function getJwtTokenUserInfo(responseString:any): any {

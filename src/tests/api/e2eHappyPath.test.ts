@@ -1,5 +1,5 @@
 import { assertStatusCode } from "../../utils/apiHelper";
-import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken } from "../../utils/apiTestSteps";
+import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../../utils/apiTestSteps";
 import * as dataSlim from "../../data/happyPathSlim.json";
 import * as dataBjorn from "../../data/happyPathBjörn.json";
 
@@ -62,6 +62,7 @@ describe("E2E Happy Path Well Known Endpoint", () => {
 	it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
+		validateWellKnownReponse(wellKnownResponse.data);
 		assertStatusCode(200, wellKnownResponse.status, wellKnownResponse.statusText);
 	});
 });
