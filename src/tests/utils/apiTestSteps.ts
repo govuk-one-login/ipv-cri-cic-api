@@ -1,7 +1,7 @@
 import axios from "axios";
-import { constants } from "./ApiConstants";
+import { constants } from "../utils/apiConstants";
 import { assertStatusCode, post, get } from "../utils/apiHelper";
-import { jwtUtils } from "./JwtUtils";
+import { jwtUtils } from "../../utils/JwtUtils";
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 
 export async function startStubServiceAndReturnSessionId(): Promise<any> {

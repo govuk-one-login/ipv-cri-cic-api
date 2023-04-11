@@ -1,5 +1,5 @@
-import { assertStatusCode } from "../../utils/apiHelper";
-import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../../utils/apiTestSteps";
+import { assertStatusCode } from "../../tests/utils/apiHelper"; 
+import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../../tests/utils/apiTestSteps";
 import * as dataSlim from "../../data/happyPathSlim.json";
 import * as dataBjorn from "../../data/happyPathBjörn.json";
 
