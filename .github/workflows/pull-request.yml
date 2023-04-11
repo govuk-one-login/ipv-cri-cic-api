@@ -68,6 +68,10 @@ jobs:
 
       - name: Run Tests
         run: npm run test:unit
+
+      - name: Run API Tests
+        run: npm run test:api
+        
       - name: Run Infra checks
         run: npm run test:infra
   sam-validate:
