@@ -23,8 +23,8 @@ permissions:
 
 env: # Only adding the variables in that are required for
   AWS_REGION: eu-west-2
-  API_URL: ${{ secrets.DEV_CRI_CIC_API_URL }}
-  STUB_URL: ${{ secrets.DEV_IPV_STUB_URL }}
+  DEV_CRI_CIC_API_URL: ${{ secrets.DEV_CRI_CIC_API_URL }}
+  DEV_IPV_STUB_URL: ${{ secrets.DEV_IPV_STUB_URL }}
 
 jobs:
   run-code-check:
@@ -71,7 +71,7 @@ jobs:
 
       - name: Run API Tests
         run: npm run test:api
-        
+
       - name: Run Infra checks
         run: npm run test:infra
   sam-validate:
