@@ -1,14 +1,13 @@
 import * as dataSlim from "../data/happyPathSlim.json";
 import * as dataBjorn from "../data/happyPathBjörn.json";
 import { assertStatusCode } from "../utils/ApiHelper";
-import { authorizationGet, tokenPost, claimedIdentityPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../utils/ApiTestSteps";
+import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../utils/ApiTestSteps";
 
 
 describe("E2E Happy Path Tests Slim", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
-		await startStubServiceAndReturnSessionId
 		assertStatusCode(200, sessionResponse.status, sessionResponse.statusText);
 		sessionId = sessionResponse.data.session_id;
 	});
