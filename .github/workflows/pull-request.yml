@@ -66,6 +66,12 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Archive lint results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: src/reports/eslint/reportFile.html
+
       - name: Run Tests
         run: npm run test:unit
 
