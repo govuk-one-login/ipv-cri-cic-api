@@ -1,9 +1,7 @@
 export interface ICicSession {
-	given_names?: string [];
-	family_names?: string [];
+	given_names?: string[];
+	family_names?: string[];
 	date_of_birth?: string;
-	document_selected?: string;
-	date_of_expiry?: string;
 }
 
 export interface ISessionItem extends ICicSession {
