@@ -6,13 +6,12 @@ const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 
 export async function startStubServiceAndReturnSessionId(): Promise<any> {
 	const stubResponse = await stubStartPost();
-	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
-	return postRequest;
+	return sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 }
 
 export async function stubStartPost():Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
-	const postRequest = await post(axios, `${path}`, { target:constants.DEV_CRI_CIC_API_URL }, null );
+	const postRequest = await post(axios, `${path}`, { target:constants.DEV_CRI_CIC_API_URL }, null);
 	assertStatusCode(201, postRequest.status, postRequest.statusText);
 	return postRequest;
 }
