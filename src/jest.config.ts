@@ -3,6 +3,9 @@
  * https://jestjs.io/docs/configuration
  */
 
+const dotenv = require('dotenv');
+dotenv.config();
+
 export default {
   transform: {
     '^.+\\.ts?$': 'ts-jest'

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { constants } from "../utils/apiConstants";
-import { assertStatusCode, post, get } from "../utils/apiHelper";
+import { constants } from "./ApiConstants";
+import { assertStatusCode, post, get } from "./ApiHelper";
 import { jwtUtils } from "../../utils/JwtUtils";
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 
@@ -73,6 +73,7 @@ export async function userInfoPost(accessToken?: any):Promise<any> {
 }
 
 export async function wellKnownGet():Promise<any> {
+	console.log(constants.DEV_CRI_CIC_API_URL);
 	const path = "/.well-known/jwks.json";
 	try {
 		const getRequest = await get(API_INSTANCE, "/.well-known/jwks.json", null);	return getRequest;
