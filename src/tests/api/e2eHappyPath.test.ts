@@ -1,7 +1,7 @@
-import { assertStatusCode } from "../utils/ApiHelper"; 
 import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../utils/ApiTestSteps";
 import * as dataSlim from "../data/happyPathSlim.json";
 import * as dataBjorn from "../data/happyPathBjörn.json";
+import { assertStatusCode } from "../utils/ApiHelper";
 
 
 describe("E2E Happy Path Tests Slim", () => {

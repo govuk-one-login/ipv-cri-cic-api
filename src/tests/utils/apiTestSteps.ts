@@ -1,6 +1,6 @@
 import axios from "axios";
-import { constants } from "./ApiConstants";
-import { assertStatusCode, post, get } from "./ApiHelper";
+import { constants } from "../utils/ApiConstants";
+import { assertStatusCode, post, get } from "../utils/ApiHelper";
 import { jwtUtils } from "../../utils/JwtUtils";
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 
