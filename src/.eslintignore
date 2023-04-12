@@ -3,5 +3,4 @@ node_modules
 dist
 reports/
 /tests/infra/**
-/tests/utils/**
-ß
+**/tests/**
