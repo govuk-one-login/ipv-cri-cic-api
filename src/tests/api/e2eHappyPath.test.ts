@@ -17,21 +17,16 @@ describe("E2E Happy Path Tests Slim", () => {
 		// Claimed Identity
 		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, dataSlim.dateOfBirth, dataSlim.identityType, dataSlim.dateOfExpiry, sessionId);
 		assertStatusCode(200, calimedIdentityResponse.status, calimedIdentityResponse.statusText);
-		console.log("claimedIdentity done")
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 		assertStatusCode(200, authResponse.status, authResponse.statusText);
-		console.log("Auth done")
 		// Post Token
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
 		assertStatusCode(201, tokenResponse.status, tokenResponse.statusText);
-		console.log("tokenPost done")
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		validateJwtToken(JSON.stringify(userInfoResponse.data), dataSlim);
 		assertStatusCode(200, userInfoResponse.status, userInfoResponse.statusText);
-		console.log("userInfo done")
-
 	});
 
 });
