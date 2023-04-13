@@ -15,7 +15,7 @@ describe("E2E Happy Path Tests Slim", () => {
 	it("E2E Happy Path Journey - User Info Slim", async () => {
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
-		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, dataSlim.dateOfBirth, dataSlim.identityType, dataSlim.dateOfExpiry, sessionId);
+		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, dataSlim.dateOfBirth, sessionId);
 		assertStatusCode(200, calimedIdentityResponse.status, calimedIdentityResponse.statusText);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
@@ -42,7 +42,7 @@ describe("E2E Happy Path Tests Björn", () => {
 	it("E2E Happy Path Journey - User Info Björn", async () => {
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
-		const calimedIdentityResponse = await claimedIdentityPost(dataBjorn.firstName, dataBjorn.lastName, dataBjorn.dateOfBirth, dataBjorn.identityType, dataBjorn.dateOfExpiry, sessionId);
+		const calimedIdentityResponse = await claimedIdentityPost(dataBjorn.firstName, dataBjorn.lastName, dataBjorn.dateOfBirth, sessionId);
 		assertStatusCode(200, calimedIdentityResponse.status, calimedIdentityResponse.statusText);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);

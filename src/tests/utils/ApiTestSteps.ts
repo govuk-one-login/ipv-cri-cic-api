@@ -27,10 +27,10 @@ export async function sessionPost(clientId?: string, request?: string):Promise<a
 	} 
 }
 
-export async function claimedIdentityPost(given_names?: string, family_names?: string, dob?: string, doc_selected?: string, doe?: string, sessionId?: string):Promise<any> {
+export async function claimedIdentityPost(given_names?: string, family_names?: string, dob?: string, sessionId?: string):Promise<any> {
 	const path = "/claimedIdentity";
 	try {
-		const postRequest = await post(API_INSTANCE, "/claimedIdentity", { given_names, family_names, date_of_birth: dob, document_selected: doc_selected, date_of_expiry: doe }, { headers:{ "x-govuk-signin-session-id": sessionId } });
+		const postRequest = await post(API_INSTANCE, "/claimedIdentity", { "given_names" : given_names, "family_names" : family_names, "date_of_birth": dob }, { headers:{ "x-govuk-signin-session-id": sessionId } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
