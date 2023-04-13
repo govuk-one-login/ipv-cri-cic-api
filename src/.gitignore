@@ -1,5 +1,11 @@
-node_modules/
-coverage/
-dist/
-.aws-sam
-reports/
+node_modules/**
+**/node_modules/**
+coverage
+**/build/**
+
+
+### Logs ###
+**/.DS_Store
+
+### Environment ###
+**/.env
