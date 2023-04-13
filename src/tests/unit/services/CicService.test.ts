@@ -22,9 +22,9 @@ const FAILURE_VALUE = "throw_me";
 describe("Cic Service", () => {
 	beforeEach(() => {
 		jest.resetAllMocks();
-	 	cicService = new CicService(tableName, logger, mockDynamoDbClient);
+		cicService = new CicService(tableName, logger, mockDynamoDbClient);
 
-	 });
+	});
 	it("Should return a session item when passed a valid session Id", async () => {
 		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
 		const result = await cicService.getSessionById(sessionId);
@@ -39,7 +39,7 @@ describe("Cic Service", () => {
 
 	it("should throw 500 if request fails during save CIC data", async () => {
 		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
-		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: ["Family", "name"], date_of_birth: "1970-01-01", document_selected: "passport", date_of_expiry: "1970-01-01" });
+		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: ["Family", "name"], date_of_birth: "1970-01-01" });
 
 		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,

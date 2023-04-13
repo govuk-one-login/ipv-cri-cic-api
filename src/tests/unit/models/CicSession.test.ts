@@ -13,8 +13,6 @@ describe("CicSession", () => {
 			given_names: ["Frederick", "Joseph"],
 			family_names: ["Flintstone"],
 			date_of_birth: "1970-01-01",
-			document_selected: "brp",
-			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
@@ -25,8 +23,6 @@ describe("CicSession", () => {
 			given_names: [],
 			family_names: ["Flintstone"],
 			date_of_birth: "1970-01-01",
-			document_selected: "driversPermit",
-			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
@@ -37,8 +33,6 @@ describe("CicSession", () => {
 			given_names: ["Frederick", "Joseph"],
 			family_names: [],
 			date_of_birth: "1970-01-01",
-			document_selected: "brp",
-			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
@@ -49,32 +43,6 @@ describe("CicSession", () => {
 			given_names: ["Frederick", "Joseph"],
 			family_names: ["Flintstone"],
 			date_of_birth: "",
-			document_selected: "brp",
-			date_of_expiry: "1970-01-01",
-		});
-
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
-	});
-
-	it("should throw error if document_selected is empty in CicSession model", async () => {
-		const cicSession = new CicSession({
-			given_names: ["Frederick", "Joseph"],
-			family_names: ["Flintstone"],
-			date_of_birth: "1970-01-01",
-			document_selected: "",
-			date_of_expiry: "1970-01-01",
-		});
-
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
-	});
-
-	it("should throw error if date_of_expiry is empty in CicSession model", async () => {
-		const cicSession = new CicSession({
-			given_names: ["Frederick", "Joseph"],
-			family_names: ["Flintstone"],
-			date_of_birth: "1970-01-01",
-			document_selected: "brp",
-			date_of_expiry: "",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
@@ -85,22 +53,9 @@ describe("CicSession", () => {
 			given_names: ["Frederick", "Joseph"],
 			family_names: ["Flintstone"],
 			date_of_birth: "date_of_birth",
-			document_selected: "brp",
-			date_of_expiry: "1970-01-01",
 		});
 
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
-	it("should throw error if date_of_expiry is invalid in CicSession model", async () => {
-		const cicSession = new CicSession({
-			given_names: ["Frederick", "Joseph"],
-			family_names: ["Flintstone"],
-			date_of_birth: "1970-01-01",
-			document_selected: "brp",
-			date_of_expiry: "date_of_expiry",
-		});
-
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
-	});
 });

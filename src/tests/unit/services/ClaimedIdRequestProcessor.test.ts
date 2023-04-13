@@ -19,9 +19,9 @@ const logger = new Logger({
 });
 const metrics = new Metrics({ namespace: "CIC" });
 
-function getMockSessionItem() : ISessionItem {
+function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
-		sessionId : "sdfsdg",
+		sessionId: "sdfsdg",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
 		clientSessionId: "sdfssg",
@@ -39,8 +39,6 @@ function getMockSessionItem() : ISessionItem {
 		given_names: ["given", "name"],
 		family_names: ["family", "name"],
 		date_of_birth: "09-08-1961",
-		document_selected: "Passport",
-		date_of_expiry: "23-04-1027",
 		authSessionState: AuthSessionState.CIC_SESSION_CREATED,
 	};
 	return sess;

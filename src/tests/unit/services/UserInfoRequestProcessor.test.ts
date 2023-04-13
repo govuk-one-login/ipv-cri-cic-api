@@ -12,7 +12,7 @@ import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/Moc
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
-let mockSession : ISessionItem;
+let mockSession: ISessionItem;
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(true);
 const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(false);
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
@@ -21,9 +21,9 @@ const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFai
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
-function getMockSessionItem() : ISessionItem {
+function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
-		sessionId : "sdfsdg",
+		sessionId: "sdfsdg",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
 		clientSessionId: "sdfssg",
@@ -41,8 +41,6 @@ function getMockSessionItem() : ISessionItem {
 		given_names: ["given", "name"],
 		family_names: ["family", "name"],
 		date_of_birth: "09-08-1961",
-		document_selected: "Passport",
-		date_of_expiry: "23-04-1027",
 		authSessionState: "CIC_ACCESS_TOKEN_ISSUED",
 	};
 	return sess;
@@ -138,9 +136,7 @@ describe("UserInfoRequestProcessor", () => {
 		"given_names",
 		"family_names",
 		"date_of_birth",
-		"document_selected",
-		"date_of_expiry",
-	])("when %s userInfo data is missing - will return error", async (userInfoData ) => {
+	])("when %s userInfo data is missing - will return error", async (userInfoData) => {
 		// @ts-ignore
 		mockSession[userInfoData] = "";
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
