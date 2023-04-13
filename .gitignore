@@ -10,3 +10,10 @@ coverage
 
 ### Environment ###
 **/.env
+
+
+### Logs ###
+**/.DS_Store
+
+### Environment ###
+**/.env

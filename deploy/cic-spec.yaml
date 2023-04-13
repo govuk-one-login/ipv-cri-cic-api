@@ -783,8 +783,6 @@ components:
         - given_names
         - family_names
         - date_of_birth
-        - document_selected
-        - date_of_expiry
       properties:
         given_names:
           type: string
@@ -799,26 +797,6 @@ components:
           format: date
           example: "1970-01-01"
           description: claimed Date of Birth
-        document_selected:
-          type: string
-          example: brp
-          description: >-
-            specifies which of the available supported document types the user elected to present for offline
-            verification
-          enum:
-            - ukPassport
-            - ukPhotocardDl
-            - brp
-            - otherPassport
-            - euPhotocardDl
-            - euIdentityCard
-            - citizenCard
-            - youngScotNationalEntitlementCard
-        date_of_expiry:
-          type: string
-          format: date
-          example: "1970-01-01"
-          description: claimed expiry date for the document to be presented at the post office
     JWKSFile:
       type: object
       required:

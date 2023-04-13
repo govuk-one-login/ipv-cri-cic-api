@@ -18,15 +18,15 @@ import { ValidationHelper } from "../../../utils/ValidationHelper";
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
-let mockSession : ISessionItem;
+let mockSession: ISessionItem;
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapterForVc(true);
 
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
-function getMockSessionItem() : ISessionItem {
+function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
-		sessionId : "sdfsdg",
+		sessionId: "sdfsdg",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
 		clientSessionId: "sdfssg",
@@ -44,8 +44,6 @@ function getMockSessionItem() : ISessionItem {
 		given_names: ["FRED", "NICK"],
 		family_names: ["OTHER", "NAME"],
 		date_of_birth: "01-01-1960",
-		document_selected: "brp",
-		date_of_expiry: "23-04-2024",
 		authSessionState: "CIC_ACCESS_TOKEN_ISSUED",
 	};
 	return sess;

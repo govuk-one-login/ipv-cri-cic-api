@@ -1,6 +1,5 @@
-import { startStubServiceAndReturnSessionId, stubStartPost, sessionPost } from "../../utils/apiTestSteps";
-import * as data from "../../data/happyPathSlim.json";
-import { assertStatusCode, assertResponseMessage, assertResponseData } from "../../utils/apiHelper";
+import { stubStartPost, sessionPost } from "../utils/ApiTestSteps";
+import { assertStatusCode, assertResponseMessage, assertResponseData } from "../utils/ApiHelper";
 
 
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {

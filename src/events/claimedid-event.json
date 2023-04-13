@@ -1,5 +1,5 @@
 {
-  "body": "{ \"given_names\": \"Given name\",\"family_names\": \"FamilyName\",\"dateOfBirth\": \"1970-01-01\", \"documentSelected\": \"UK Passport\", \"dateOfExpiry\": \"2027-01-01\"}",
+  "body": "{ \"given_names\": \"Given name\",\"family_names\": \"FamilyName\",\"dateOfBirth\": \"1970-01-01\"}",
   "resource": "/claimedIdentity",
   "httpMethod": "POST",
   "headers": {
