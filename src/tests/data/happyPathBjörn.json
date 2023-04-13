@@ -1,7 +1,5 @@
 {
     "firstName": "Björn",
     "lastName": "Bønd",
-    "dateOfBirth": "1985-01-25",
-    "identityType": "brp",
-    "dateOfExpiry": "2024-06-15"
+    "dateOfBirth": "1985-01-25"
 }

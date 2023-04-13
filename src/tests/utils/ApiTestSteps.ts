@@ -27,13 +27,13 @@ export async function sessionPost(clientId?: string, request?: string):Promise<a
 	} 
 }
 
-export async function claimedIdentityPost(givenName: string, familyName: string, dob: string, doc_selected?: string, doe?: string, sessionId?: string):Promise<any> {
+export async function claimedIdentityPost(givenName: string, familyName: string, dob: string, sessionId?: string):Promise<any> {
 	const path = "/claimedIdentity";
 	try {
 		const postRequest = await post(API_INSTANCE, "/claimedIdentity", { 
 			"given_names" : givenName, 
 			"family_names" : familyName, 
-			"date_of_birth": dob 
+			"date_of_birth": dob, 
 		}, { headers:{ "x-govuk-signin-session-id": sessionId } });
 		return postRequest;
 	} catch (error: any) {
