@@ -19,6 +19,7 @@ export async function sessionPost(clientId?: string, request?: string):Promise<a
 	const path = "/session";
 	try {
 		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
+		expect(postRequest.status).toBe(200);
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);

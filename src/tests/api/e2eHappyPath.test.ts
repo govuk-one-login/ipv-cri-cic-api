@@ -7,7 +7,6 @@ describe("E2E Happy Path Tests Slim", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
-		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
 
@@ -34,7 +33,6 @@ describe("E2E Happy Path Tests Björn", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
-		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
 
