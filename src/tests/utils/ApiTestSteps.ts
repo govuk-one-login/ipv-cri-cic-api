@@ -1,6 +1,5 @@
 import axios from "axios";
 import { constants } from "../utils/ApiConstants";
-import { assertStatusCode, post, get } from "../utils/ApiHelper";
 import { jwtUtils } from "../../utils/JwtUtils";
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 
@@ -11,15 +10,15 @@ export async function startStubServiceAndReturnSessionId(): Promise<any> {
 
 export async function stubStartPost():Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
-	const postRequest = await post(axios, `${path}`, { target:constants.DEV_CRI_CIC_API_URL }, null);
-	assertStatusCode(201, postRequest.status, postRequest.statusText);
+	const postRequest = await axios.post(`${path}`, { target:constants.DEV_CRI_CIC_API_URL });
+	expect(postRequest.status).toBe(201);
 	return postRequest;
 }
 
 export async function sessionPost(clientId?: string, request?: string):Promise<any> {
 	const path = "/session";
 	try {
-		const postRequest = await post(API_INSTANCE, path, { client_id: clientId, request }, null);
+		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -30,7 +29,7 @@ export async function sessionPost(clientId?: string, request?: string):Promise<a
 export async function claimedIdentityPost(givenName: any, familyName: any, dob: any, sessionId?: any):Promise<any> {
 	const path = "/claimedIdentity";
 	try {
-		const postRequest = await post(API_INSTANCE, "/claimedIdentity", { 
+		const postRequest = await API_INSTANCE.post("/claimedIdentity", { 
 			"given_names" : givenName, 
 			"family_names" : familyName, 
 			"date_of_birth": dob, 
@@ -45,7 +44,7 @@ export async function claimedIdentityPost(givenName: any, familyName: any, dob: 
 export async function authorizationGet(sessionId: any):Promise<any> {
 	const path = "/authorization";
 	try {
-		const getRequest = await get(API_INSTANCE, "/authorization", { headers:{ "session-id": sessionId } });
+		const getRequest = await API_INSTANCE.get( "/authorization", { headers:{ "session-id": sessionId } });
 		return getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -56,7 +55,7 @@ export async function authorizationGet(sessionId: any):Promise<any> {
 export async function tokenPost(authCode?: any, redirectUri?: any ):Promise<any> {
 	const path = "/token";
 	try {
-		const postRequest = await post(API_INSTANCE, "/token", `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}`, { headers:{ "Content-Type" : "text/plain" } });
+		const postRequest = await API_INSTANCE.post( "/token", `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}`, { headers:{ "Content-Type" : "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -67,7 +66,7 @@ export async function tokenPost(authCode?: any, redirectUri?: any ):Promise<any>
 export async function userInfoPost(accessToken?: any):Promise<any> {
 	const path = "/userInfo";
 	try {
-		const postRequest = await post(API_INSTANCE, "/userInfo", null, { headers: { "Authorization": `Bearer ${accessToken}` } });
+		const postRequest = await API_INSTANCE.post( "/userInfo", null, { headers: { "Authorization": `Bearer ${accessToken}` } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -79,7 +78,8 @@ export async function wellKnownGet():Promise<any> {
 	console.log(constants.DEV_CRI_CIC_API_URL);
 	const path = "/.well-known/jwks.json";
 	try {
-		const getRequest = await get(API_INSTANCE, "/.well-known/jwks.json", null);	return getRequest;
+		const getRequest = await API_INSTANCE.get( "/.well-known/jwks.json");	
+		return getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;

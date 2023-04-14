@@ -1,6 +1,5 @@
 import * as dataSlim from "../data/happyPathSlim.json";
 import * as dataBjorn from "../data/happyPathBjörn.json";
-import { assertStatusCode } from "../utils/ApiHelper";
 import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, wellKnownGet, userInfoPost, validateJwtToken, validateWellKnownReponse } from "../utils/ApiTestSteps";
 
 
@@ -8,7 +7,7 @@ describe("E2E Happy Path Tests Slim", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
-		assertStatusCode(200, sessionResponse.status, sessionResponse.statusText);
+		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
 
@@ -16,17 +15,17 @@ describe("E2E Happy Path Tests Slim", () => {
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
 		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, dataSlim.dateOfBirth, sessionId);
-		assertStatusCode(200, calimedIdentityResponse.status, calimedIdentityResponse.statusText);
+		expect(calimedIdentityResponse.status).toBe(200);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
-		assertStatusCode(200, authResponse.status, authResponse.statusText);
+		expect(authResponse.status).toBe(200);
 		// Post Token
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
-		assertStatusCode(201, tokenResponse.status, tokenResponse.statusText);
+		expect(tokenResponse.status).toBe(201);
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		validateJwtToken(JSON.stringify(userInfoResponse.data), dataSlim);
-		assertStatusCode(200, userInfoResponse.status, userInfoResponse.statusText);
+		expect(userInfoResponse.status).toBe(200);
 	});
 
 });
@@ -35,7 +34,7 @@ describe("E2E Happy Path Tests Björn", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
-		assertStatusCode(200, sessionResponse.status, sessionResponse.statusText);
+		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
 
@@ -43,17 +42,17 @@ describe("E2E Happy Path Tests Björn", () => {
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
 		const calimedIdentityResponse = await claimedIdentityPost(dataBjorn.firstName, dataBjorn.lastName, dataBjorn.dateOfBirth, sessionId);
-		assertStatusCode(200, calimedIdentityResponse.status, calimedIdentityResponse.statusText);
+		expect(calimedIdentityResponse.status).toBe(200);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
-		assertStatusCode(200, authResponse.status, authResponse.statusText);
+		expect(authResponse.status).toBe(200);
 		// Post Token
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
-		assertStatusCode(201, tokenResponse.status, tokenResponse.statusText);
+		expect(tokenResponse.status).toBe(201);
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		validateJwtToken(JSON.stringify(userInfoResponse.data), dataBjorn);
-		assertStatusCode(200, userInfoResponse.status, userInfoResponse.statusText);
+		expect(userInfoResponse.status).toBe(200);
 	});
 
 });
@@ -63,6 +62,6 @@ describe("E2E Happy Path Well Known Endpoint", () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
 		validateWellKnownReponse(wellKnownResponse.data);
-		assertStatusCode(200, wellKnownResponse.status, wellKnownResponse.statusText);
+		expect(wellKnownResponse.status).toBe(200);
 	});
 });
