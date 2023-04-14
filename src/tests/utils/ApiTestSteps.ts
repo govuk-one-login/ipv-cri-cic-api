@@ -27,7 +27,7 @@ export async function sessionPost(clientId?: string, request?: string):Promise<a
 	} 
 }
 
-export async function claimedIdentityPost(givenName: string, familyName: string, dob: string, sessionId?: string):Promise<any> {
+export async function claimedIdentityPost(givenName: any, familyName: any, dob: any, sessionId?: any):Promise<any> {
 	const path = "/claimedIdentity";
 	try {
 		const postRequest = await post(API_INSTANCE, "/claimedIdentity", { 
