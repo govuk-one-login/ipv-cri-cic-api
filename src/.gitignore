@@ -3,4 +3,9 @@ coverage/
 dist/
 .aws-sam
 reports/
-build/
+
+### Logs ###
+**/.DS_Store
+
+### Environment ###
+**/.env
