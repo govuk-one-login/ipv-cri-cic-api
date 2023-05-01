@@ -1,4 +1,4 @@
-name: Pre-merge checks
+ame: Pre-merge checks
 on:
   pull_request:
     types:
