@@ -19,9 +19,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.16.0
-          cache: 'yarn'
       - name: Install dependencies
-        run: yarn install
+        run: yarn
       - name: Run lint
         run: yarn lint
       - name: Run test and write coverage
