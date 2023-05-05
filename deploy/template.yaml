@@ -38,6 +38,10 @@ Parameters:
     Type: String
     Default: "cic-cri-kms"
     Description: The name of the L2 DynamoDB stack deployed.
+  PowertoolsLogLevel:
+    Type: String
+    Default: "INFO"
+    Description: Lambda Powertools-for-Typescript Log Level
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -165,7 +169,7 @@ Globals:
       Variables:
         # These should always be alphabetically organised.
         AWS_STACK_NAME: !Sub ${AWS::StackName} # The AWS Stack Name, as passed into the template.
-        POWERTOOLS_LOG_LEVEL: INFO # The LogLevel for the AWS PowerTools LogHelper
+        POWERTOOLS_LOG_LEVEL: !Ref PowertoolsLogLevel # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
         ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
         REGION: !Sub "${AWS::Region}"
