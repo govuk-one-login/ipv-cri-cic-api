@@ -22,19 +22,12 @@ Parameters:
     Description: The stack name of the API stack under test
     Default: cic-cri-api
     Type: String
-  FrontendStack:
-    Description: The stack name of the Frontend stack under test
-    Default: cic-cri-front
-    Type: String
-  VpcStackName:
-    Description: >
-      The name of the stack that defines the VPC in which this container will
-      run. This should stop anyone not on the GDS VPN or internal to AWS from 
-      calling this stuff.
-    Default: vpc-cri
-    Type: String
   PermissionsBoundary:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
+    Type: String
+    Default: "none"
+  OidcFrontBaseUri:
+    Description: "Custom OIDC Frontend Base URI"
     Type: String
     Default: "none"
 
@@ -64,6 +57,11 @@ Conditions:
     Fn::Not:
       - Fn::Equals:
           - !Ref PermissionsBoundary
+          - "none"
+  UseCustomOidcFrontBaseUri:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref OidcFrontBaseUri
           - "none"
 
 Globals:
@@ -295,8 +293,10 @@ Resources:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
-          JWKS_URI: !Sub "https://api.review-c.${Environment}.account.gov.uk/.well-known/jwks.json"
-          OIDC_FRONT_BASE_URI: !Sub  "https://review-c.${Environment}.account.gov.uk"
+          OIDC_FRONT_BASE_URI: !If
+            - UseCustomOidcFrontBaseUri
+            - !Ref OidcFrontBaseUri
+            - !Sub "https://review-c.${Environment}.account.gov.uk"
       Policies:
         - Statement:
             - Sid: KMSSignPolicy

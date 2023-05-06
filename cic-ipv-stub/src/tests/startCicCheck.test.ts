@@ -76,7 +76,6 @@ describe("Start CIC Check Endpoint", () => {
 
   it("returns JAR data and target uri", async () => {
     process.env.REDIRECT_URI = "test.com/callback";
-    process.env.JWKS_URI = "test.com/.well-known/jwks.json";
     process.env.CLIENT_ID = "test-id";
     process.env.SIGNING_KEY = "key-id";
     process.env.OIDC_FRONT_BASE_URI = "test-target.com";

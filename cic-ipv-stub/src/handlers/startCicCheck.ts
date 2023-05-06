@@ -85,14 +85,12 @@ export const handler = async (
 
 export function getConfig(): {
   redirectUri: string;
-  jwksUri: string;
   clientId: string;
   signingKey: string;
   oidcUri: string;
 } {
   if (
     process.env.REDIRECT_URI == null ||
-    process.env.JWKS_URI == null ||
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
     process.env.OIDC_FRONT_BASE_URI == null
@@ -102,7 +100,6 @@ export function getConfig(): {
 
   return {
     redirectUri: process.env.REDIRECT_URI,
-    jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
     oidcUri: process.env.OIDC_FRONT_BASE_URI,
