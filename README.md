@@ -85,16 +85,29 @@ Run tests against a CloudFormation stack deployed into AWS: `STACK_NAME=cic-back
 
 This file contains an example of the environment variables that this project requires. To use it, copy the file to `.env` and replace the values with your actual sensitive information.
 To copy the file, run the following command in your terminal:
-```console
+
+```shell
 cp .env.example .env
 ```
+
 Then, open the `.env` file and replace ALL the values with your actual sensitive information.
 Note: The `.env` file should not be committed to the repository, as it contains sensitive information.
+
+## Stack deployment in DEV
+
+To deploy an individual stack in the DEV account from a local branch with full DEBUG logging in the lambdas:
+
+```shell
+cd ./deploy
+sam build --parallel
+sam deploy --resolve-s3 --stack-name "YOUR_STACK_NAME" --confirm-changeset --config-env dev --parameter-overrides \
+  "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" CommonStackName=\"common-cri-api\" L2DynamoStackName=\"infra-l2-dynamo\" L2KMSStackName=\"infra-l2-kms\" PowertoolsLogLevel=\"DEBUG\""
+```
 
 # Generating JWKS
 
 The public JWKS is not generated automatically when deploying a stack. In order to run the E2E tests, or to successfully call the ./wellknown/jwks endpoint, the key needs to be generated. It can be done as follows:
 
-```bash
+```shell
 aws lambda invoke --function-name JsonWebKeys-<STACK-NAME> response.json
 ```
