@@ -932,4 +932,4 @@ Outputs:
       - DNSSUFFIX:
           !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
     Export:
-      Name: !Sub ${AWS::StackName}-F2FBackendURL
+      Name: !Sub ${AWS::StackName}-CICBackendURL
