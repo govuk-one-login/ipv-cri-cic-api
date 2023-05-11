@@ -925,3 +925,11 @@ Outputs:
     Value: !Sub "${CICRestApi}"
     Export:
       Name: !Sub ${AWS::StackName}-CICApiGatewayId
+  CICBackendURL:
+    Description: "CIC Backend URL"
+    Value: !Sub
+      - "https://api-${AWS::StackName}.${DNSSUFFIX}/"
+      - DNSSUFFIX:
+          !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+    Export:
+      Name: !Sub ${AWS::StackName}-F2FBackendURL
