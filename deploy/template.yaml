@@ -265,7 +265,7 @@ Resources:
       TracingEnabled: true
       Tags:
         Product: GOV.UK Sign In
-        System: F2F
+        System: CIC
         Environment: !Ref Environment
         Service: backend
         Name: CICRestApi
@@ -298,8 +298,7 @@ Resources:
   ### API Gateway Custom Domain definition
 
   CICApiCustomDomain:
-    Type: AWS::ApiGatewayV2::DomainName
-    Condition: CreateNonProdResources
+    Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !If
         - CreateDevResources
@@ -311,35 +310,29 @@ Resources:
           - "api.${DNSSUFFIX}"
           - DNSSUFFIX:
              !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-      DomainNameConfigurations:
-        - CertificateArn: !Ref CICCertificate
-          EndpointType: REGIONAL
-          SecurityPolicy: TLS_1_2
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+      SecurityPolicy: TLS_1_2
 
-  CICApiRecord:
+  CICApiCertificateRecord:
     Type: AWS::Route53::RecordSet
-    Condition: CreateNonProdResources
     Properties:
-      # Name: !Sub "api.review-c.${Environment}.account.gov.uk."
-      Name: !Sub "api.${DNSSUFFIX}"
+      Name: !Ref CICApiCustomDomainName
       Type: A
-      HostedZoneId: !ImportValue PublicHostedZoneId
+      HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
       AliasTarget:
-        DNSName: !GetAtt CICApiCustomDomain.RegionalDomainName
-        HostedZoneId: !GetAtt CICApiCustomDomain.RegionalHostedZoneId
-        EvaluateTargetHealth: false
+        DNSName: !GetAtt CICApiCustomDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt CICApiCustomDomainName.RegionalHostedZoneId
 
   CICApiMapping:
-    Type: AWS::ApiGatewayV2::ApiMapping
-    Condition: CreateNonProdResources
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: "CICApiCustomDomainName"
     Properties:
-      DomainName: !Sub "api.review-c.${Environment}.account.gov.uk"
-      ApiId:
-        Fn::ImportValue:
-          !Sub cic-cri-api-CICApiGatewayId
-      Stage: !Ref Environment
-    DependsOn:
-      - CICApiCustomDomain
+      DomainName: !Ref CICApiCustomDomainName
+      RestApiId: !Ref CICRestApi
+      Stage: !Sub "${CICRestApi.Stage}"
 
   ### End of API Gateway Custom Domain definition
 
