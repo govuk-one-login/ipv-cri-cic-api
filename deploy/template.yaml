@@ -297,7 +297,7 @@ Resources:
 
   ### API Gateway Custom Domain definition
 
-  CICApiCustomDomain:
+  CICApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !If
@@ -316,7 +316,7 @@ Resources:
       RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
       SecurityPolicy: TLS_1_2
 
-  CICProdApiCustomDomain:
+  CICProdApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Condition: CreateProdResources
     Properties:
@@ -350,6 +350,47 @@ Resources:
       Stage: !Sub "${CICRestApi.Stage}"
 
   ### End of API Gateway Custom Domain definition
+
+  ### Stub Custom Domain definition
+
+  StubApiCustomDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Condition: CreateStub
+    Properties:
+      DomainName: 
+        - !Sub
+          - "ipvstub.${DNSSUFFIX}"
+          - DNSSUFFIX:
+             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+      SecurityPolicy: TLS_1_2
+
+  StubApiRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateStub
+    Properties:
+      Name: !Ref StubApiCustomDomainName
+      Type: A
+      HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
+      AliasTarget:
+        DNSName: !GetAtt StubApiCustomDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt StubApiCustomDomainName.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+
+  StubApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: "StubApiCustomDomainName"
+    Condition: CreateStub
+    Properties:
+      DomainName: !Ref StubApiCustomDomainName
+      ApiId:
+        Fn::ImportValue: cic-cri-IPVStubApiGw
+      Stage: !Ref Environment
+
+  ### End of Custom Domain definition
 
   ### Function Definition
 
