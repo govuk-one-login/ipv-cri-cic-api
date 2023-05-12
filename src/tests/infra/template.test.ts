@@ -121,15 +121,15 @@ describe("Infra", () => {
 	});
 
 	it("should define an output with the API Gateway ID", () => {
-		template.hasOutput("F2FApiGatewayId", {
+		template.hasOutput("CICApiGatewayId", {
 			Value: {
-				"Fn::Sub": "${F2FRestApi}",
+				"Fn::Sub": "${CICRestApi}",
 			},
 		});
 	});
 
-	it("should define an output with the F2F Backend URL using the custom domain name", () => {
-		template.hasOutput("F2FBackendURL", {
+	it("should define an output with the CIC Backend URL using the custom domain name", () => {
+		template.hasOutput("CICBackendURL", {
 			Value: {
 				"Fn::Sub": [
 					"https://api-${AWS::StackName}.${DNSSUFFIX}/",
