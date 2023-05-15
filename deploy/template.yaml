@@ -258,6 +258,14 @@ Resources:
         OpenApiVersion: 3.0.1
 
       TracingEnabled: true
+      MethodSettings:
+        - LoggingLevel: INFO
+          MetricsEnabled: true
+          ThrottlingBurstLimit: 400
+          ThrottlingRateLimit: 200
+          DataTraceEnabled: true
+          HttpMethod: "*"
+          ResourcePath: "/*"
       Tags:
         Product: GOV.UK Sign In
         System: F2F
