@@ -316,21 +316,6 @@ Resources:
       RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
       SecurityPolicy: TLS_1_2
 
-  CICProdApiCustomDomainName:
-    Type: AWS::ApiGateway::DomainName
-    Condition: CreateProdResources
-    Properties:
-      DomainName: 
-        - !Sub
-          - "api.${DNSSUFFIX}"
-          - DNSSUFFIX:
-             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
-      SecurityPolicy: TLS_1_2
-
   CICApiCertificateRecord:
     Type: AWS::Route53::RecordSet
     Properties:
