@@ -169,8 +169,7 @@ Resources:
     DependsOn: "StubApiCustomDomainName"
     Properties:
       DomainName: !Ref StubApiCustomDomainName
-      ApiId:
-        Fn::ImportValue: cic-cri-IPVStubApiGw
+      RestApiId: !Ref IPVStubApiGw
       Stage: !Ref Environment
 
   # Redirect ---------------------------------------
