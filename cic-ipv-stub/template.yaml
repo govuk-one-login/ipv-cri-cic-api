@@ -51,6 +51,18 @@ Mappings:
     production:
       IPVStubID: "C910A762"
 
+  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
+    dev:
+      DNSSUFFIX: review-c.dev.account.gov.uk
+    build:
+      DNSSUFFIX: review-c.build.account.gov.uk
+    staging:
+      DNSSUFFIX: review-c.staging.account.gov.uk
+    integration:
+      DNSSUFFIX: review-c.integration.account.gov.uk
+    production:
+      DNSSUFFIX: review-c.account.gov.uk
+
 Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
@@ -130,11 +142,10 @@ Resources:
   StubApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: 
-        - !Sub
-          - "ipvstub.${DNSSUFFIX}"
-          - DNSSUFFIX:
-             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+      DomainName: !Sub
+        - "ipvstub.${DNSSUFFIX}"
+        - DNSSUFFIX:
+            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       EndpointConfiguration:
         Types:
           - REGIONAL
@@ -157,8 +168,7 @@ Resources:
     DependsOn: "StubApiCustomDomainName"
     Properties:
       DomainName: !Ref StubApiCustomDomainName
-      ApiId:
-        Fn::ImportValue: cic-cri-IPVStubApiGw
+      RestApiId: !Ref IPVStubApiGw
       Stage: !Ref Environment
 
   # Redirect ---------------------------------------
