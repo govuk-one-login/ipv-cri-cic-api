@@ -22,6 +22,7 @@ const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
 class UserInfo implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
+	@logger.injectLambdaContext()
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 		switch (event.resource) {
 			case ResourcesEnum.USERINFO:
@@ -37,6 +38,7 @@ class UserInfo implements LambdaInterface {
 				return new Response(HttpCodesEnum.NOT_FOUND, "");
 
 			default:
+				logger.error("Requested resource does not exist", { resource: event.resource });
 				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
 
 		}

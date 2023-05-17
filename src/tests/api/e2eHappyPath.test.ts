@@ -13,8 +13,8 @@ describe("E2E Happy Path Tests Slim", () => {
 	it("E2E Happy Path Journey - User Info Slim", async () => {
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
-		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, dataSlim.dateOfBirth, sessionId);
-		expect(calimedIdentityResponse.status).toBe(200);
+		const claimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, dataSlim.dateOfBirth, sessionId);
+		expect(claimedIdentityResponse.status).toBe(200);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 		expect(authResponse.status).toBe(200);
@@ -39,8 +39,8 @@ describe("E2E Happy Path Tests Björn", () => {
 	it("E2E Happy Path Journey - User Info Björn", async () => {
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
-		const calimedIdentityResponse = await claimedIdentityPost(dataBjorn.firstName, dataBjorn.lastName, dataBjorn.dateOfBirth, sessionId);
-		expect(calimedIdentityResponse.status).toBe(200);
+		const claimedIdentityResponse = await claimedIdentityPost(dataBjorn.firstName, dataBjorn.lastName, dataBjorn.dateOfBirth, sessionId);
+		expect(claimedIdentityResponse.status).toBe(200);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 		expect(authResponse.status).toBe(200);
