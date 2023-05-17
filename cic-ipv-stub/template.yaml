@@ -324,8 +324,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "StartCICCheckFunction-${AWS::StackName}"
-      Handler: handlers/startCicCheck.handler
-      CodeUri: src/
+      Handler: startCicCheck.handler
+      CodeUri: src/handlers/
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
@@ -353,7 +353,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - handlers/startCicCheck.ts
+          - startCicCheck.ts
 
   StartCICCheckFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -375,8 +375,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "IPVStubJWKS-${AWS::StackName}"
-      Handler: handlers/jsonWebKeys.handler
-      CodeUri: src/
+      Handler: jsonWebKeys.handler
+      CodeUri: src/handlers/
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
@@ -400,7 +400,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - handlers/jsonWebKeys.ts
+          - jsonWebKeys.ts
 
   JwksFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -422,8 +422,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "IPVStubRedirect-${AWS::StackName}"
-      Handler: handlers/callback.handler
-      CodeUri: ./src/
+      Handler: callback.handler
+      CodeUri: src/handlers/
       Role: !GetAtt IPVStubLambdaRole.Arn
     Metadata:
       BuildMethod: esbuild
@@ -432,7 +432,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - handlers/callback.ts
+          - callback.ts
 
   IPVStubRedirectFunctionPermission:
     Type: AWS::Lambda::Permission
