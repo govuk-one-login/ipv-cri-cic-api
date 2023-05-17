@@ -51,7 +51,7 @@ Mappings:
     production:
       IPVStubID: "C910A762"
 
-EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
+  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       DNSSUFFIX: review-c.dev.account.gov.uk
     build:
@@ -142,11 +142,10 @@ Resources:
   StubApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: 
-        - !Sub
-          - "ipvstub.${DNSSUFFIX}"
-          - DNSSUFFIX:
-             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+      DomainName: !Sub
+        - "ipvstub.${DNSSUFFIX}"
+        - DNSSUFFIX:
+            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       EndpointConfiguration:
         Types:
           - REGIONAL
