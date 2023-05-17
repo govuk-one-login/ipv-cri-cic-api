@@ -129,7 +129,6 @@ Resources:
 
   StubApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
-    Condition: CreateStub
     Properties:
       DomainName: 
         - !Sub
@@ -144,7 +143,6 @@ Resources:
 
   StubApiRecord:
     Type: AWS::Route53::RecordSet
-    Condition: CreateStub
     Properties:
       Name: !Ref StubApiCustomDomainName
       Type: A
@@ -157,7 +155,6 @@ Resources:
   StubApiMapping:
     Type: AWS::ApiGateway::BasePathMapping
     DependsOn: "StubApiCustomDomainName"
-    Condition: CreateStub
     Properties:
       DomainName: !Ref StubApiCustomDomainName
       ApiId:
