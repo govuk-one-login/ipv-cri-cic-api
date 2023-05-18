@@ -77,7 +77,7 @@ Mappings:
     dev:
       ISSUER: "https://review-c.dev.account.gov.uk"
       DNSSUFFIX: review-c.dev.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
+      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"},{"jwksEndpoint":"https://backend-ddunford-cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"3D4D532D","redirectUri":"https://backend-ddunford-cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
       DOMAIN: "dev.review-c.dev.account.gov.uk"

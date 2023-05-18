@@ -8,6 +8,7 @@ import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { UserInfoRequestProcessor } from "./services/UserInfoRequestProcessor";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants } from "./utils/Constants";
+import { MessageCodes } from "./models/enums/MessageCodes";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
@@ -23,7 +24,7 @@ class UserInfo implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	@logger.injectLambdaContext()
-	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
+	async handler(event: APIGatewayProxyEvent, _context: any): Promise<APIGatewayProxyResult> {
 		switch (event.resource) {
 			case ResourcesEnum.USERINFO:
 				if (event.httpMethod === "POST") {
@@ -31,15 +32,22 @@ class UserInfo implements LambdaInterface {
 						logger.info("Received userInfo request:", { event });
 						return await UserInfoRequestProcessor.getInstance(logger, metrics).processRequest(event);
 					} catch (err) {
-						logger.error({ message: "An error has occurred. ", err });
+						logger.error({
+							message: "An error has occurred.",
+							err,
+							messageCode: MessageCodes.SERVER_ERROR,
+						});
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 					}
 				}
 				return new Response(HttpCodesEnum.NOT_FOUND, "");
 
 			default:
-				logger.error("Requested resource does not exist", { resource: event.resource });
-				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
+				logger.error("Requested resource does not exist", {
+					resource: event.resource,
+					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
+				});
+				throw new AppError("Requested resource does not exist " + event.resource, HttpCodesEnum.NOT_FOUND);
 
 		}
 	}

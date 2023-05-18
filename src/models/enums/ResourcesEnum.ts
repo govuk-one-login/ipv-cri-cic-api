@@ -1,5 +1,5 @@
 /**
- * Enum for TDS's available resources (endpoints).
+ * Enum for available resources (endpoints).
  */
 export enum ResourcesEnum {
 	CLAIMEDIDENTITY = "/claimedIdentity",
