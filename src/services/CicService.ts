@@ -20,6 +20,7 @@ import {
 	Address,
 	BirthDate,
 	Name,
+	NamePart,
 	PersonIdentity,
 } from "../models/PersonIdentity";
 import {
@@ -88,26 +89,50 @@ export class CicService {
 	}
 
 	async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
-		const saveCICCommand: any = new UpdateCommand({
+		const personNames = this.mapClaimedNames(cicData.given_names, cicData.family_names);
+		const personBirthDay = this.mapClaimedBirthDay(cicData.date_of_birth);
+
+		const saveCICPersonInfoCommand: any = new UpdateCommand({
+			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+			Key: { sessionId },
+			UpdateExpression:
+				"SET names = :names, birthDates = :date_of_birth",
+
+			ExpressionAttributeValues: {
+				":given_names": personNames,
+				":date_of_birth": personBirthDay,
+			},
+		});
+
+		const updateSessionAuthStateCommand: any = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
 			UpdateExpression:
-				"SET given_names = :given_names, family_names = :family_names, date_of_birth = :date_of_birth, authSessionState = :authSessionState",
+				"SET authSessionSate = :authSessionState",
 
 			ExpressionAttributeValues: {
-				":given_names": cicData.given_names,
-				":family_names": cicData.family_names,
-				":date_of_birth": cicData.date_of_birth,
 				":authSessionState": AuthSessionState.CIC_DATA_RECEIVED,
-			},
+			}
 		});
 
 		this.logger.info({
 			message: "updating CIC data in dynamodb",
-			saveCICCommand,
+			saveCICPersonInfoCommand,
+			updateSessionAuthStateCommand
 		});
 		try {
-			await this.dynamo.send(saveCICCommand);
+			await this.dynamo.send(saveCICPersonInfoCommand);
+			this.logger.info({ message: "updated CIC user info in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "got error saving CIC user data", error });
+			throw new AppError(
+				"Failed to set claimed identity data ",
+				HttpCodesEnum.SERVER_ERROR,
+			);
+		}
+
+		try {
+			await this.dynamo.send(updateSessionAuthStateCommand);
 			this.logger.info({ message: "updated CIC data in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "got error saving CIC data", error });
@@ -269,6 +294,14 @@ export class CicService {
 		return birthDates?.map((bd) => ({ value: bd.value }));
 	}
 
+	private mapClaimedBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
+		return [
+			{
+				value: birthDay,
+			},
+		]
+	}
+
 	private mapNames(names: Name[]): PersonIdentityName[] {
 		return names?.map((name) => ({
 			nameParts: name?.nameParts?.map((namePart) => ({
@@ -276,6 +309,31 @@ export class CicService {
 				value: namePart.value,
 			})),
 		}));
+	}
+
+	private mapClaimedNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
+		const nameParts: NamePart[] = [];
+		givenNames.forEach((givenName) => {
+			nameParts.push(
+				{
+					type: "GivenName",
+					value: givenName
+				},
+			);
+		});
+		familyNames.forEach((familyName) => {
+			nameParts.push(
+				{
+					type: "FamilyName",
+					value: familyName
+				},
+			);
+		});
+		return [
+			{
+				nameParts: nameParts,
+			},
+		]
 	}
 
 	private createPersonIdentityItem(
