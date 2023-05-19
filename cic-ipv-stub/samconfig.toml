@@ -9,13 +9,3 @@ confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "BackendStack=\"backend-main\""
 image_repositories = []
-
-[ddunford.deploy.parameters]
-stack_name = "backend-ddunford-cic-ipv-stub"
-resolve_s3 = true
-s3_prefix = "backend-ddunford-cic-ipv-stub"
-region = "eu-west-2"
-confirm_changeset = true
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "OidcFrontBaseUri=\"https://snkb4f37ij.execute-api.eu-west-2.amazonaws.com/dev\" JwksUri=\"unused\" CodeSigningConfigArn=\"none\" Environment=\"dev\" BackendStack=\"backend-ddunford-cic\" FrontendStack=\"cic-cri-front\" VpcStackName=\"vpc-cri\" PermissionsBoundary=\"none\""
-image_repositories = []

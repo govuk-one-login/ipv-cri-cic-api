@@ -77,38 +77,33 @@ Mappings:
     dev:
       ISSUER: "https://review-c.dev.account.gov.uk"
       DNSSUFFIX: review-c.dev.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"},{"jwksEndpoint":"https://backend-ddunford-cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"3D4D532D","redirectUri":"https://backend-ddunford-cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/redirect"}]'
+      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
-      DOMAIN: "dev.review-c.dev.account.gov.uk"
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
-      DOMAIN: "build.review-c.dev.account.gov.uk"
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
-      DOMAIN: "staging.review-c.dev.account.gov.uk"
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
-      DOMAIN: "integration.review-c.dev.account.gov.uk"
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
-      DOMAIN: "review-c.dev.account.gov.uk"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -925,39 +920,6 @@ Resources:
       FunctionName: !GetAtt JsonWebKeysFunction.Arn
       Principal: events.amazonaws.com
 
-#  ExternalApiCustomDomain:
-#    Type: AWS::ApiGatewayV2::DomainName
-#    Condition: CreateDevResources
-#    Properties:
-#      DomainName: !Sub
-#        - "${AWS::StackName}-${IPVSTUBURL}"
-#        - IPVSTUBURL:
-#            !FindInMap [ EnvironmentVariables, !Ref Environment, DOMAIN ]
-#      DomainNameConfigurations:
-#        - CertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
-#          EndpointType: REGIONAL
-#          SecurityPolicy: TLS_1_2
-#
-#  ExternalApiRecord:
-#    Type: AWS::Route53::RecordSet
-#    Condition: CreateDevResources
-#    Properties:
-#      Name: !Ref ExternalApiCustomDomain
-#      Type: A
-#      HostedZoneId: !ImportValue PublicHostedZoneId
-#      AliasTarget:
-#        DNSName: !GetAtt ExternalApiCustomDomain.RegionalDomainName
-#        HostedZoneId: !GetAtt ExternalApiCustomDomain.RegionalHostedZoneId
-#        EvaluateTargetHealth: false
-#
-#  ExternalApiMapping:
-#    Type: AWS::ApiGatewayV2::ApiMapping
-#    Condition: CreateDevResources
-#    Properties:
-#      DomainName: !Ref ExternalApiCustomDomain
-#      ApiId: !Ref CICRestApi
-#      Stage: !Ref Environment
-#
 Outputs:
   CICApiGatewayId:
     Description: "API GatewayID of the CIC CRI API"
