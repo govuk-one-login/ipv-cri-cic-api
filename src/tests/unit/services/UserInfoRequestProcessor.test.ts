@@ -79,10 +79,12 @@ describe("UserInfoRequestProcessor", () => {
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(logger.info).toHaveBeenCalledTimes(2);
-		expect(logger.info).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
-		}));
+		});
 	});
 
 	it("Return 401 when Authorization header is missing in the request", async () => {
@@ -152,10 +154,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.body).toBe("Server Error");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 		expect(logger.error).toHaveBeenCalledTimes(1);
-		expect(logger.error).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
-		}));
+		});
 	});
 
 	it("Return 401 when AuthSessionState is not CIC_ACCESS_TOKEN_ISSUED", async () => {
@@ -167,10 +171,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.body).toContain("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
-		expect(logger.error).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
-		}));
+		});
 	});
 
 	it("Return 500 when Failed to sign the verifiableCredential Jwt", async () => {
@@ -183,10 +189,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.body).toContain("Server Error");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 		expect(logger.error).toHaveBeenCalledTimes(2);
-		expect(logger.error).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
-		}));
+		});
 	});
 
 	it("Return successful response with 200 OK when write to txMA fails", async () => {
@@ -199,10 +207,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
-		expect(logger.error).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
-		}));
+		});
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "ipv-core-stub",

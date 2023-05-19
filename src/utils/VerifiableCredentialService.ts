@@ -48,8 +48,6 @@ export class VerifiableCredentialService {
     	};
 
     	this.logger.info("Generated VerifiableCredential jwt", {
-    		sessionId: sessionItem.sessionId,
-    		govuk_signin_journey_id: sessionItem.clientSessionId,
     		jti: result.jti,
     	});
     	try {
@@ -58,8 +56,6 @@ export class VerifiableCredentialService {
     	} catch (error) {
     		this.logger.error("Failed to sign Jwt", {
     			error,
-    			sessionId: sessionItem.sessionId,
-    			govuk_signin_journey_id: sessionItem.clientSessionId,
     		});
     		throw new AppError( "Server Error", HttpCodesEnum.SERVER_ERROR);
     	}
