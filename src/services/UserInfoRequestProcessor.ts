@@ -13,6 +13,7 @@ import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
+import { MessageCodes } from "../models/enums/MessageCodes";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
@@ -35,7 +36,9 @@ export class UserInfoRequestProcessor {
 
   constructor(logger: Logger, metrics: Metrics) {
   	if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN) {
-  		logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN is not configured");
+  		logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN is not configured", {
+  			messageCode: MessageCodes.MISSING_CONFIGURATION,
+  		});
   		throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
   	}
   	this.logger = logger;
