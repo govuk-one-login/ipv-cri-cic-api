@@ -68,29 +68,16 @@ export class UserInfoRequestProcessor {
   		return new Response(HttpCodesEnum.SERVER_ERROR, "Unexpected error occurred");
   	}
 
+  	// add sessionId to all subsequent log messages
+  	this.logger.appendKeys({ sessionId: sub });
+
   	let session: ISessionItem | undefined;
   	try {
   		session = await this.cicService.getSessionById(sub);
   		if (!session) {
-  			this.logger.error("No session found", {
-  				sessionId: sub,
-  			});
+  			this.logger.error("No session found");
   			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   		}
-  		this.logger.info("Found Session:", {
-  			sessionId: sub,
-  			// note: we only log specific non-PII attributes from the session object:
-  			govuk_signin_journey_id: session.clientSessionId,
-  			session: {
-  				authSessionState: session.authSessionState,
-  				accessTokenExpiryDate: session.accessTokenExpiryDate,
-  				attemptCount: session.attemptCount,
-  				authorizationCodeExpiryDate: session.authorizationCodeExpiryDate,
-  				createdDate: session.createdDate,
-  				expiryDate: session.expiryDate,
-  				redirectUri: session.redirectUri,
-  			},
-  		});
   	} catch (err) {
   		this.logger.error("Error finding session", {
   			sessionId: sub,
@@ -99,13 +86,27 @@ export class UserInfoRequestProcessor {
   		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   	}
 
+  	// add govuk_signin_journey_id to all subsequent log messages
+  	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+
+  	this.logger.info("Found Session:", {
+  		// note: we only log specific non-PII attributes from the session object:
+  		session: {
+  			authSessionState: session.authSessionState,
+  			accessTokenExpiryDate: session.accessTokenExpiryDate,
+  			attemptCount: session.attemptCount,
+  			authorizationCodeExpiryDate: session.authorizationCodeExpiryDate,
+  			createdDate: session.createdDate,
+  			expiryDate: session.expiryDate,
+  			redirectUri: session.redirectUri,
+  		},
+  	});
+
   	this.metrics.addMetric("found session", MetricUnits.Count, 1);
   	// Validate the AuthSessionState to be "CIC_ACCESS_TOKEN_ISSUED"
   	if (session.authSessionState !== AuthSessionState.CIC_ACCESS_TOKEN_ISSUED) {
   		this.logger.error("Session is in wrong Auth state", {
-  			sessionId: sub,
   			// note: we only log specific non-PII attributes from the session object:
-  			govuk_signin_journey_id: session.clientSessionId,
   			expectedSessionState: AuthSessionState.CIC_ACCESS_TOKEN_ISSUED,
   			session: {
   				authSessionState: session.authSessionState,
@@ -117,10 +118,7 @@ export class UserInfoRequestProcessor {
   	// Validate the User Info data presence required to generate the VC
   	const isValidClaimedIdentity = this.validationHelper.validateClaimedIdentity(session, this.logger);
   	if (!isValidClaimedIdentity) {
-  		this.logger.error("Claimed Identity data invalid", {
-  			sessionId: sub,
-  			govuk_signin_journey_id: session.clientSessionId,
-  		});
+  		this.logger.error("Claimed Identity data invalid");
   		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   	}
 
@@ -131,8 +129,6 @@ export class UserInfoRequestProcessor {
   	} catch (error) {
   		if (error instanceof AppError) {
   			this.logger.error("Error generating signed verifiable credential jwt", {
-  				sessionId: sub,
-  				govuk_signin_journey_id: session.clientSessionId,
   				error,
   			});
   			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
@@ -148,11 +144,11 @@ export class UserInfoRequestProcessor {
   		});
   	} catch (error) {
   		this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
-  			sessionId: sub,
-  			govuk_signin_journey_id: session.clientSessionId,
   			error,
   		});
   	}
+
+  	// return success response
   	return new Response(HttpCodesEnum.OK, JSON.stringify({
   		sub: session.clientId,
   		"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],

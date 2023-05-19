@@ -1,5 +1,5 @@
 /**
- *  Enum for error codes used across the service
+ *  Enum for message codes used across the service
  */
 
 export enum MessageCodes {
