@@ -22,46 +22,27 @@ Parameters:
     Description: The stack name of the API stack under test
     Default: cic-cri-api
     Type: String
-  FrontendStack:
-    Description: The stack name of the Frontend stack under test
-    Default: cic-cri-front
-    Type: String
-  VpcStackName:
-    Description: >
-      The name of the stack that defines the VPC in which this container will
-      run. This should stop anyone not on the GDS VPN or internal to AWS from 
-      calling this stuff.
-    Default: vpc-cri
-    Type: String
   PermissionsBoundary:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
+    Type: String
+    Default: "none"
+  OidcFrontBaseUri:
+    Description: "Custom OIDC Frontend Base URI"
     Type: String
     Default: "none"
 
 Mappings:
   Configuration:
     dev:
-      IPVStubID: "5C584572"
+      IPVStubID: "3D4D532D"
     build:
       IPVStubID: "BD7B2A5D"
-    staging:
-      IPVStubID: "9CDA6F61"
-    integration:
-      IPVStubID: "AE140E43"
-    production:
-      IPVStubID: "C910A762"
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       DNSSUFFIX: review-c.dev.account.gov.uk
     build:
       DNSSUFFIX: review-c.build.account.gov.uk
-    staging:
-      DNSSUFFIX: review-c.staging.account.gov.uk
-    integration:
-      DNSSUFFIX: review-c.integration.account.gov.uk
-    production:
-      DNSSUFFIX: review-c.account.gov.uk
 
 Conditions:
   CreateDevResources: !Equals
@@ -76,6 +57,11 @@ Conditions:
     Fn::Not:
       - Fn::Equals:
           - !Ref PermissionsBoundary
+          - "none"
+  UseCustomOidcFrontBaseUri:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref OidcFrontBaseUri
           - "none"
 
 Globals:
@@ -142,10 +128,16 @@ Resources:
   StubApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: !Sub
-        - "ipvstub.${DNSSUFFIX}"
-        - DNSSUFFIX:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+      DomainName: !If
+        - CreateDevResources
+        - !Sub
+          - "ipvstub-${AWS::StackName}.${DNSSUFFIX}"
+          - DNSSUFFIX:
+              !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+        - !Sub
+          - "ipvstub.${DNSSUFFIX}"
+          - DNSSUFFIX:
+              !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       EndpointConfiguration:
         Types:
           - REGIONAL
@@ -340,9 +332,13 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-          REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
-          JWKS_URI: !Sub "https://api.review-c.${Environment}.account.gov.uk/.well-known/jwks.json"
-          OIDC_FRONT_BASE_URI: !Sub  "https://review-c.${Environment}.account.gov.uk"
+          REDIRECT_URI: !Sub
+            - "https://${CUSTOMDOMAIN}/redirect"
+            - CUSTOMDOMAIN: !Ref StubApiCustomDomainName
+          OIDC_FRONT_BASE_URI: !If
+            - UseCustomOidcFrontBaseUri
+            - !Ref OidcFrontBaseUri
+            - !Sub "https://review-c.${Environment}.account.gov.uk"
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -549,4 +545,4 @@ Outputs:
     Description: "The ID of the API Gateway"
     Value: !Ref IPVStubApiGw
     Export:
-      Name: "cic-cri-IPVStubApiGw"
+      Name: !Sub "${AWS::StackName}-IPVStubApiGw"
