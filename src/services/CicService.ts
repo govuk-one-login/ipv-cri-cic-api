@@ -88,6 +88,34 @@ export class CicService {
 		}
 	}
 
+	async getPersonIdentityBySessionId(sessionId: string): Promise<PersonIdentityItem | undefined> {
+		this.logger.debug("Table name " + this.tableName);
+		const getPersonIdentityCommand = new GetCommand({
+			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+			Key: {
+				sessionId,
+			},
+		});
+
+		let personIdentity;
+		try {
+			personIdentity = await this.dynamo.send(getPersonIdentityCommand);
+		} catch (e: any) {
+			this.logger.error({
+				message: "getPersonIdentityBySessionId - failed executing get from dynamodb:",
+				e,
+			});
+			throw new AppError(
+				"Error retrieving Session",
+				HttpCodesEnum.SERVER_ERROR,
+			);
+		}
+
+		if (personIdentity.Item) {
+			return personIdentity.Item as PersonIdentityItem;
+		}
+	}
+
 	async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
 		const personNames = this.mapClaimedNames(cicData.given_names, cicData.family_names);
 		const personBirthDay = this.mapClaimedBirthDay(cicData.date_of_birth);
