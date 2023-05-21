@@ -64,11 +64,17 @@ export class UserInfoRequestProcessor {
   		sub = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
   	} catch (error) {
   		if (error instanceof AppError) {
-  			this.logger.error("Error validating Authentication Access token from headers: ", { error });
-  			return new Response(HttpCodesEnum.UNAUTHORIZED, "Failed to Validate - Authentication header: " + error.message);
+  			this.logger.error("Error validating Authentication Access token from headers: ", {
+  				error,
+  				messageCode: MessageCodes.INVALID_AUTH_CODE,
+  			});
+  			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   		}
-  		this.logger.error("Unexpected error occurred", { error });
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Unexpected error occurred");
+  		this.logger.error("Unexpected error occurred", {
+  			error,
+  			messageCode: MessageCodes.SERVER_ERROR,
+  		});
+  		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   	}
 
   	// add sessionId to all subsequent log messages
@@ -78,13 +84,16 @@ export class UserInfoRequestProcessor {
   	try {
   		session = await this.cicService.getSessionById(sub);
   		if (!session) {
-  			this.logger.error("No session found");
+  			this.logger.error("No session found", {
+  				messageCode: MessageCodes.SESSION_NOT_FOUND,
+  			});
   			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   		}
-  	} catch (err) {
+  	} catch (error) {
   		this.logger.error("Error finding session", {
   			sessionId: sub,
-  			err,
+  			error,
+  			messageCode: MessageCodes.SERVER_ERROR,
   		});
   		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   	}
@@ -114,6 +123,7 @@ export class UserInfoRequestProcessor {
   			session: {
   				authSessionState: session.authSessionState,
   			},
+  			messageCode: MessageCodes.STATE_MISMATCH,
   		});
   		return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}
@@ -121,8 +131,10 @@ export class UserInfoRequestProcessor {
   	// Validate the User Info data presence required to generate the VC
   	const isValidClaimedIdentity = this.validationHelper.validateClaimedIdentity(session, this.logger);
   	if (!isValidClaimedIdentity) {
-  		this.logger.error("Claimed Identity data invalid");
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+  		this.logger.error("Claimed Identity data invalid", {
+  			messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
+  		});
+  		return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
   	}
 
   	// Generate VC and create a signedVC as response back to IPV Core.
@@ -133,6 +145,7 @@ export class UserInfoRequestProcessor {
   		if (error instanceof AppError) {
   			this.logger.error("Error generating signed verifiable credential jwt", {
   				error,
+  				messageCode: MessageCodes.ERROR_SIGNING_VC,
   			});
   			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   		}
@@ -148,6 +161,7 @@ export class UserInfoRequestProcessor {
   	} catch (error) {
   		this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
   			error,
+  			messageCode: MessageCodes.ERROR_WRITING_TXMA,
   		});
   	}
 

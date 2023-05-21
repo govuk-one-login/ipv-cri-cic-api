@@ -91,9 +91,15 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: Missing header: Authorization header value is missing or invalid auth_scheme");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when access_token JWT validation fails", async () => {
@@ -102,9 +108,15 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: Verification of JWT failed");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when sub is missing from JWT access_token", async () => {
@@ -113,9 +125,15 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: sub missing");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when we receive expired JWT access_token", async () => {
@@ -124,9 +142,15 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: Verification of exp failed");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when session (based upon sub) was not found in the DB", async () => {
@@ -138,6 +162,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.body).toContain("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "SESSION_NOT_FOUND",
+			}),
+		);
 	});
 
 	it.each([
@@ -151,8 +181,8 @@ describe("UserInfoRequestProcessor", () => {
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toBe("Server Error");
-		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+		expect(out.body).toBe("Bad Request");
+		expect(out.statusCode).toBe(HttpCodesEnum.BAD_REQUEST);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
@@ -160,6 +190,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
 		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "INVALID_CLAIMED_IDENTITY",
+			}),
+		);
 	});
 
 	it("Return 401 when AuthSessionState is not CIC_ACCESS_TOKEN_ISSUED", async () => {
@@ -177,6 +213,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
 		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "STATE_MISMATCH",
+			}),
+		);
 	});
 
 	it("Return 500 when Failed to sign the verifiableCredential Jwt", async () => {
@@ -195,6 +237,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
 		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "ERROR_SIGNING_VC",
+			}),
+		);
 	});
 
 	it("Return successful response with 200 OK when write to txMA fails", async () => {
