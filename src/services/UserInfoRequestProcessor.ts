@@ -95,14 +95,16 @@ export class UserInfoRequestProcessor {
 		}
 
 		// Validate the User Info data presence required to generate the VC
-		const isValidUserCredentials = this.validationHelper.validateUserInfo(session, this.logger);
-		if (!isValidUserCredentials) {
+
+		if (personInfo.names[0].nameParts.length === 0 || !personInfo.birthDates[0].value) {
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Missing user info: User may have not completed the journey, hence few of the required user data is missing.");
 		}
 		//Generate VC and create a signedVC as response back to IPV Core.
 		let signedJWT;
 		try {
-			signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, personInfo, absoluteTimeNow);
+			const names = personInfo.names[0].nameParts;
+			const birthDate = personInfo.birthDates[0].value
+			signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, birthDate, absoluteTimeNow);
 		} catch (error) {
 			if (error instanceof AppError) {
 				this.logger.error({ message: "Error generating signed verifiable credential jwt: " + error.message });

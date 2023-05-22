@@ -2,7 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { VerifiedCredential } from "./IVeriCredential";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
-import { PersonIdentityItem, PersonIdentityName } from "../models/PersonIdentityItem";
+import { PersonIdentityNamePart } from "../models/PersonIdentityItem";
 import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
@@ -33,11 +33,10 @@ export class VerifiableCredentialService {
 		return VerifiableCredentialService.instance;
 	}
 
-	async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem | undefined, personItem: PersonIdentityItem | undefined, getNow: () => number): Promise<string> {
+	async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDay: string, getNow: () => number): Promise<string> {
 		const now = getNow();
 		const subject = sessionItem?.subject as string;
-		const nameParts = personItem?.names
-		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, sessionItem?.date_of_birth)
+		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDay)
 			.build();
 		const result = {
 			sub: subject,
@@ -58,31 +57,31 @@ export class VerifiableCredentialService {
 		}
 	}
 
-	buildVcNamePart(given_names: string[] | undefined, family_names: string[] | undefined): object[] {
-		const parts: object[] = [];
-		given_names?.forEach((givenName) => {
-			parts.push(
-				{
-					value: givenName,
-					type: "GivenName",
-				},
-			);
-		});
-		family_names?.forEach((familyName) => {
-			parts.push(
-				{
-					value: familyName,
-					type: "FamilyName",
-				},
-			);
-		});
-		return parts;
-	}
+	// 	buildVcNamePart(given_names: string[] | undefined, family_names: string[] | undefined): object[] {
+	// 		const parts: object[] = [];
+	// 		given_names?.forEach((givenName) => {
+	// 			parts.push(
+	// 				{
+	// 					value: givenName,
+	// 					type: "GivenName",
+	// 				},
+	// 			);
+	// 		});
+	// 		family_names?.forEach((familyName) => {
+	// 			parts.push(
+	// 				{
+	// 					value: familyName,
+	// 					type: "FamilyName",
+	// 				},
+	// 			);
+	// 		});
+	// 		return parts;
+	// 	}
 }
 class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
-	constructor(nameParts: PersonIdentityName[] | undefined, date_of_birth: string | undefined) {
+	constructor(nameParts: PersonIdentityNamePart[], date_of_birth: string) {
 		this.credential = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,

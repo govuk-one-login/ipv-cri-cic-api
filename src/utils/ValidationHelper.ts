@@ -2,7 +2,7 @@ import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
-import { ISessionItem } from "../models/ISessionItem";
+import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
@@ -55,15 +55,15 @@ export class ValidationHelper {
 		return isValid;
 	}
 
-	validateUserInfo(session: ISessionItem, logger: Logger): boolean {
-		let isValid = true;
-		if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
-			!this.validateUserData(session.family_names, "Family names is missing", logger) ||
-			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger)) {
-			isValid = false;
-		}
-		return isValid;
-	}
+	// validateUserInfo(personInfo: PersonIdentityItem, logger: Logger): boolean {
+	// 	let isValid = true;
+	// 	if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
+	// 		!this.validateUserData(session.family_names, "Family names is missing", logger) ||
+	// 		!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger)) {
+	// 		isValid = false;
+	// 	}
+	// 	return isValid;
+	// }
 
 	async eventToSubjectIdentifier(jwtAdapter: KmsJwtAdapter, event: APIGatewayProxyEvent): Promise<string> {
 		const headerValue = event.headers.authorization ?? event.headers.Authorization;

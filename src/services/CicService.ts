@@ -318,7 +318,7 @@ export class CicService {
 			validUntil: address.validUntil,
 		}));
 	}
-
+	// Redundant? 
 	private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
 		return birthDates?.map((bd) => ({ value: bd.value }));
 	}
