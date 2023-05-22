@@ -27,7 +27,7 @@ export class ClaimedIdRequestProcessor {
 	constructor(logger: Logger, metrics: Metrics) {
 		if (!SESSION_TABLE) {
 			logger.error("Environment variable SESSION_TABLE is not configured");
-			throw new AppError( "Service incorrectly configured", 500);
+			throw new AppError("Service incorrectly configured", 500);
 		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
@@ -71,7 +71,7 @@ export class ClaimedIdRequestProcessor {
 				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`);
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
-			await this.cicService.saveCICData(sessionId, cicSession);
+			await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
 			return new Response(HttpCodesEnum.OK, "");
 		} else {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);

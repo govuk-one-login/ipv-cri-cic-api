@@ -116,7 +116,7 @@ export class CicService {
 		}
 	}
 
-	async saveCICData(sessionId: string, cicData: CicSession): Promise<void> {
+	async saveCICData(sessionId: string, cicData: CicSession, sessionExpiry: number): Promise<void> {
 		const personNames = this.mapClaimedNames(cicData.given_names, cicData.family_names);
 		const personBirthDay = this.mapClaimedBirthDay(cicData.date_of_birth);
 
@@ -124,11 +124,12 @@ export class CicService {
 			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
 			Key: { sessionId },
 			UpdateExpression:
-				"SET names = :names, birthDates = :date_of_birth",
+				"SET names = :names, birthDates = :date_of_birth, expiryDate = :expiryDate",
 
 			ExpressionAttributeValues: {
 				":given_names": personNames,
 				":date_of_birth": personBirthDay,
+				":expiryDate": sessionExpiry
 			},
 		});
 
