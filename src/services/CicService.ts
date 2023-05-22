@@ -124,10 +124,10 @@ export class CicService {
 			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
 			Key: { sessionId },
 			UpdateExpression:
-				"SET names = :names, birthDates = :date_of_birth, expiryDate = :expiryDate",
+				"SET personNames = :personNames, birthDates = :date_of_birth, expiryDate = :expiryDate",
 
 			ExpressionAttributeValues: {
-				":given_names": personNames,
+				":personNames": personNames,
 				":date_of_birth": personBirthDay,
 				":expiryDate": sessionExpiry
 			},
@@ -137,7 +137,7 @@ export class CicService {
 			TableName: this.tableName,
 			Key: { sessionId },
 			UpdateExpression:
-				"SET authSessionSate = :authSessionState",
+				"SET authSessionState = :authSessionState",
 
 			ExpressionAttributeValues: {
 				":authSessionState": AuthSessionState.CIC_DATA_RECEIVED,
@@ -375,7 +375,7 @@ export class CicService {
 			addresses: this.mapAddresses(sharedClaims.address),
 			birthDates: this.mapBirthDates(sharedClaims.birthDate),
 			expiryDate: sessionExpirationEpoch,
-			names: this.mapNames(sharedClaims.name),
+			personNames: this.mapNames(sharedClaims.name),
 		};
 	}
 

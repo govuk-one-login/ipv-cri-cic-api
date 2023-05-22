@@ -32,7 +32,7 @@ export interface PersonIdentityDateOfBirth {
 export interface PersonIdentityItem {
 	sessionId: string;
 	addresses: PersonIdentityAddress[];
-	names: PersonIdentityName[];
+	personNames: PersonIdentityName[];
 	birthDates: PersonIdentityDateOfBirth[];
 	expiryDate: number;
 }
