@@ -11,7 +11,7 @@ import {
 	PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
-import { getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
+import { getAuthorizationCodeExpirationEpoch, absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { sqsClient, SendMessageCommand } from "../utils/SqsClient";
@@ -83,6 +83,9 @@ export class CicService {
 		}
 
 		if (session.Item) {
+			if (session.Item.expiryDate < absoluteTimeNow()) {
+				throw new AppError(`Session with session id: ${sessionId} has expired`, HttpCodesEnum.UNAUTHORIZED);
+			}
 			return session.Item as ISessionItem;
 		}
 	}
@@ -189,6 +192,10 @@ export class CicService {
 				"Error retrieving Session by authorization code",
 				HttpCodesEnum.SERVER_ERROR,
 			);
+		}
+		
+		if (sessionItem.Items[0].expiryDate < absoluteTimeNow()) {
+			throw new AppError(`Session with session id: ${sessionItem.Items[0].sessionId} has expired`, HttpCodesEnum.UNAUTHORIZED);
 		}
 
 		return sessionItem.Items[0] as ISessionItem;
