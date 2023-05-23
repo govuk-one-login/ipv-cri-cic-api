@@ -79,7 +79,7 @@ export class UserInfoRequestProcessor {
 		}
 
 		try {
-			personInfo = await this.cicService.getPersonIdentityBySessionId(sub as string);
+			personInfo = await this.cicService.getPersonIdentityBySessionId(session.sessionId);
 			this.logger.info({ message: "Found Person Info: " + JSON.stringify(personInfo) });
 			if (!personInfo) {
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the sessionId: ${sub}`);
@@ -95,14 +95,13 @@ export class UserInfoRequestProcessor {
 		}
 
 		// Validate the User Info data presence required to generate the VC
-
-		if (personInfo.names[0].nameParts.length === 0 || !personInfo.birthDates[0].value) {
+		if (personInfo.personNames[0].nameParts.length === 0 || !personInfo.birthDates[0].value) {
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Missing user info: User may have not completed the journey, hence few of the required user data is missing.");
 		}
 		//Generate VC and create a signedVC as response back to IPV Core.
 		let signedJWT;
 		try {
-			const names = personInfo.names[0].nameParts;
+			const names = personInfo.personNames[0].nameParts;
 			const birthDate = personInfo.birthDates[0].value
 			signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, birthDate, absoluteTimeNow);
 		} catch (error) {

@@ -7,5 +7,5 @@ s3_prefix = "backend-stelios"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" L2DynamoStackName=\"infra-l2-dynamo-viveak\" L2KMSStackName=\"infra-l2-kms-viveak\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" L2DynamoStackName=\"cic-cri-dynamo\" L2KMSStackName=\"cic-cri-kms\""
 image_repositories = []

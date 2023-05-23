@@ -387,6 +387,8 @@ Resources:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
           SESSION_TABLE:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          PERSON_IDENTITY_TABLE_NAME:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
@@ -399,17 +401,26 @@ Resources:
         - DynamoDBReadPolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
         - Statement:
+            # - Sid: KMSPolicy
+            #   Effect: Allow
+            #   Action:
+            #     - kms:Verify
+            #     - kms:Sign
+            #   Resource:
+            #     Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
             - Sid: KMSPolicy
               Effect: Allow
               Action:
-                - kms:Verify
-                - kms:Sign
+                - kms:*
               Resource:
-                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+                "*"
         - Statement:
             - Effect: Allow
               Action:

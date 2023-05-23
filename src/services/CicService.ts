@@ -89,7 +89,7 @@ export class CicService {
 	}
 
 	async getPersonIdentityBySessionId(sessionId: string): Promise<PersonIdentityItem | undefined> {
-		this.logger.debug("Table name " + this.tableName);
+		this.logger.debug("Table name " + process.env.PERSON_IDENTITY_TABLE_NAME);
 		const getPersonIdentityCommand = new GetCommand({
 			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
 			Key: {
