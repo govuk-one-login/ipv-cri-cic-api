@@ -26,8 +26,10 @@ export const handler = async (
     config.oidcUri = overrides.target;
   }
   if (overrides?.addSharedClaims != null) {
-    addSharedClaims = addSharedClaims;
+    addSharedClaims = overrides.addSharedClaims;
   }
+
+  console.log("addSharedClaims", addSharedClaims);
   const defaultClaims = {
     name: [
       {
@@ -75,6 +77,8 @@ export const handler = async (
         ? overrides.shared_claims
         : defaultClaims;
   }
+
+  console.log("payload", payload);
 
   const signedJwt = await sign(payload, config.signingKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
