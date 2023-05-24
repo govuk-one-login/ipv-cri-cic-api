@@ -7,12 +7,14 @@ import { CicService } from "../../../services/CicService";
 import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
+import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
+let mockPerson: PersonIdentityItem;
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(true);
 const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(false);
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
@@ -38,17 +40,43 @@ function getMockSessionItem(): ISessionItem {
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
 		attemptCount: 1,
-		given_names: ["given", "name"],
-		family_names: ["family", "name"],
-		date_of_birth: "09-08-1961",
 		authSessionState: "CIC_ACCESS_TOKEN_ISSUED",
 	};
 	return sess;
 }
 
+function getMockPersonItem(): PersonIdentityItem {
+	const person: PersonIdentityItem = {
+		sessionId: "sdfsdg",
+		addresses: [{
+			uprn: 100,
+			organisationName: "string",
+			departmentName: "string",
+			subBuildingName: "string",
+			buildingNumber: "string",
+			buildingName: "string",
+			dependentStreetName: "string",
+			streetName: "string",
+			doubleDependentAddressLocality: "string",
+			dependentAddressLocality: "string",
+			addressLocality: "string",
+			postalCode: "string",
+			addressCountry: "string",
+			validFrom: "string",
+			validUntil: "string",
+		}],
+		personNames: [{ nameParts: [{ type: "First", value: "Name" }] }],
+		birthDates: [{ value: "1990-01-01" }],
+		expiryDate: 123
+
+	};
+	return person;
+}
+
 describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
+		mockPerson = getMockPersonItem();
 		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics);
 		// @ts-ignore
 		userInforequestProcessorTest.cicService = mockCicService;
@@ -59,16 +87,20 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
+		mockPerson = getMockPersonItem();
 	});
 
 	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 
@@ -132,14 +164,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 	});
 
-	it.each([
-		"given_names",
-		"family_names",
-		"date_of_birth",
-	])("when %s userInfo data is missing - will return error", async (userInfoData) => {
+	it("Return error when person data is missing", async () => {
 		// @ts-ignore
-		mockSession[userInfoData] = "";
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockPerson.personNames = [];
+		mockPerson.birthDates = [];
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -163,18 +193,24 @@ describe("UserInfoRequestProcessor", () => {
 
 	it("Return 500 when Failed to sign the verifiableCredential Jwt", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
+
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("Failed to sign the verifiableCredential Jwt");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 	});
 
 	it("Return successful response with 200 OK when write to txMA fails", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
+
 		mockCicService.sendToTXMA.mockRejectedValue({});
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
@@ -182,6 +218,8 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		// eslint-disable-next-line @typescript-eslint/unbound-method

@@ -36,9 +36,6 @@ function getMockSessionItem(): ISessionItem {
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
 		attemptCount: 1,
-		given_names: ["given", "name"],
-		family_names: ["family", "name"],
-		date_of_birth: "09-08-1961",
 		authSessionState: AuthSessionState.CIC_SESSION_CREATED,
 	};
 	return sess;

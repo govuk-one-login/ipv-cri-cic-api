@@ -14,6 +14,7 @@ let cicService: CicService;
 const tableName = "MYTABLE";
 const sessionId = "SESSID";
 const authCode = "AUTHCODE";
+const expiryDate = 9999999999999
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const SESSION_RECORD = require("../data/db_record.json");
 
@@ -41,7 +42,7 @@ describe("Cic Service", () => {
 		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
 		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: ["Family", "name"], date_of_birth: "1970-01-01" });
 
-		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess)).rejects.toThrow(expect.objectContaining({
+		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,
 		}));
 	});
