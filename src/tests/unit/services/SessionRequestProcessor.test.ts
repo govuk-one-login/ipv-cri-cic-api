@@ -212,4 +212,29 @@ describe("SessionRequestProcessor", () => {
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.OK);
 	});
+
+	it("the session created should have a valid expiryDate", async () => {
+		// Arrange
+		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+		mockValidationHelper.isJwtValid.mockReturnValue("");
+		mockCicService.getSessionById.mockResolvedValue(undefined);
+		mockCicService.createAuthSession.mockResolvedValue();
+		mockCicService.savePersonIdentity.mockRejectedValue("error");
+		jest.useFakeTimers();
+		const fakeTime = 1684933200;
+		jest.setSystemTime(fakeTime); // 2023-05-24T13:00:00.000Z
+
+		// Act
+		await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+		// Assert
+		expect(mockCicService.createAuthSession).toHaveBeenCalledWith(
+			expect.objectContaining({
+				expiryDate: fakeTime + +process.env.AUTH_SESSION_TTL!,
+			}),
+		);
+		jest.useRealTimers();
+	});
 });
