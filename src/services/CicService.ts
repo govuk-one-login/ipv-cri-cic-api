@@ -129,7 +129,7 @@ export class CicService {
 			ExpressionAttributeValues: {
 				":personNames": personNames,
 				":date_of_birth": personBirthDay,
-				":expiryDate": sessionExpiry
+				":expiryDate": sessionExpiry,
 			},
 		});
 
@@ -141,13 +141,13 @@ export class CicService {
 
 			ExpressionAttributeValues: {
 				":authSessionState": AuthSessionState.CIC_DATA_RECEIVED,
-			}
+			},
 		});
 
 		this.logger.info({
 			message: "updating CIC data in dynamodb",
 			saveCICPersonInfoCommand,
-			updateSessionAuthStateCommand
+			updateSessionAuthStateCommand,
 		});
 		try {
 			await this.dynamo.send(saveCICPersonInfoCommand);
@@ -318,6 +318,7 @@ export class CicService {
 			validUntil: address.validUntil,
 		}));
 	}
+
 	// Redundant? 
 	private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
 		return birthDates?.map((bd) => ({ value: bd.value }));
@@ -328,7 +329,7 @@ export class CicService {
 			{
 				value: birthDay,
 			},
-		]
+		];
 	}
 
 	private mapNames(names: Name[]): PersonIdentityName[] {
@@ -346,7 +347,7 @@ export class CicService {
 			nameParts.push(
 				{
 					type: "GivenName",
-					value: givenName
+					value: givenName,
 				},
 			);
 		});
@@ -354,15 +355,15 @@ export class CicService {
 			nameParts.push(
 				{
 					type: "FamilyName",
-					value: familyName
+					value: familyName,
 				},
 			);
 		});
 		return [
 			{
-				nameParts: nameParts,
+				nameParts,
 			},
-		]
+		];
 	}
 
 	private createPersonIdentityItem(

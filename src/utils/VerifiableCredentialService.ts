@@ -35,7 +35,7 @@ export class VerifiableCredentialService {
 
 	async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDay: string, getNow: () => number): Promise<string> {
 		const now = getNow();
-		const subject = sessionItem?.subject as string;
+		const subject = sessionItem?.subject;
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDay)
 			.build();
 		const result = {
