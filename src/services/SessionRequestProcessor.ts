@@ -139,8 +139,8 @@ export class SessionRequestProcessor {
 			clientId: jwtPayload.client_id,
 			clientSessionId: jwtPayload.govuk_signin_journey_id as string,
 			redirectUri: jwtPayload.redirect_uri,
-			expiryDate: Date.now() + Number(AUTH_SESSION_TTL_IN_SECS),
-			createdDate: Date.now(),
+			expiryDate: (Date.now() / 1000) + Number(AUTH_SESSION_TTL_IN_SECS),
+			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
 			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used

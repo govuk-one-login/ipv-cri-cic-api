@@ -224,17 +224,22 @@ describe("SessionRequestProcessor", () => {
 		mockCicService.savePersonIdentity.mockRejectedValue("error");
 		jest.useFakeTimers();
 		const fakeTime = 1684933200;
-		jest.setSystemTime(fakeTime); // 2023-05-24T13:00:00.000Z
+		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
 		// Act
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
 		// Assert
-		expect(mockCicService.createAuthSession).toHaveBeenCalledWith(
+		expect(mockCicService.createAuthSession).toHaveBeenNthCalledWith(
+			1,
 			expect.objectContaining({
 				expiryDate: fakeTime + +process.env.AUTH_SESSION_TTL!,
 			}),
 		);
+		// the next assertion checks that the value has no more than 10 digits, i.e. is in secs not ms
+		// this will break in the year 2286!
+		const actualExpiryDate = mockCicService.createAuthSession.mock.calls[0][0]["expiryDate"];
+		expect(actualExpiryDate).toBeLessThan(10000000000);
 		jest.useRealTimers();
 	});
 });
