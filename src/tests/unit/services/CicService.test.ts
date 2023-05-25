@@ -37,11 +37,11 @@ describe("Cic Service", () => {
 		return expect(cicService.getSessionById("1234")).resolves.toBeUndefined();
 	});
 
-	it("Should not throw an error and return undefined when session expiry date has pasted", async () => {
+	it("Should not throw an error and return undefined when session expiry date has passed", async () => {
 		const expiredSession = {
 			...SESSION_RECORD,
-			expiryDate: absoluteTimeNow() - 500
-		}
+			expiryDate: absoluteTimeNow() - 500,
+		};
 		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: expiredSession });
 		return expect(cicService.getSessionById("1234")).rejects.toThrow("Session with session id: 1234 has expired");
 	});
