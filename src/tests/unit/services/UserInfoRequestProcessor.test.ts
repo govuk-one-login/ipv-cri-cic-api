@@ -10,6 +10,9 @@ import { ISessionItem } from "../../../models/ISessionItem";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 
+/* eslint @typescript-eslint/unbound-method: 0 */
+/* eslint jest/unbound-method: error */
+
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
@@ -67,9 +70,7 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 
 		expect(out.body).toEqual(JSON.stringify({
@@ -77,15 +78,28 @@ describe("UserInfoRequestProcessor", () => {
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.info).toHaveBeenCalledTimes(2);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
 	});
 
 	it("Return 401 when Authorization header is missing in the request", async () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: Missing header: Authorization header value is missing or invalid auth_scheme");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when access_token JWT validation fails", async () => {
@@ -93,10 +107,16 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.kmsJwtAdapter = failingKmsJwtAdapterFactory();
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: Verification of JWT failed");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when sub is missing from JWT access_token", async () => {
@@ -104,10 +124,16 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.sub = null;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: sub missing");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when we receive expired JWT access_token", async () => {
@@ -115,10 +141,16 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = absoluteTimeNow() - 500;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		// @ts-ignore
-		expect(out.body).toBe("Failed to Validate - Authentication header: Verification of exp failed");
+		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Error validating Authentication Access token from headers: ",
+			expect.objectContaining({
+				messageCode: "INVALID_AUTH_CODE",
+			}),
+		);
 	});
 
 	it("Return 401 when session (based upon sub) was not found in the DB", async () => {
@@ -126,10 +158,16 @@ describe("UserInfoRequestProcessor", () => {
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toContain("No session found with the sessionId: ");
+		expect(out.body).toContain("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "SESSION_NOT_FOUND",
+			}),
+		);
 	});
 
 	it.each([
@@ -142,12 +180,22 @@ describe("UserInfoRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-
-		expect(out.body).toBe("Missing user info: User may have not completed the journey, hence few of the required user data is missing.");
-		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-
+		expect(out.body).toBe("Bad Request");
+		expect(out.statusCode).toBe(HttpCodesEnum.BAD_REQUEST);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "INVALID_CLAIMED_IDENTITY",
+			}),
+		);
 	});
 
 	it("Return 401 when AuthSessionState is not CIC_ACCESS_TOKEN_ISSUED", async () => {
@@ -155,10 +203,22 @@ describe("UserInfoRequestProcessor", () => {
 		mockSession.authSessionState = "CIC_AUTH_CODE_ISSUED";
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toContain("AuthSession is in wrong Auth state: Expected state- CIC_ACCESS_TOKEN_ISSUED, actual state- CIC_AUTH_CODE_ISSUED");
+		expect(out.body).toContain("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "STATE_MISMATCH",
+			}),
+		);
 	});
 
 	it("Return 500 when Failed to sign the verifiableCredential Jwt", async () => {
@@ -167,10 +227,22 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toContain("Failed to sign the verifiableCredential Jwt");
+		expect(out.body).toContain("Server Error");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+		expect(logger.error).toHaveBeenCalledTimes(2);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "ERROR_SIGNING_VC",
+			}),
+		);
 	});
 
 	it("Return successful response with 200 OK when write to txMA fails", async () => {
@@ -180,14 +252,16 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.");
-
-
+		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "ipv-core-stub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
