@@ -164,16 +164,46 @@ describe("UserInfoRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 	});
 
-	it("Return error when person data is missing", async () => {
-		// @ts-ignore
+	it("Return 401 when person (based upon sub) was not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
-		mockPerson.personNames = [];
-		mockPerson.birthDates = [];
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(undefined);
+
+		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+		expect(out.body).toContain("No person found with the sessionId: ");
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+	});
+
+	it("Return error when person names are missing", async () => {
+		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		// @ts-ignore
+		mockPerson.personNames[0].nameParts = [];
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+
+		expect(out.body).toBe("Missing user info: User may have not completed the journey, hence few of the required user data is missing.");
+		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+
+	});
+
+	it("Return error when person DoB is missing", async () => {
+		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		// @ts-ignore
+		mockPerson.birthDates[0].value = "";
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
+
+		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 
 		expect(out.body).toBe("Missing user info: User may have not completed the journey, hence few of the required user data is missing.");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);

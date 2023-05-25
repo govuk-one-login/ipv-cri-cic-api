@@ -131,13 +131,21 @@ describe("Issuing verified credentials", () => {
 	});
 
 	it.each([
-		[["FRED", "NICK", "FAMILY"], 3],
-		[["FRED", "FAMILY"], 2],
-		[["FRED", "NICK", "FAMILY", "NAME"], 4],
-		[["FRED", "NICK", "JAMES", "FAMILY", "NAME"], 5],
+		[[
+			{ type: "FamilyName", value: "OTHER" },
+			{ type: "FamilyName", value: "NAME" },], 2],
+		[[
+			{ type: "GivenName", value: "FRED" },
+			{ type: "GivenName", value: "NICK" },
+			{ type: "FamilyName", value: "OTHER" },
+			{ type: "FamilyName", value: "NAME" },], 4],
+		[[
+			{ type: "GivenName", value: "FRED" },
+			{ type: "GivenName", value: "NICK" },
+			{ type: "FamilyName", value: "OTHER" },], 3],
 	])("Return successful response with 200 OK and verify length of name parts in the VC", async (personName, expectedLength) => {
 		// @ts-ignore
-		mockPerson.personNames = personName;
+		mockPerson.personNames[0].nameParts = personName;
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 

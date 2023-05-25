@@ -37,6 +37,16 @@ describe("Cic Service", () => {
 		return expect(cicService.getSessionById("1234")).resolves.toBeUndefined();
 	});
 
+	it("Should return a person item when passed a valid session Id", async () => {
+		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
+		const result = await cicService.getPersonIdentityBySessionId(sessionId);
+		expect(result).toEqual({ sessionId: "SESSID" });
+	});
+
+	it("Should not throw an error and return undefined when person doesn't exist", async () => {
+		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+		return expect(cicService.getPersonIdentityBySessionId("1234")).resolves.toBeUndefined();
+	});
 
 	it("should throw 500 if request fails during save CIC data", async () => {
 		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});

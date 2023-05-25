@@ -319,11 +319,6 @@ export class CicService {
 		}));
 	}
 
-	// Redundant? 
-	private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
-		return birthDates?.map((bd) => ({ value: bd.value }));
-	}
-
 	private mapClaimedBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
 		return [
 			{
@@ -374,7 +369,7 @@ export class CicService {
 		return {
 			sessionId,
 			addresses: this.mapAddresses(sharedClaims.address),
-			birthDates: this.mapBirthDates(sharedClaims.birthDate),
+			birthDates: sharedClaims.birthDate,
 			expiryDate: sessionExpirationEpoch,
 			personNames: this.mapNames(sharedClaims.name),
 		};

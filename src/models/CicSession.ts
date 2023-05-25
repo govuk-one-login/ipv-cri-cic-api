@@ -7,7 +7,7 @@ import {
 } from "class-validator";
 import { ICicSession } from "./ISessionItem";
 
-// This could be renamed to shared_claims and doesn't need to implement session?
+// This could be renamed to cic_payload and doesn't need to implement session?
 export class CicSession implements ICicSession {
 	constructor(data: CicSession) {
 		this.given_names = data.given_names!;
