@@ -32,9 +32,9 @@ export class VerifiableCredentialService {
     	return VerifiableCredentialService.instance;
     }
 
-    async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem | undefined, getNow: () => number): Promise<string> {
+    async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem, getNow: () => number): Promise<string> {
     	const now = getNow();
-    	const subject = sessionItem?.subject as string;
+    	const subject = sessionItem.subject;
     	const nameParts = this.buildVcNamePart(sessionItem?.given_names, sessionItem?.family_names);
     	const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, sessionItem?.date_of_birth)
     		.build();
@@ -47,13 +47,17 @@ export class VerifiableCredentialService {
     		vc: verifiedCredential,
     	};
 
-    	this.logger.info({ message: "Verified Credential jwt: " }, JSON.stringify(result));
+    	this.logger.info("Generated VerifiableCredential jwt", {
+    		jti: result.jti,
+    	});
     	try {
     		// Sign the VC
-    		const signedVerifiedCredential = await this.kmsJwtAdapter.sign(result);
-    		return signedVerifiedCredential;
+    		return await this.kmsJwtAdapter.sign(result);
     	} catch (error) {
-    		throw new AppError( "Failed to sign Jwt", HttpCodesEnum.SERVER_ERROR);
+    		this.logger.error("Failed to sign Jwt", {
+    			error,
+    		});
+    		throw new AppError( "Server Error", HttpCodesEnum.SERVER_ERROR);
     	}
     }
 
