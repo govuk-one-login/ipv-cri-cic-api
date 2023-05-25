@@ -57,6 +57,7 @@ export class VerifiableCredentialService {
 		}
 	}
 
+	// No longer necessary - VC name parts are now received by UserInfo in correct format from person table directly
 	// 	buildVcNamePart(given_names: string[] | undefined, family_names: string[] | undefined): object[] {
 	// 		const parts: object[] = [];
 	// 		given_names?.forEach((givenName) => {

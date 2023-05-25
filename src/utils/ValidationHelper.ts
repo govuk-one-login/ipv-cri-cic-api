@@ -34,26 +34,28 @@ export class ValidationHelper {
 		});
 	}
 
-	private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
-		let isValid = true;
-		if (data === null || data === undefined) {
-			isValid = false;
-		} else {
-			if (typeof data === "string") {
-				if (data.trim().length === 0) {
-					isValid = false;
-				}
-			} else {
-				if (data.length === 0) {
-					isValid = false;
-				}
-			}
-		}
-		if (!isValid) {
-			logger.info({ message: "UserInfo missing: ", errmsg });
-		}
-		return isValid;
-	}
+	// These validation functions are no longer used - person info validated directly in UserInfoRequestProcessor
+	
+	// private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
+	// 	let isValid = true;
+	// 	if (data === null || data === undefined) {
+	// 		isValid = false;
+	// 	} else {
+	// 		if (typeof data === "string") {
+	// 			if (data.trim().length === 0) {
+	// 				isValid = false;
+	// 			}
+	// 		} else {
+	// 			if (data.length === 0) {
+	// 				isValid = false;
+	// 			}
+	// 		}
+	// 	}
+	// 	if (!isValid) {
+	// 		logger.info({ message: "UserInfo missing: ", errmsg });
+	// 	}
+	// 	return isValid;
+	// }
 
 	// validateUserInfo(personInfo: PersonIdentityItem, logger: Logger): boolean {
 	// 	let isValid = true;

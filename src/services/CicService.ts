@@ -319,6 +319,11 @@ export class CicService {
 		}));
 	}
 
+	// This is unecessary
+	// private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
+	// 	return birthDates?.map((bd) => ({ value: bd.value }));
+	// }
+
 	private mapClaimedBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
 		return [
 			{
