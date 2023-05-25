@@ -34,7 +34,7 @@ export class ValidationHelper {
 		});
 	}
 
-	private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
+	private validateIdentityData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
 		let isValid = true;
 		if (data === null || data === undefined) {
 			isValid = false;
@@ -55,11 +55,11 @@ export class ValidationHelper {
 		return isValid;
 	}
 
-	validateUserInfo(session: ISessionItem, logger: Logger): boolean {
+	validateClaimedIdentity(session: ISessionItem, logger: Logger): boolean {
 		let isValid = true;
-		if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
-			!this.validateUserData(session.family_names, "Family names is missing", logger) ||
-			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger)) {
+		if (!this.validateIdentityData(session.given_names, "Given names is missing", logger) ||
+			!this.validateIdentityData(session.family_names, "Family names is missing", logger) ||
+			!this.validateIdentityData(session.date_of_birth, "Date of Birth is missing", logger)) {
 			isValid = false;
 		}
 		return isValid;

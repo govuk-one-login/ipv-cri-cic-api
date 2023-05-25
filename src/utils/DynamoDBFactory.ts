@@ -6,7 +6,7 @@ import AWSXRay from "aws-xray-sdk-core";
 AWSXRay.setContextMissingStrategy("LOG_ERROR");
 
 const awsRegion = process.env.AWS_REGION;
-export const createDynamoDbClient = () => {
+export const createDynamoDbClient = (): DynamoDBDocument => {
 	const marshallOptions = {
 		// Whether to automatically convert empty strings, blobs, and sets to `null`.
 		convertEmptyValues: false,
@@ -22,5 +22,5 @@ export const createDynamoDbClient = () => {
 	const translateConfig = { marshallOptions, unmarshallOptions };
 	const dbClient = new DynamoDBClient({ region: awsRegion, credentials: fromEnv() });
 	const dbClientRaw = DynamoDBDocument.from(dbClient, translateConfig);
-	return process.env.XRAY_ENABLED === "true" ? AWSXRay.captureAWSv3Client(dbClientRaw as any) : dbClientRaw;
+	return process.env.XRAY_ENABLED === "true" ? AWSXRay.captureAWSv3Client(dbClientRaw) : dbClientRaw;
 };
