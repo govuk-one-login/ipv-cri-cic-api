@@ -17,16 +17,10 @@ import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { sqsClient, SendMessageCommand } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import {
-	Address,
-	BirthDate,
-	Name,
-	NamePart,
-	PersonIdentity,
-} from "../models/PersonIdentity";
-import {
-	PersonIdentityAddress,
+	SharedClaimsItem,
 	PersonIdentityDateOfBirth,
 	PersonIdentityItem,
+	PersonIdentityNamePart,
 	PersonIdentityName,
 } from "../models/PersonIdentityItem";
 
@@ -117,8 +111,8 @@ export class CicService {
 	}
 
 	async saveCICData(sessionId: string, cicData: CicSession, sessionExpiry: number): Promise<void> {
-		const personNames = this.mapClaimedNames(cicData.given_names, cicData.family_names);
-		const personBirthDay = this.mapClaimedBirthDay(cicData.date_of_birth);
+		const personNames = this.mapCICNames(cicData.given_names, cicData.family_names);
+		const personBirthDay = this.mapCICBirthDay(cicData.date_of_birth);
 
 		const saveCICPersonInfoCommand: any = new UpdateCommand({
 			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
@@ -299,50 +293,42 @@ export class CicService {
 		}
 	}
 
-	private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
-		return addresses?.map((address) => ({
-			uprn: address.uprn,
-			organisationName: address.organisationName,
-			departmentName: address.departmentName,
-			subBuildingName: address.subBuildingName,
-			buildingNumber: address.buildingNumber,
-			buildingName: address.buildingName,
-			dependentStreetName: address.dependentStreetName,
-			streetName: address.streetName,
-			addressCountry: address.addressCountry,
-			postalCode: address.postalCode,
-			addressLocality: address.addressLocality,
-			dependentAddressLocality: address.dependentAddressLocality,
-			doubleDependentAddressLocality: address.doubleDependentAddressLocality,
-			validFrom: address.validFrom,
-			validUntil: address.validUntil,
-		}));
-	}
+	// These functions are not required as shared_claims object is same format as person table
+	// private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
+	// 	return addresses?.map((address) => ({
+	// 		uprn: address.uprn,
+	// 		organisationName: address.organisationName,
+	// 		departmentName: address.departmentName,
+	// 		subBuildingName: address.subBuildingName,
+	// 		buildingNumber: address.buildingNumber,
+	// 		buildingName: address.buildingName,
+	// 		dependentStreetName: address.dependentStreetName,
+	// 		streetName: address.streetName,
+	// 		addressCountry: address.addressCountry,
+	// 		postalCode: address.postalCode,
+	// 		addressLocality: address.addressLocality,
+	// 		dependentAddressLocality: address.dependentAddressLocality,
+	// 		doubleDependentAddressLocality: address.doubleDependentAddressLocality,
+	// 		validFrom: address.validFrom,
+	// 		validUntil: address.validUntil,
+	// 	}));
+	// }
 
-	// This is unecessary
 	// private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
 	// 	return birthDates?.map((bd) => ({ value: bd.value }));
 	// }
 
-	private mapClaimedBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
-		return [
-			{
-				value: birthDay,
-			},
-		];
-	}
+	// private mapNames(names: Name[]): PersonIdentityName[] {
+	// 	return names?.map((name) => ({
+	// 		nameParts: name?.nameParts?.map((namePart) => ({
+	// 			type: namePart.type,
+	// 			value: namePart.value,
+	// 		})),
+	// 	}));
+	// }
 
-	private mapNames(names: Name[]): PersonIdentityName[] {
-		return names?.map((name) => ({
-			nameParts: name?.nameParts?.map((namePart) => ({
-				type: namePart.type,
-				value: namePart.value,
-			})),
-		}));
-	}
-
-	private mapClaimedNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
-		const nameParts: NamePart[] = [];
+	private mapCICNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
+		const nameParts: PersonIdentityNamePart[] = [];
 		givenNames.forEach((givenName) => {
 			nameParts.push(
 				{
@@ -366,22 +352,30 @@ export class CicService {
 		];
 	}
 
+	private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
+		return [
+			{
+				value: birthDay,
+			},
+		];
+	}
+
 	private createPersonIdentityItem(
-		sharedClaims: PersonIdentity,
+		sharedClaims: SharedClaimsItem,
 		sessionId: string,
 		sessionExpirationEpoch: number,
 	): PersonIdentityItem {
 		return {
 			sessionId,
-			addresses: this.mapAddresses(sharedClaims.address),
+			addresses: sharedClaims.address,
 			birthDates: sharedClaims.birthDate,
 			expiryDate: sessionExpirationEpoch,
-			personNames: this.mapNames(sharedClaims.name),
+			personNames: sharedClaims.name,
 		};
 	}
 
 	async savePersonIdentity(
-		sharedClaims: PersonIdentity,
+		sharedClaims: SharedClaimsItem,
 		sessionId: string,
 		expiryDate: number,
 	): Promise<void> {
