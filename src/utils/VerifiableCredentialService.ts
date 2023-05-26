@@ -83,6 +83,7 @@ export class VerifiableCredentialService {
 	// 		return parts;
 	// 	}
 }
+
 class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
@@ -109,5 +110,4 @@ class VerifiableCredentialBuilder {
 	build(): VerifiedCredential {
 		return this.credential;
 	}
-
 }

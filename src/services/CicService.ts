@@ -182,16 +182,13 @@ export class CicService {
 			},
 		});
 
-		this.logger.info({
-			message: "updating authorizationCode dynamodb",
-			updateSessionCommand,
-		});
+		this.logger.info("updating authorizationCode dynamodb", { updateSessionCommand });
 
 		try {
 			await this.dynamo.send(updateSessionCommand);
-			this.logger.info({ message: "updated authorizationCode in dynamodb" });
-		} catch (e: any) {
-			this.logger.error({ message: "got error setting auth code", e });
+			this.logger.info("updated authorizationCode in dynamodb");
+		} catch (error) {
+			this.logger.error("got error setting auth code", { error });
 			throw new AppError(
 				"Failed to set authorization code ",
 				HttpCodesEnum.SERVER_ERROR,
@@ -206,12 +203,18 @@ export class CicService {
 			QueueUrl: process.env.TXMA_QUEUE_URL,
 		};
 
-		this.logger.info({ message: "Sending message to TxMA", messageBody });
+		this.logger.info("Sending message to TxMA", {
+			messageBody: event,
+		});
 		try {
 			await sqsClient.send(new SendMessageCommand(params));
-			this.logger.info("Sent message to TxMA");
+			this.logger.info("Sent message to TxMA", {
+				messageBody: event,
+			});
 		} catch (error) {
-			this.logger.error("got error " + error);
+			this.logger.error("got error ", {
+				error,
+			});
 			throw new AppError("sending event - failed ", HttpCodesEnum.SERVER_ERROR);
 		}
 	}

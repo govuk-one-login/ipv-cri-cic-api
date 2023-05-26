@@ -21,9 +21,14 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   const config = getConfig();
   const overrides = event.body !== null ? JSON.parse(event.body) : null;
+  let addSharedClaims = true;
   if (overrides?.target != null) {
     config.oidcUri = overrides.target;
   }
+  if (overrides?.addSharedClaims != null) {
+    addSharedClaims = overrides.addSharedClaims;
+  }
+
   const defaultClaims = {
     name: [
       {
@@ -63,11 +68,15 @@ export const handler = async (
     iat,
     nbf: iat - 1,
     exp: iat + 3 * 60,
-    shared_claims:
+  };
+
+  if (addSharedClaims) {
+    payload.shared_claims =
       overrides?.shared_claims != null
         ? overrides.shared_claims
-        : defaultClaims,
-  };
+        : defaultClaims;
+  }
+
   const signedJwt = await sign(payload, config.signingKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
   const request = await encrypt(signedJwt, publicEncryptionKey);

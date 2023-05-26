@@ -244,7 +244,6 @@ describe("UserInfoRequestProcessor", () => {
 				messageCode: "INVALID_CLAIMED_IDENTITY",
 			}),
 		);
-
 	});
 
 	it("Return error when person DoB is missing", async () => {
@@ -272,7 +271,6 @@ describe("UserInfoRequestProcessor", () => {
 				messageCode: "INVALID_CLAIMED_IDENTITY",
 			}),
 		);
-
 	});
 
 	it("Return 401 when AuthSessionState is not CIC_ACCESS_TOKEN_ISSUED", async () => {
