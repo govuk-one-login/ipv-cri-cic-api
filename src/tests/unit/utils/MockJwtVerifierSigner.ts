@@ -56,4 +56,17 @@ export class MockKmsJwtAdapterForVc {
     sign(jwtPayload: JwtPayload): string {
     	return JSON.stringify(jwtPayload);
     }
+
+	decode(_token: string): Jwt {
+    	return {
+    		header: {
+    			alg: "MOCK",
+    		},
+    		payload: {
+    			exp: absoluteTimeNow() + 300,
+    			sub: "1234",
+    		},
+    		signature: "ABCDE",
+    	};
+    }
 }

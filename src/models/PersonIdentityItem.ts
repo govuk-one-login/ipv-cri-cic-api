@@ -42,9 +42,3 @@ export interface SharedClaimsItem {
 	birthDate: PersonIdentityDateOfBirth[];
 	address: PersonIdentityAddress[];
 }
-
-export interface SharedClaimsItem {
-	name: PersonIdentityName[];
-	birthDate: PersonIdentityDateOfBirth[];
-	address: PersonIdentityAddress[];
-}

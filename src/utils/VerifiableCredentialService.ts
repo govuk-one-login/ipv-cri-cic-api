@@ -35,7 +35,7 @@ export class VerifiableCredentialService {
 
 	async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDay: string, getNow: () => number): Promise<string> {
 		const now = getNow();
-		const subject = sessionItem?.subject;
+		const subject = sessionItem.subject;
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDay)
 			.build();
 		const result = {
@@ -47,13 +47,17 @@ export class VerifiableCredentialService {
 			vc: verifiedCredential,
 		};
 
-		this.logger.info({ message: "Verified Credential jwt: " }, JSON.stringify(result));
+		this.logger.info("Generated VerifiableCredential jwt", {
+    		jti: result.jti,
+    	});
 		try {
 			// Sign the VC
-			const signedVerifiedCredential = await this.kmsJwtAdapter.sign(result);
-			return signedVerifiedCredential;
+			return await this.kmsJwtAdapter.sign(result);
 		} catch (error) {
-			throw new AppError("Failed to sign Jwt", HttpCodesEnum.SERVER_ERROR);
+			this.logger.error("Failed to sign Jwt", {
+    			error,
+    		});
+    		throw new AppError( "Server Error", HttpCodesEnum.SERVER_ERROR);
 		}
 	}
 
