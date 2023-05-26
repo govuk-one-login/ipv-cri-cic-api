@@ -295,30 +295,6 @@ export class CicService {
 	}
 	// These functions are not required as shared_claims object is same format as person table
 
-	// private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
-	// 	return addresses?.map((address) => ({
-	// 		uprn: address.uprn,
-	// 		organisationName: address.organisationName,
-	// 		departmentName: address.departmentName,
-	// 		subBuildingName: address.subBuildingName,
-	// 		buildingNumber: address.buildingNumber,
-	// 		buildingName: address.buildingName,
-	// 		dependentStreetName: address.dependentStreetName,
-	// 		streetName: address.streetName,
-	// 		addressCountry: address.addressCountry,
-	// 		postalCode: address.postalCode,
-	// 		addressLocality: address.addressLocality,
-	// 		dependentAddressLocality: address.dependentAddressLocality,
-	// 		doubleDependentAddressLocality: address.doubleDependentAddressLocality,
-	// 		validFrom: address.validFrom,
-	// 		validUntil: address.validUntil,
-	// 	}));
-	// }
-
-	// private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
-	// 	return birthDates?.map((bd) => ({ value: bd.value }));
-	// }
-
 	// These functions are not required as shared_claims object is same format as person table
 	// private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
 	// 	return addresses?.map((address) => ({

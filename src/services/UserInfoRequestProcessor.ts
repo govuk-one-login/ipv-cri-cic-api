@@ -155,12 +155,7 @@ export class UserInfoRequestProcessor {
 		const names = personInfo.personNames[0].nameParts;
 		const birthDate = personInfo.birthDates[0].value;
 		// Validate the User Info data presence required to generate the VC
-		if (names.length === 0 || !birthDate) {
-			this.logger.error("Claimed Identity data invalid", {
-				messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
-			});
-			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
-		}
+		if (names && names.length > 0 && birthDate) {
 
 		//Generate VC and create a signedVC as response back to IPV Core.
 		let signedJWT;
@@ -193,6 +188,13 @@ export class UserInfoRequestProcessor {
 		return new Response(HttpCodesEnum.OK, JSON.stringify({
 			sub: session.clientId,
 			"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
-		}));
+		}))} else {
+
+			this.logger.error("Claimed Identity data invalid", {
+					messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
+				});
+				return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+		}
 	}
 }
+

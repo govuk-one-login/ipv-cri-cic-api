@@ -323,13 +323,9 @@ Resources:
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
-        - Statement:
-            - Sid: KMSPolicy
-              Effect: Allow
-              Action:
-                - kms:*
-              Resource:
-                "*"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
 
       Events:
         claimedIdentity:
@@ -407,20 +403,17 @@ Resources:
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
         - Statement:
-            # - Sid: KMSPolicy
-            #   Effect: Allow
-            #   Action:
-            #     - kms:Verify
-            #     - kms:Sign
-            #   Resource:
-            #     Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
             - Sid: KMSPolicy
               Effect: Allow
               Action:
-                - kms:*
+                - kms:Verify
+                - kms:Sign
               Resource:
-                "*"
+                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
         - Statement:
             - Effect: Allow
               Action:

@@ -49,10 +49,10 @@ export class ClaimedIdRequestProcessor {
 			this.logger.debug("IN processRequest");
 			const bodyParsed = JSON.parse(event.body as string);
 			// Convert given_names and family_names string into string[]
-			bodyParsed.given_names = bodyParsed.given_names.split(" ");
-			bodyParsed.family_names = bodyParsed.family_names.split(" ");
 			cicSession = new CicSession(bodyParsed);
 			await this.validationHelper.validateModel(cicSession, this.logger);
+			cicSession.given_names = cicSession.given_names.split(" ");
+			cicSession.family_names = cicSession.family_names.split(" ");
 			this.logger.debug({ message: "CIC Session is", cicSession });
 		} catch (error) {
 			return new Response(HttpCodesEnum.BAD_REQUEST, "Missing mandatory fields in the request payload");
