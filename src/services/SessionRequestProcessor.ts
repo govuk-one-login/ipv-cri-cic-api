@@ -24,7 +24,7 @@ interface ClientConfig {
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const CLIENT_CONFIG = process.env.CLIENT_CONFIG;
 const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
-const AUTH_SESSION_TTL = process.env.AUTH_SESSION_TTL;
+const AUTH_SESSION_TTL_IN_SECS = process.env.AUTH_SESSION_TTL;
 const ISSUER = process.env.ISSUER;
 
 export class SessionRequestProcessor {
@@ -42,7 +42,7 @@ export class SessionRequestProcessor {
 
 	constructor(logger: Logger, metrics: Metrics) {
 
-		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL || !ISSUER ) {
+		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL_IN_SECS || !ISSUER ) {
 			logger.error("Environment variable SESSION_TABLE or CLIENT_CONFIG or ENCRYPTION_KEY_IDS or AUTH_SESSION_TTL is not configured");
 			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
 		}
@@ -139,8 +139,8 @@ export class SessionRequestProcessor {
 			clientId: jwtPayload.client_id,
 			clientSessionId: jwtPayload.govuk_signin_journey_id as string,
 			redirectUri: jwtPayload.redirect_uri,
-			expiryDate: Date.now() + Number(AUTH_SESSION_TTL) * 1000,
-			createdDate: Date.now(),
+			expiryDate: (Date.now() / 1000) + Number(AUTH_SESSION_TTL_IN_SECS),
+			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
 			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used

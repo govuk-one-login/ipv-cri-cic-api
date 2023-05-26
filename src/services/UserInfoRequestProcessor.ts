@@ -21,6 +21,7 @@ const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
 const ISSUER = process.env.ISSUER!;
 
 export class UserInfoRequestProcessor {
+  
 	private static instance: UserInfoRequestProcessor;
 
 	private readonly logger: Logger;
@@ -154,6 +155,7 @@ export class UserInfoRequestProcessor {
 		// Person info required for VC
 		const names = personInfo.personNames[0].nameParts;
 		const birthDate = personInfo.birthDates[0].value;
+
 		// Validate the User Info data presence required to generate the VC
 		if (names && names.length > 0 && birthDate) {
 
@@ -170,13 +172,13 @@ export class UserInfoRequestProcessor {
 				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 			}
 		}
+
 		// Add metric and send TXMA event to the sqsqueue
 		this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 		try {
 			await this.cicService.sendToTXMA({
 				event_name: "CIC_CRI_VC_ISSUED",
 				...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
-
 			});
 		} catch (error) {
 			this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {

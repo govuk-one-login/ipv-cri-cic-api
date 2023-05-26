@@ -76,26 +76,31 @@ Mappings:
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       ISSUER: "https://review-c.dev.account.gov.uk"
+      DNSSUFFIX: review-c.dev.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
+      DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
+      DNSSUFFIX: review-c.staging.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
+      DNSSUFFIX: review-c.integration.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
     production:
       ISSUER: "https://review-c.account.gov.uk"
+      DNSSUFFIX: review-c.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/redirect"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "604800" # 7 days in seconds
@@ -258,9 +263,17 @@ Resources:
         OpenApiVersion: 3.0.1
 
       TracingEnabled: true
+      MethodSettings:
+        - LoggingLevel: INFO
+          MetricsEnabled: true
+          ThrottlingBurstLimit: 400
+          ThrottlingRateLimit: 200
+          DataTraceEnabled: true
+          HttpMethod: "*"
+          ResourcePath: "/*"
       Tags:
         Product: GOV.UK Sign In
-        System: F2F
+        System: CIC
         Environment: !Ref Environment
         Service: backend
         Name: CICRestApi
@@ -289,6 +302,47 @@ Resources:
           Value: APIGatewayAccessLogGroup
 
   ### End of API Gateway definition.
+
+  ### API Gateway Custom Domain definition
+
+  CICApiCustomDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !If
+        - CreateDevResources
+        - !Sub
+          - "api-${AWS::StackName}.${DNSSUFFIX}"
+          - DNSSUFFIX:
+              !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+        - !Sub
+          - "api.${DNSSUFFIX}"
+          - DNSSUFFIX:
+             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+      SecurityPolicy: TLS_1_2
+
+  CICApiCertificateRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref CICApiCustomDomainName
+      Type: A
+      HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
+      AliasTarget:
+        DNSName: !GetAtt CICApiCustomDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt CICApiCustomDomainName.RegionalHostedZoneId
+
+  CICApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: "CICApiCustomDomainName"
+    Properties:
+      DomainName: !Ref CICApiCustomDomainName
+      RestApiId: !Ref CICRestApi
+      Stage: !Sub "${CICRestApi.Stage}"
+
+  ### End of API Gateway Custom Domain definition
 
   ### Function Definition
 
@@ -889,3 +943,11 @@ Outputs:
     Value: !Sub "${CICRestApi}"
     Export:
       Name: !Sub ${AWS::StackName}-CICApiGatewayId
+  CICBackendURL:
+    Description: "CIC Backend URL"
+    Value: !Sub
+      - "https://api-${AWS::StackName}.${DNSSUFFIX}/"
+      - DNSSUFFIX:
+          !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+    Export:
+      Name: !Sub ${AWS::StackName}-CICBackendURL
