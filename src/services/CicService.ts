@@ -132,6 +132,7 @@ export class CicService {
 			Key: { sessionId },
 			UpdateExpression:
 				"SET authSessionState = :authSessionState",
+				"SET authSessionState = :authSessionState",
 
 			ExpressionAttributeValues: {
 				":authSessionState": AuthSessionState.CIC_DATA_RECEIVED,
@@ -142,7 +143,20 @@ export class CicService {
 			message: "updating CIC data in dynamodb",
 			saveCICPersonInfoCommand,
 			updateSessionAuthStateCommand,
+			saveCICPersonInfoCommand,
+			updateSessionAuthStateCommand,
 		});
+
+		try {await this.dynamo.send(saveCICPersonInfoCommand);
+			this.logger.info({ message: "updated CIC user info in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "got error saving CIC user data", error });
+			throw new AppError(
+				"Failed to set claimed identity data ",
+				HttpCodesEnum.SERVER_ERROR,
+			);
+		}
+
 		try {
 			await this.dynamo.send(saveCICPersonInfoCommand);
 			this.logger.info({ message: "updated CIC user info in dynamodb" });
@@ -165,6 +179,7 @@ export class CicService {
 			);
 		}
 	}
+
 
 	async setAuthorizationCode(sessionId: string, uuid: string): Promise<void> {
 		const updateSessionCommand = new UpdateCommand({
@@ -292,6 +307,31 @@ export class CicService {
 			throw new AppError("saveItem - failed ", 500);
 		}
 	}
+	// These functions are not required as shared_claims object is same format as person table
+
+	// private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
+	// 	return addresses?.map((address) => ({
+	// 		uprn: address.uprn,
+	// 		organisationName: address.organisationName,
+	// 		departmentName: address.departmentName,
+	// 		subBuildingName: address.subBuildingName,
+	// 		buildingNumber: address.buildingNumber,
+	// 		buildingName: address.buildingName,
+	// 		dependentStreetName: address.dependentStreetName,
+	// 		streetName: address.streetName,
+	// 		addressCountry: address.addressCountry,
+	// 		postalCode: address.postalCode,
+	// 		addressLocality: address.addressLocality,
+	// 		dependentAddressLocality: address.dependentAddressLocality,
+	// 		doubleDependentAddressLocality: address.doubleDependentAddressLocality,
+	// 		validFrom: address.validFrom,
+	// 		validUntil: address.validUntil,
+	// 	}));
+	// }
+
+	// private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
+	// 	return birthDates?.map((bd) => ({ value: bd.value }));
+	// }
 
 	// These functions are not required as shared_claims object is same format as person table
 	// private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
@@ -350,8 +390,37 @@ export class CicService {
 				nameParts,
 			},
 		];
+	private mapCICNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
+		const nameParts: PersonIdentityNamePart[] = [];
+		givenNames.forEach((givenName) => {
+			nameParts.push(
+				{
+					type: "GivenName",
+					value: givenName,
+				},
+			);
+		});
+		familyNames.forEach((familyName) => {
+			nameParts.push(
+				{
+					type: "FamilyName",
+					value: familyName,
+				},
+			);
+		});
+		return [
+			{
+				nameParts,
+			},
+		];
 	}
 
+	private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
+		return [
+			{
+				value: birthDay,
+			},
+		];
 	private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
 		return [
 			{
@@ -362,6 +431,7 @@ export class CicService {
 
 	private createPersonIdentityItem(
 		sharedClaims: SharedClaimsItem,
+		sharedClaims: SharedClaimsItem,
 		sessionId: string,
 		sessionExpirationEpoch: number,
 	): PersonIdentityItem {
@@ -369,12 +439,16 @@ export class CicService {
 			sessionId,
 			addresses: sharedClaims.address,
 			birthDates: sharedClaims.birthDate,
+			addresses: sharedClaims.address,
+			birthDates: sharedClaims.birthDate,
 			expiryDate: sessionExpirationEpoch,
+			personNames: sharedClaims.name,
 			personNames: sharedClaims.name,
 		};
 	}
 
 	async savePersonIdentity(
+		sharedClaims: SharedClaimsItem,
 		sharedClaims: SharedClaimsItem,
 		sessionId: string,
 		expiryDate: number,
