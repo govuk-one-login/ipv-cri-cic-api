@@ -48,16 +48,10 @@ export class ClaimedIdRequestProcessor {
 		try {
 			this.logger.debug("IN processRequest");
 			const bodyParsed = JSON.parse(event.body as string);
-			console.log("EVENTBODY:", event.body);
-			console.log("BODYPARSED:", bodyParsed);
-
 			// Convert given_names and family_names string into string[]
-			// Need to somehow perform the split after 
 			bodyParsed.given_names = bodyParsed.given_names.split(" ");
 			bodyParsed.family_names = bodyParsed.family_names.split(" ");
 			cicSession = new CicSession(bodyParsed);
-			console.log("AFTERSPLIT:", bodyParsed);
-			console.log("CICSESSION:", cicSession);
 			await this.validationHelper.validateModel(cicSession, this.logger);
 			this.logger.debug({ message: "CIC Session is", cicSession });
 		} catch (error) {

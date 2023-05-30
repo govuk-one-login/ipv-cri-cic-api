@@ -297,41 +297,6 @@ export class CicService {
 			throw new AppError("saveItem - failed ", 500);
 		}
 	}
-	// These functions are not required as shared_claims object is same format as person table
-
-	// These functions are not required as shared_claims object is same format as person table
-	// private mapAddresses(addresses: Address[]): PersonIdentityAddress[] {
-	// 	return addresses?.map((address) => ({
-	// 		uprn: address.uprn,
-	// 		organisationName: address.organisationName,
-	// 		departmentName: address.departmentName,
-	// 		subBuildingName: address.subBuildingName,
-	// 		buildingNumber: address.buildingNumber,
-	// 		buildingName: address.buildingName,
-	// 		dependentStreetName: address.dependentStreetName,
-	// 		streetName: address.streetName,
-	// 		addressCountry: address.addressCountry,
-	// 		postalCode: address.postalCode,
-	// 		addressLocality: address.addressLocality,
-	// 		dependentAddressLocality: address.dependentAddressLocality,
-	// 		doubleDependentAddressLocality: address.doubleDependentAddressLocality,
-	// 		validFrom: address.validFrom,
-	// 		validUntil: address.validUntil,
-	// 	}));
-	// }
-
-	// private mapBirthDates(birthDates: BirthDate[]): PersonIdentityDateOfBirth[] {
-	// 	return birthDates?.map((bd) => ({ value: bd.value }));
-	// }
-
-	// private mapNames(names: Name[]): PersonIdentityName[] {
-	// 	return names?.map((name) => ({
-	// 		nameParts: name?.nameParts?.map((namePart) => ({
-	// 			type: namePart.type,
-	// 			value: namePart.value,
-	// 		})),
-	// 	}));
-	// }
 
 	private mapCICNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
 		const nameParts: PersonIdentityNamePart[] = [];

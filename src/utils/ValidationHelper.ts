@@ -34,39 +34,6 @@ export class ValidationHelper {
 		});
 	}
 
-	// These validation functions are no longer used - person info validated directly in UserInfoRequestProcessor
-	
-	// private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
-	// 	let isValid = true;
-	// 	if (data === null || data === undefined) {
-	// 		isValid = false;
-	// 	} else {
-	// 		if (typeof data === "string") {
-	// 			if (data.trim().length === 0) {
-	// 				isValid = false;
-	// 			}
-	// 		} else {
-	// 			if (data.length === 0) {
-	// 				isValid = false;
-	// 			}
-	// 		}
-	// 	}
-	// 	if (!isValid) {
-	// 		logger.info({ message: "UserInfo missing: ", errmsg });
-	// 	}
-	// 	return isValid;
-	// }
-
-	// validateUserInfo(personInfo: PersonIdentityItem, logger: Logger): boolean {
-	// 	let isValid = true;
-	// 	if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
-	// 		!this.validateUserData(session.family_names, "Family names is missing", logger) ||
-	// 		!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger)) {
-	// 		isValid = false;
-	// 	}
-	// 	return isValid;
-	// }
-
 	async eventToSubjectIdentifier(jwtAdapter: KmsJwtAdapter, event: APIGatewayProxyEvent): Promise<string> {
 		const headerValue = event.headers.authorization ?? event.headers.Authorization;
 		if (headerValue === null || headerValue === undefined) {

@@ -60,28 +60,6 @@ export class VerifiableCredentialService {
     		throw new AppError( "Server Error", HttpCodesEnum.SERVER_ERROR);
 		}
 	}
-
-	// No longer necessary - VC name parts are now received by UserInfo in correct format from person table directly
-	// 	buildVcNamePart(given_names: string[] | undefined, family_names: string[] | undefined): object[] {
-	// 		const parts: object[] = [];
-	// 		given_names?.forEach((givenName) => {
-	// 			parts.push(
-	// 				{
-	// 					value: givenName,
-	// 					type: "GivenName",
-	// 				},
-	// 			);
-	// 		});
-	// 		family_names?.forEach((familyName) => {
-	// 			parts.push(
-	// 				{
-	// 					value: familyName,
-	// 					type: "FamilyName",
-	// 				},
-	// 			);
-	// 		});
-	// 		return parts;
-	// 	}
 }
 
 class VerifiableCredentialBuilder {
