@@ -4,6 +4,7 @@ import { CicSession } from "../../../models/CicSession";
 import { randomUUID } from "crypto";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
+import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 
 const logger = new Logger({
 	logLevel: "DEBUG",
@@ -46,6 +47,15 @@ describe("Cic Service", () => {
 	it("Should not throw an error and return undefined when person doesn't exist", async () => {
 		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 		return expect(cicService.getPersonIdentityBySessionId("1234")).resolves.toBeUndefined();
+	});
+
+	it("Should not throw an error and return undefined when session expiry date has passed", async () => {
+		const expiredSession = {
+			...SESSION_RECORD,
+			expiryDate: absoluteTimeNow() - 500,
+		};
+		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: expiredSession });
+		return expect(cicService.getSessionById("1234")).rejects.toThrow("Session with session id: 1234 has expired");
 	});
 
 	it("should throw 500 if request fails during save CIC data", async () => {
