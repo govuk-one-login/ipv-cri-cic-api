@@ -144,7 +144,8 @@ export class CicService {
 			updateSessionAuthStateCommand,
 		});
 
-		try {await this.dynamo.send(saveCICPersonInfoCommand);
+		try {
+			await this.dynamo.send(saveCICPersonInfoCommand);
 			this.logger.info({ message: "updated CIC user info in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "got error saving CIC user data", error });

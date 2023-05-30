@@ -14,7 +14,7 @@ let cicService: CicService;
 const tableName = "MYTABLE";
 const sessionId = "SESSID";
 const authCode = "AUTHCODE";
-const expiryDate = 9999999999999
+const expiryDate = 9999999999999;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const SESSION_RECORD = require("../data/db_record.json");
 

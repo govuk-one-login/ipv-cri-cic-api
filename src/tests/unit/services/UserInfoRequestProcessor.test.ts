@@ -70,7 +70,7 @@ function getMockPersonItem(): PersonIdentityItem {
 		}],
 		personNames: [{ nameParts: [{ type: "First", value: "Name" }] }],
 		birthDates: [{ value: "1990-01-01" }],
-		expiryDate: 123
+		expiryDate: 123,
 
 	};
 	return person;

@@ -135,7 +135,7 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
-		this.logger.info("Found Person")
+		this.logger.info("Found Person");
   
 		this.metrics.addMetric("found person", MetricUnits.Count, 1);
 		
@@ -159,43 +159,44 @@ export class UserInfoRequestProcessor {
 		// Validate the User Info data presence required to generate the VC
 		if (names && names.length > 0 && birthDate) {
 
-		//Generate VC and create a signedVC as response back to IPV Core.
-		let signedJWT;
-		try {
-			signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, birthDate, absoluteTimeNow);
-		} catch (error) {
-			if (error instanceof AppError) {
-				this.logger.error("Error generating signed verifiable credential jwt", {
-					error,
-					messageCode: MessageCodes.ERROR_SIGNING_VC,
-				});
-				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+			//Generate VC and create a signedVC as response back to IPV Core.
+			let signedJWT;
+			try {
+				signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, birthDate, absoluteTimeNow);
+			} catch (error) {
+				if (error instanceof AppError) {
+					this.logger.error("Error generating signed verifiable credential jwt", {
+						error,
+						messageCode: MessageCodes.ERROR_SIGNING_VC,
+					});
+					return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+				}
 			}
-		}
 
-		// Add metric and send TXMA event to the sqsqueue
-		this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
-		try {
-			await this.cicService.sendToTXMA({
-				event_name: "CIC_CRI_VC_ISSUED",
-				...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
-			});
-		} catch (error) {
-			this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
-				error,
-				messageCode: MessageCodes.ERROR_WRITING_TXMA,
-			});
-		}
-		// return success response
-		return new Response(HttpCodesEnum.OK, JSON.stringify({
-			sub: session.clientId,
-			"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
-		}))} else {
+			// Add metric and send TXMA event to the sqsqueue
+			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
+			try {
+				await this.cicService.sendToTXMA({
+					event_name: "CIC_CRI_VC_ISSUED",
+					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+				});
+			} catch (error) {
+				this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
+					error,
+					messageCode: MessageCodes.ERROR_WRITING_TXMA,
+				});
+			}
+			// return success response
+			return new Response(HttpCodesEnum.OK, JSON.stringify({
+				sub: session.clientId,
+				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
+			}));
+		} else {
 
 			this.logger.error("Claimed Identity data invalid", {
-					messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
-				});
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+				messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
+			});
+			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}
 	}
 }

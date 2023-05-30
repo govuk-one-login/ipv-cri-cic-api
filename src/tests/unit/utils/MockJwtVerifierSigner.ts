@@ -57,7 +57,7 @@ export class MockKmsJwtAdapterForVc {
     	return JSON.stringify(jwtPayload);
     }
 
-	decode(_token: string): Jwt {
+    decode(_token: string): Jwt {
     	return {
     		header: {
     			alg: "MOCK",

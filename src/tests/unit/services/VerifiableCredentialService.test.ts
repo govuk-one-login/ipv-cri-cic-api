@@ -73,10 +73,10 @@ function getMockPersonItem(): PersonIdentityItem {
 				{ type: "GivenName", value: "FRED" },
 				{ type: "GivenName", value: "NICK" },
 				{ type: "FamilyName", value: "OTHER" },
-				{ type: "FamilyName", value: "NAME" },]
+				{ type: "FamilyName", value: "NAME" }],
 		}],
 		birthDates: [{ value: "01-01-1960" }],
-		expiryDate: 123
+		expiryDate: 123,
 
 	};
 	return person;
@@ -133,16 +133,16 @@ describe("Issuing verified credentials", () => {
 	it.each([
 		[[
 			{ type: "FamilyName", value: "OTHER" },
-			{ type: "FamilyName", value: "NAME" },], 2],
+			{ type: "FamilyName", value: "NAME" }], 2],
 		[[
 			{ type: "GivenName", value: "FRED" },
 			{ type: "GivenName", value: "NICK" },
 			{ type: "FamilyName", value: "OTHER" },
-			{ type: "FamilyName", value: "NAME" },], 4],
+			{ type: "FamilyName", value: "NAME" }], 4],
 		[[
 			{ type: "GivenName", value: "FRED" },
 			{ type: "GivenName", value: "NICK" },
-			{ type: "FamilyName", value: "OTHER" },], 3],
+			{ type: "FamilyName", value: "OTHER" }], 3],
 	])("Return successful response with 200 OK and verify length of name parts in the VC", async (personName, expectedLength) => {
 		// @ts-ignore
 		mockPerson.personNames[0].nameParts = personName;
