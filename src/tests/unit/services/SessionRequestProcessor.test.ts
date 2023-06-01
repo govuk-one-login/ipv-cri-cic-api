@@ -303,7 +303,7 @@ describe("SessionRequestProcessor", () => {
 		);
 		// the next assertion checks that the value has no more than 10 digits, i.e. is in secs not ms
 		// this will break in the year 2286!
-		const actualExpiryDate = mockCicService.createAuthSession.mock.calls[0][0]["expiryDate"];
+		const actualExpiryDate = mockCicService.createAuthSession.mock.calls[0][0].expiryDate;
 		expect(actualExpiryDate).toBeLessThan(10000000000);
 		jest.useRealTimers();
 	});

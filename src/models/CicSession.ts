@@ -3,7 +3,7 @@ import {
 	IsArray,
 	IsISO8601,
 	IsNotEmpty,
-	IsString,
+	ArrayNotContains,
 } from "class-validator";
 import { ICicSession } from "./ISessionItem";
 
@@ -16,6 +16,7 @@ export class CicSession implements ICicSession {
 
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayNotContains([""])
   given_names: string[];
 
   @IsISO8601()
@@ -24,5 +25,6 @@ export class CicSession implements ICicSession {
 
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayNotContains([""])
   family_names: string[];
 }

@@ -3,7 +3,7 @@ import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 
 // arrange test data before importing the class under test
-process.env["SESSION_TABLE"] = "";
+process.env.SESSION_TABLE = "";
 
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 
