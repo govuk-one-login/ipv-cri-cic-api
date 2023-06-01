@@ -3,7 +3,7 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
-import { VALID_SESSION } from "../data/session-events";
+import { VALID_SESSION, SESSION_WITH_INVALID_CLIENT } from "../data/session-events";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { JWTPayload } from "jose";
@@ -71,6 +71,24 @@ describe("SessionRequestProcessor", () => {
 		sessionRequestProcessor.validationHelper = mockValidationHelper;
 	});
 
+	it("should report unrecognised client", async () => {
+
+		// Arrange
+
+		// Act
+		const response = await sessionRequestProcessor.processRequest(SESSION_WITH_INVALID_CLIENT);
+
+		// Assert
+		expect(response.statusCode).toBe(HttpCodesEnum.BAD_REQUEST);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "UNRECOGNISED_CLIENT",
+			}),
+		);
+	});
+
 	it("should report a JWE decryption failure", async () => {
 
 		// Arrange
@@ -81,7 +99,13 @@ describe("SessionRequestProcessor", () => {
 
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
-
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "FAILED_DECRYPTING_JWE",
+			}),
+		);
 	});
 
 	it("should report a failure to decode JWT", async () => {
@@ -99,8 +123,10 @@ describe("SessionRequestProcessor", () => {
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
-			"FAILED_DECODING_JWT",
 			expect.anything(),
+			expect.objectContaining({
+				messageCode: "FAILED_DECODING_JWT",
+			}),
 		);
 	});
 
@@ -116,7 +142,13 @@ describe("SessionRequestProcessor", () => {
 
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
-		expect(response.body).toBe("{\"redirect\":null,\"message\":\"JWT verification failed\"}");
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "FAILED_VERIFYING_JWT",
+			}),
+		);
 	});
 
 	it("should report an unexpected error verifying JWT", async () => {
@@ -131,12 +163,13 @@ describe("SessionRequestProcessor", () => {
 
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
-		expect(logger.debug).toHaveBeenCalledTimes(1);
-		expect(logger.debug).toHaveBeenCalledWith(
-			"UNEXPECTED_ERROR_VERIFYING_JWT",
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
+			expect.objectContaining({
+				messageCode: "UNEXPECTED_ERROR_VERIFYING_JWT",
+			}),
 		);
-		expect(response.body).toBe("{\"redirect\":null,\"message\":\"Invalid request: Could not verify jwt\"}");
 	});
 
 	it("should report a JWT validation failure", async () => {
@@ -152,7 +185,12 @@ describe("SessionRequestProcessor", () => {
 
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
-		expect(response.body).toBe("{\"redirect\":null,\"message\":\"JWT validation/verification failed\"}");
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "FAILED_VALIDATING_JWT",
+			}),
+		);
 	});
 
 	it("should report session already exists", async () => {
@@ -169,8 +207,10 @@ describe("SessionRequestProcessor", () => {
 		// Assert
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
-			"SESSION_ALREADY_EXISTS",
 			expect.anything(),
+			expect.objectContaining({
+				messageCode: "SESSION_ALREADY_EXISTS",
+			}),
 		);
 		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 	});
@@ -190,8 +230,10 @@ describe("SessionRequestProcessor", () => {
 		// Assert
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
-			"FAILED_CREATING_SESSION",
 			expect.anything(),
+			expect.objectContaining({
+				messageCode: "FAILED_CREATING_SESSION",
+			}),
 		);
 		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 	});
@@ -204,13 +246,36 @@ describe("SessionRequestProcessor", () => {
 		mockValidationHelper.isJwtValid.mockReturnValue("");
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 		mockCicService.createAuthSession.mockResolvedValue();
-		mockCicService.savePersonIdentity.mockRejectedValue("error");
 
 		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.OK);
+	});
+
+	it("should create a new session but report a TxMA failure", async () => {
+		// Arrange
+		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+		mockValidationHelper.isJwtValid.mockReturnValue("");
+		mockCicService.getSessionById.mockResolvedValue(undefined);
+		mockCicService.createAuthSession.mockResolvedValue();
+		mockCicService.sendToTXMA.mockRejectedValue("failed");
+
+		// Act
+		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+		// Assert
+		expect(response.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "FAILED_TO_WRITE_TXMA",
+			}),
+		);
 	});
 
 	it("the session created should have a valid expiryDate", async () => {
