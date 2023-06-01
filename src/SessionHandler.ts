@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
@@ -24,8 +24,12 @@ const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
 class Session implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
-	@logger.injectLambdaContext()
-	async handler(event: APIGatewayProxyEvent, _context: any): Promise<APIGatewayProxyResult> {
+	async handler(event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> {
+
+		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
+		logger.setPersistentLogAttributes({});
+		logger.addContext(context);
+
 		switch (event.resource) {
 			case ResourcesEnum.SESSION:
 				try {

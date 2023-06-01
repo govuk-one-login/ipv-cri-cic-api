@@ -77,8 +77,9 @@ export class SessionRequestProcessor {
 		try {
 			const config = JSON.parse(CLIENT_CONFIG!) as ClientConfig[];
 			configClient = config.find(c => c.clientId === requestBodyClientId);
-		} catch {
+		} catch (error) {
 			this.logger.error("Invalid or missing client configuration table", {
+				error,
 				messageCode: MessageCodes.MISSING_CONFIGURATION,
 			});
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
@@ -144,8 +145,11 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse();
 		}
 
-
 		const sessionId: string = randomUUID();
+		this.logger.appendKeys({
+			sessionId,
+			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+		});
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
 				this.logger.error("SESSION_ALREADY_EXISTS", {

@@ -26,7 +26,9 @@ const decodedJwtFactory = ():Jwt => {
 		header: {
 			alg: "mock",
 		},
-		payload: {},
+		payload: {
+			govuk_signin_journey_id: "abcdef",
+		},
 		signature: "signature",
 	};
 };
@@ -213,6 +215,10 @@ describe("SessionRequestProcessor", () => {
 			}),
 		);
 		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: expect.any(String),
+			govuk_signin_journey_id: "abcdef",
+		});
 	});
 
 	it("should fail to create a session", async () => {
@@ -236,6 +242,10 @@ describe("SessionRequestProcessor", () => {
 			}),
 		);
 		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: expect.any(String),
+			govuk_signin_journey_id: "abcdef",
+		});
 	});
 
 	it("should create a new session", async () => {
@@ -252,6 +262,10 @@ describe("SessionRequestProcessor", () => {
 
 		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: expect.any(String),
+			govuk_signin_journey_id: "abcdef",
+		});
 	});
 
 	it("should create a new session but report a TxMA failure", async () => {
@@ -276,6 +290,10 @@ describe("SessionRequestProcessor", () => {
 				messageCode: "FAILED_TO_WRITE_TXMA",
 			}),
 		);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: expect.any(String),
+			govuk_signin_journey_id: "abcdef",
+		});
 	});
 
 	it("the session created should have a valid expiryDate", async () => {
