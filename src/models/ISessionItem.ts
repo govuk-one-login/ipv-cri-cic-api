@@ -4,7 +4,7 @@ export interface ICicSession {
 	date_of_birth?: string;
 }
 
-export interface ISessionItem extends ICicSession {
+export interface ISessionItem {
 	sessionId: string;
 	clientId: string;
 	clientSessionId: string;
