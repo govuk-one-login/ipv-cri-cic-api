@@ -12,21 +12,21 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 		// Session Post      
 		const sessionRequest = await sessionPost(stubResponse.data.clientId, "");
 		expect(sessionRequest.status).toBe(401);
-		expect(sessionRequest.data.message).toBe("Invalid request: Request failed to be decrypted");
+		expect(sessionRequest.data.message).toBe("Unauthorized");
 	});
 
 	it("E2E Negative Path Journey - Sessions: Empty Client ID", async () => {
 		// Session Post
 		const sessionRequest = await sessionPost("", stubResponse.data.request);
 		expect(sessionRequest.status).toBe(400);
-		expect(sessionRequest.data).toBe("Missing client config");
+		expect(sessionRequest.data).toBe("Bad Request");
 	});
 
 	it("E2E Negative Path Journey - Sessions: Incorrect Client ID", async () => {
 		// Session Post
 		const sessionRequest = await sessionPost("1A2B3C4D", stubResponse.data.request);
 		expect(sessionRequest.status).toBe(400);
-		expect(sessionRequest.data).toBe("Missing client config");
+		expect(sessionRequest.data).toBe("Bad Request");
 	});
 
 });
