@@ -111,9 +111,8 @@ export class CicService {
 	}
 
 	async saveCICData(sessionId: string, cicData: CicSession, sessionExpiry: number): Promise<void> {
-		const personNames = this.mapCICNames(cicData.given_names, cicData.family_names);
-		const personBirthDay = this.mapCICBirthDay(cicData.date_of_birth);
-
+		// const personNames = this.mapCICNames(cicData.given_names, cicData.family_names);
+		// const personBirthDay = this.mapCICBirthDay(cicData.date_of_birth);
 		const saveCICPersonInfoCommand: any = new UpdateCommand({
 			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
 			Key: { sessionId },
@@ -121,8 +120,8 @@ export class CicService {
 				"SET personNames = :personNames, birthDates = :date_of_birth, expiryDate = :expiryDate",
 
 			ExpressionAttributeValues: {
-				":personNames": personNames,
-				":date_of_birth": personBirthDay,
+				":personNames": cicData.personNames,
+				":date_of_birth": cicData.birthDates,
 				":expiryDate": sessionExpiry,
 			},
 		});
@@ -298,38 +297,38 @@ export class CicService {
 		}
 	}
 
-	private mapCICNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
-		const nameParts: PersonIdentityNamePart[] = [];
-		givenNames.forEach((givenName) => {
-			nameParts.push(
-				{
-					type: "GivenName",
-					value: givenName,
-				},
-			);
-		});
-		familyNames.forEach((familyName) => {
-			nameParts.push(
-				{
-					type: "FamilyName",
-					value: familyName,
-				},
-			);
-		});
-		return [
-			{
-				nameParts,
-			},
-		];
-	}
+	// private mapCICNames(givenNames: string[], familyNames: string[]): PersonIdentityName[] {
+	// 	const nameParts: PersonIdentityNamePart[] = [];
+	// 	givenNames.forEach((givenName) => {
+	// 		nameParts.push(
+	// 			{
+	// 				type: "GivenName",
+	// 				value: givenName,
+	// 			},
+	// 		);
+	// 	});
+	// 	familyNames.forEach((familyName) => {
+	// 		nameParts.push(
+	// 			{
+	// 				type: "FamilyName",
+	// 				value: familyName,
+	// 			},
+	// 		);
+	// 	});
+	// 	return [
+	// 		{
+	// 			nameParts,
+	// 		},
+	// 	];
+	// }
 
-	private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
-		return [
-			{
-				value: birthDay,
-			},
-		];
-	}
+	// private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
+	// 	return [
+	// 		{
+	// 			value: birthDay,
+	// 		},
+	// 	];
+	// }
 
 	private createPersonIdentityItem(
 		sharedClaims: SharedClaimsItem,

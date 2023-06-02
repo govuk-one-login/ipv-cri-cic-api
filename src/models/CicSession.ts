@@ -5,26 +5,60 @@ import {
 	IsNotEmpty,
 	ArrayNotContains,
 } from "class-validator";
-import { ICicSession } from "./ISessionItem";
+import {
+  ICicSession, 
+  PersonIdentityNamePart,
+  PersonIdentityName,
+  PersonIdentityDateOfBirth
+} from "./PersonIdentityItem"
 
 export class CicSession implements ICicSession {
-	constructor(data: CicSession) {
-		this.given_names = data.given_names!;
-		this.family_names = data.family_names!;
-		this.date_of_birth = data.date_of_birth!;
-	}
+    constructor(givenNames: string, familyNames: string, birthDate: string) {
+      this.personNames =  this.mapCICNames(givenNames.split(" "), familyNames.split(" "));
+      this.birthDates = this.mapCICBirthDay(birthDate);
+    }
 
   @IsArray()
   @ArrayNotEmpty()
   @ArrayNotContains([""])
-  given_names: string[];
-
-  @IsISO8601()
-  @IsNotEmpty()
-  date_of_birth: string;
+  personNames:PersonIdentityName[];
 
   @IsArray()
   @ArrayNotEmpty()
   @ArrayNotContains([""])
-  family_names: string[];
+  birthDates:PersonIdentityDateOfBirth[];
+
+  private mapCICNames(givenNames: string[], familyNames: string[]) {
+    const nameParts: PersonIdentityNamePart[] = [];
+    givenNames.forEach((givenName) => {
+      nameParts.push(
+        {
+          type: "GivenName",
+          value: givenName,
+        },
+      );
+    });
+    familyNames.forEach((familyName) => {
+      nameParts.push(
+        {
+          type: "FamilyName",
+          value: familyName,
+        },
+      );
+    });
+    return [
+      {
+        nameParts,
+      },
+    ];
+  }
+
+  private mapCICBirthDay(birthDay: string) {
+    return [
+      {
+        value: birthDay,
+      },
+    ];
+  }
+
 }
