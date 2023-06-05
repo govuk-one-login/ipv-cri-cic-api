@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-
 set -eu
+
+set -a
 
 declare error_code
 # shellcheck disable=SC2154
 export DEV_CRI_CIC_API_URL="${CFN_CICBackendURL}/"
 export DEV_IPV_STUB_URL="https://erveje5km8.execute-api.eu-west-2.amazonaws.com/dev/start"
-env
 
-./src/node_modules/.bin/jest --config ./src/jest.config.ts --test-match '**/tests/api/e2e*.test.ts'
+cd src
+#./node_modules/.bin/jest --config ./jest.config.ts --test-match '**/tests/api/e2e*.test.ts'
+npm run test:api
 
 error_code=$?
 
