@@ -12,6 +12,7 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
+const PERSON_IDENTITY_TABLE_NAME = process.env.PERSON_IDENTITY_TABLE_NAME;
 
 export class ClaimedIdRequestProcessor {
 	private static instance: ClaimedIdRequestProcessor;
@@ -25,9 +26,9 @@ export class ClaimedIdRequestProcessor {
 	private readonly cicService: CicService;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE) {
-			logger.error("Environment variable SESSION_TABLE is not configured");
-			throw new AppError( "Service incorrectly configured", 500);
+		if (!SESSION_TABLE || !PERSON_IDENTITY_TABLE_NAME) {
+			logger.error("Environment variable SESSION_TABLE or PERSON_IDENTITY_TABLE_NAME is not configured");
+			throw new AppError("Service incorrectly configured", 500);
 		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
@@ -71,7 +72,7 @@ export class ClaimedIdRequestProcessor {
 				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`);
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
-			await this.cicService.saveCICData(sessionId, cicSession);
+			await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
 			return new Response(HttpCodesEnum.OK, "");
 		} else {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);

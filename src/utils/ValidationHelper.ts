@@ -2,7 +2,7 @@ import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
-import { ISessionItem } from "../models/ISessionItem";
+import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
@@ -32,37 +32,6 @@ export class ValidationHelper {
 				children: error?.children, // Gets error messages from nested Objects
 			};
 		});
-	}
-
-	private validateUserData(data: string | undefined | string[], errmsg: string, logger: Logger): boolean {
-		let isValid = true;
-		if (data === null || data === undefined) {
-			isValid = false;
-		} else {
-			if (typeof data === "string") {
-				if (data.trim().length === 0) {
-					isValid = false;
-				}
-			} else {
-				if (data.length === 0) {
-					isValid = false;
-				}
-			}
-		}
-		if (!isValid) {
-			logger.info({ message: "UserInfo missing: ", errmsg });
-		}
-		return isValid;
-	}
-
-	validateUserInfo(session: ISessionItem, logger: Logger): boolean {
-		let isValid = true;
-		if (!this.validateUserData(session.given_names, "Given names is missing", logger) ||
-			!this.validateUserData(session.family_names, "Family names is missing", logger) ||
-			!this.validateUserData(session.date_of_birth, "Date of Birth is missing", logger)) {
-			isValid = false;
-		}
-		return isValid;
 	}
 
 	async eventToSubjectIdentifier(jwtAdapter: KmsJwtAdapter, event: APIGatewayProxyEvent): Promise<string> {

@@ -32,7 +32,13 @@ export interface PersonIdentityDateOfBirth {
 export interface PersonIdentityItem {
 	sessionId: string;
 	addresses: PersonIdentityAddress[];
-	names: PersonIdentityName[];
+	personNames: PersonIdentityName[];
 	birthDates: PersonIdentityDateOfBirth[];
 	expiryDate: number;
+}
+
+export interface SharedClaimsItem {
+	name: PersonIdentityName[];
+	birthDate: PersonIdentityDateOfBirth[];
+	address: PersonIdentityAddress[];
 }

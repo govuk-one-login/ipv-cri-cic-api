@@ -6,7 +6,8 @@ export class Response {
 		public body: string,
 		public headers?: { [header: string]: boolean | number | string } | undefined,
 		public multiValueHeaders?: { [header: string]: Array<boolean | number | string> } | undefined,
-	) {}
+	) {
+	}
 }
 
 export const SECURITY_HEADERS = {
@@ -23,13 +24,13 @@ export const GenericServerError = {
 	body: "Internal server error",
 };
 
-export const unauthorizedResponse = (errorDescription: string) => {
+export const unauthorizedResponse = () => {
 	return {
 		statusCode: HttpCodesEnum.UNAUTHORIZED,
 		headers: SECURITY_HEADERS,
 		body: JSON.stringify({
 			redirect: null,
-			message: errorDescription,
+			message: "Unauthorized",
 		}),
 	};
 };
