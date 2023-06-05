@@ -5,7 +5,7 @@ set -eu
 
 declare error_code
 # shellcheck disable=SC2154
-export DEV_CRI_CIC_API_URL=`echo ${CFN_CICBackendURL%/}`
+export DEV_CRI_CIC_API_URL="${CFN_CICBackendURL}/"
 export DEV_IPV_STUB_URL="https://erveje5km8.execute-api.eu-west-2.amazonaws.com/dev/start"
 env
 
