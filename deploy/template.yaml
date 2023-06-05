@@ -130,6 +130,9 @@ Conditions:
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
+  IsPersonalIdentifiableInformationEnvironment: !Or
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -268,7 +271,11 @@ Resources:
           MetricsEnabled: true
           ThrottlingBurstLimit: 400
           ThrottlingRateLimit: 200
-          DataTraceEnabled: true
+          # Disable data trace in production and integration to avoid logging customer sensitive information
+          DataTraceEnabled: !If
+            - IsPersonalIdentifiableInformationEnvironment
+            - false
+            - true
           HttpMethod: "*"
           ResourcePath: "/*"
       Tags:
