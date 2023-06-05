@@ -11,6 +11,3 @@ cf-output.txt
 
 ### Environment ###
 **/.env
-
-### Run-tests
-/docker_vars.env
