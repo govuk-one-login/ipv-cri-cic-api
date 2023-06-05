@@ -20,7 +20,10 @@ then
     echo TEST_ENVIRONMENT="$ENVIRONMENT" >> docker_vars.env
     echo ENVIRONMENT="$ENVIRONMENT" >> docker_vars.env
     echo SAM_STACK_NAME="$SAM_STACK" >> docker_vars.env
-    
+    echo AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" >> docker_vars.env
+    echo AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" >> docker_vars.env
+    echo AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" >> docker_vars.env
+
     docker build -f Dockerfile -t testcontainer .
     docker run --env-file docker_vars.env -v $(pwd)/results:/results testcontainer
 else    
