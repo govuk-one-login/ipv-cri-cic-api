@@ -304,6 +304,11 @@ Resources:
   ### End of API Gateway definition.
 
   ### API Gateway Custom Domain definition
+  WAFv2ACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${CICRestApi}/stages/${CICRestApi.Stage}"
+      WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/WafArn}}"
 
   CICApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
