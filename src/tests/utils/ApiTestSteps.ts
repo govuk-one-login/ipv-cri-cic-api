@@ -56,7 +56,7 @@ export async function authorizationGet(sessionId: any):Promise<any> {
 export async function tokenPost(authCode?: any, redirectUri?: any ):Promise<any> {
 	const path = "/token";
 	try {
-		const postRequest = await API_INSTANCE.post( "/token", `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}`, { headers:{ "Content-Type" : "text/plain" } });
+		const postRequest = await API_INSTANCE.post( "/token", `code=${authCode}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(redirectUri)}`, { headers:{ "Content-Type" : "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
