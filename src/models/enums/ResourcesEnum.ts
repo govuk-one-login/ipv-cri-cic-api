@@ -3,7 +3,7 @@
  */
 export enum ResourcesEnum {
 	CLAIMEDIDENTITY = "/claimedIdentity",
-	USERINFO = "/userInfo",
+	USERINFO = "/userinfo",
 	TOKEN = "/token",
 	AUTHORIZATION = "/authorization",
 	SESSION = "/session",
