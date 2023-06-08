@@ -1045,5 +1045,7 @@ x-amazon-apigateway-request-validators:
       validateRequestParameters: true
     requestBodyOnly:
       validateRequestBody: true
+      validateRequestParameters: false
     requestParamsOnly:
+      validateRequestBody: false
       validateRequestParameters: true
