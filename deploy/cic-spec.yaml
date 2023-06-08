@@ -37,7 +37,7 @@ paths:
             schema:
               $ref: '#/components/schemas/IssueTokenRequest'
       responses:
-        "201":
+        "200":
           description: >-
             Created - OAuth token is valid - Session details have been stored in the backend and a `session_id`
             is returned.
