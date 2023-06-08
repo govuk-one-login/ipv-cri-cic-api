@@ -105,7 +105,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OAuthErrorResponse"
-      x-amazon-apigateway-request-validator: "both"
+      x-amazon-apigateway-request-validator: "requestParamsOnly"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
@@ -1042,4 +1042,8 @@ components:
 x-amazon-apigateway-request-validators:
     both:
       validateRequestBody: true
+      validateRequestParameters: true
+    requestBodyOnly:
+      validateRequestBody: true
+    requestParamsOnly:
       validateRequestParameters: true
