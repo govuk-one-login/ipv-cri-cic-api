@@ -19,7 +19,7 @@ const logger = new Logger({
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
-const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
+const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
 class Session implements LambdaInterface {
 
@@ -33,10 +33,8 @@ class Session implements LambdaInterface {
 		switch (event.resource) {
 			case ResourcesEnum.SESSION:
 				try {
-					logger.debug("metrics is", { metrics });
-					logger.debug("Event received", { event });
 					return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
-				} catch (error: any) {
+				} catch (error) {
 					logger.error("An error has occurred.", {
 						messageCode: MessageCodes.SERVER_ERROR,
 						error,
@@ -44,14 +42,14 @@ class Session implements LambdaInterface {
 					if (error instanceof AppError) {
 						return new Response(error.statusCode, error.message);
 					}
-					return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
+					return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 				}
 			default:
 				logger.error("Requested resource does not exist", {
 					resource: event.resource,
 					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
 				});
-				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
+				throw new AppError("Not Found", HttpCodesEnum.NOT_FOUND);
 		}
 
 	}
