@@ -42,6 +42,10 @@ Parameters:
     Type: String
     Default: "INFO"
     Description: Lambda Powertools-for-Typescript Log Level
+  IPVStubStackName:
+    Type: String
+    Default: "cic-ipv-stub"
+    Description: The name of theIPV stub stack deployed.
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -951,3 +955,7 @@ Outputs:
           !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
     Export:
       Name: !Sub ${AWS::StackName}-CICBackendURL
+  CICIPVStubExecuteURL:
+    Description: "CIC IPV Stub"
+    Value:
+      Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
