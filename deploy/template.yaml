@@ -93,19 +93,19 @@ Mappings:
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/redirect"}]'
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/redirect"}]'
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/redirect"}]'
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
   TxMAAccounts:
@@ -132,6 +132,9 @@ Conditions:
     - dev
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
+  IsPersonalIdentifiableInformationEnvironment: !Or
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
   UseCodeSigning:
@@ -272,7 +275,11 @@ Resources:
           MetricsEnabled: true
           ThrottlingBurstLimit: 400
           ThrottlingRateLimit: 200
-          DataTraceEnabled: true
+          # Disable data trace in production and integration to avoid logging customer sensitive information
+          DataTraceEnabled: !If
+            - IsPersonalIdentifiableInformationEnvironment
+            - false
+            - true
           HttpMethod: "*"
           ResourcePath: "/*"
       Tags:
@@ -365,7 +372,7 @@ Resources:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           PERSON_IDENTITY_TABLE_NAME:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
-          
+
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -416,7 +423,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
@@ -514,7 +521,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref UserInfoFunctionLogGroup
@@ -617,7 +624,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref SessionFunctionLogGroup
@@ -694,7 +701,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref TokenFunctionLogGroup
@@ -774,7 +781,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref AuthorizationFunctionLogGroup
@@ -906,7 +913,7 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: cron(0 * * * ? *)
-            
+
       Environment:
         Variables:
           JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
