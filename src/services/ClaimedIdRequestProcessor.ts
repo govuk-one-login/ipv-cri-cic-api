@@ -48,12 +48,7 @@ export class ClaimedIdRequestProcessor {
 		try {
 			this.logger.debug("IN processRequest");
 			const bodyParsed = JSON.parse(event.body as string);
-			// bodyParsed.given_names = bodyParsed.given_names.split(" ");
-			// bodyParsed.family_names = bodyParsed.family_names.split(" ");
-			// console.log(bodyParsed);
 			cicSession = new CicSession(bodyParsed.given_names, bodyParsed.family_names, bodyParsed.date_of_birth);
-			// console.log(cicSession);
-			// console.log(cicSession.personNames[0].nameParts);
 			await this.validationHelper.validateModel(cicSession, this.logger);
 			this.logger.debug({ message: "CIC Session is", cicSession });
 		} catch (error) {

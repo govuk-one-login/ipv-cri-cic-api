@@ -24,7 +24,6 @@ describe("CicSession", () => {
 			"Flintstone",
 			"1970-01-01",
 		);
-		console.log(cicSession.personNames[0].nameParts);
 		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
 	});
 
