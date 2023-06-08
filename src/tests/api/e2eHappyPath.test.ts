@@ -20,7 +20,7 @@ describe("E2E Happy Path Tests Slim", () => {
 		expect(authResponse.status).toBe(200);
 		// Post Token
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
-		expect(tokenResponse.status).toBe(201);
+		expect(tokenResponse.status).toBe(200);
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		validateJwtToken(JSON.stringify(userInfoResponse.data), dataSlim);
@@ -46,7 +46,7 @@ describe("E2E Happy Path Tests Björn", () => {
 		expect(authResponse.status).toBe(200);
 		// Post Token
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
-		expect(tokenResponse.status).toBe(201);
+		expect(tokenResponse.status).toBe(200);
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		validateJwtToken(JSON.stringify(userInfoResponse.data), dataBjorn);

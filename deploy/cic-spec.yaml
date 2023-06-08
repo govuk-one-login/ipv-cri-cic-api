@@ -116,7 +116,7 @@ paths:
         passthroughBehavior: "when_no_match"
         contentHandling: "CONVERT_TO_TEXT"
         type: "aws_proxy"
-  /userInfo:
+  /userinfo:
     post:
       operationId: postUserInfo
       summary: Retrieve the JWT contained the Verified Credential(s) for a given Auth Session.
