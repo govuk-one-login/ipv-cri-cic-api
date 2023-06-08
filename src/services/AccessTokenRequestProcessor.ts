@@ -11,6 +11,7 @@ import { AccessTokenRequestValidationHelper } from "../utils/AccessTokenRequestV
 import { ISessionItem } from "../models/ISessionItem";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants } from "../utils/Constants";
+import { MessageCodes } from "../models/enums/MessageCodes";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
@@ -59,6 +60,10 @@ export class AccessTokenRequestProcessor {
     				return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
     			}
     		} catch (err) {
+    			this.logger.error("Error while retrieving the session", {
+    				messageCode: MessageCodes.SESSION_NOT_FOUND,
+    				error: err,
+    			});
     			return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
     		}
 
@@ -83,7 +88,7 @@ export class AccessTokenRequestProcessor {
     		this.logger.info({ message: "Access token generated successfully" });
 
     		return {
-    			statusCode: HttpCodesEnum.CREATED,
+    			statusCode: HttpCodesEnum.OK,
     			body: JSON.stringify({
     				access_token: accessToken,
     				token_type: Constants.BEARER,
