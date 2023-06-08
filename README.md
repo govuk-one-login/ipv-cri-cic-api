@@ -79,7 +79,7 @@ Hello world%
 Unit Tests:  `npm run test:unit`
 API Tests: `npm run test:api`
 Infrastructure Unit Tests: `npm run test:infra`
-Run tests against a CloudFormation stack deployed into AWS: `STACK_NAME=cic-backend-api npm run test:e2e` (Work in progress)
+Run tests against a CloudFormation stack deployed into AWS against your stack (use correct stack name): `run-tests-locally.sh cic-backend-api`
 
 ## .env.example
 
