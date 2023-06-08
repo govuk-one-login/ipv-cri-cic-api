@@ -9,7 +9,7 @@ remove_quotes () {
 declare error_code
 # shellcheck disable=SC2154
 #The CFN variables seem to include quotes when used in tests these must be removed before assigning them.
-CFN_CICBackendURL_NoQuotes=$(remove_quotes $CFN_CICBackendURL)
+CFN_CICBackendURL_NoQuotes=$(remove_quotes "$CFN_CICBackendURL")
 export DEV_CRI_CIC_API_URL=`echo ${CFN_CICBackendURL_NoQuotes%/}`
 export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)/start
 
