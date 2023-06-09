@@ -1,73 +1,19 @@
 #!/usr/bin/env bash
 
-
 set -eu
 
-declare status_code
-# shellcheck disable=SC2154
-# status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$CFN_HelloWorldApi")"
-status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200")"
+remove_quotes () {
+  echo "$1" | tr -d '"'
+}
 
-if [[ $status_code != "200" ]]; then
-  cat <<EOF > "$TEST_REPORT_ABSOLUTE_DIR/result.json"
-[
-  {
-    "uri": "test.sh",
-    "name": "Acceptance test",
-    "elements": [
-      {
-        "type": "scenario",
-        "name": "API Gateway request",
-        "line": 6,
-        "steps": [
-          {
-            "keyword": "Given ",
-            "name": "this step fails",
-            "line": 6,
-            "match": {
-              "location": "test.sh:4"
-            },
-            "result": {
-              "status": "failed",
-              "error_message": " Lambda did not return HTTP status code 200",
-              "duration": 1
-            }
-          }
-        ]
-      }
-    ]
-  }
-]
-EOF
-exit 1
-else
-  cat <<EOF > "$TEST_REPORT_ABSOLUTE_DIR/result.json"
-[
-  {
-    "uri": "test.sh",
-    "name": "Acceptance test",
-    "elements": [
-      {
-        "type": "scenario",
-        "name": "API Gateway request",
-        "line": 6,
-        "steps": [
-          {
-            "keyword": "Given ",
-            "name": "this step fails",
-            "line": 6,
-            "match": {
-              "location": "test.sh:4"
-            },
-            "result": {
-              "status": "passed",
-              "duration": 1
-            }
-          }
-        ]
-      }
-    ]
-  }
-]
-EOF
-fi
+declare error_code
+# shellcheck disable=SC2154
+#The CFN variables seem to include quotes when used in tests these must be removed before assigning them.
+CFN_CICBackendURL_NoQuotes=$(remove_quotes "$CFN_CICBackendURL")
+export DEV_CRI_CIC_API_URL=`echo ${CFN_CICBackendURL_NoQuotes%/}`
+export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)/start
+
+cd ./src; npm run test:e2e
+error_code=$?
+
+exit $error_code

@@ -26,5 +26,9 @@ export default {
   setupFiles: [
     './jest.setup.ts'
   ],
-  testEnvironment: 'node'
+  testEnvironment: 'node',
+  reporters: [
+    'default',
+    ['jest-junit', { outputDirectory: 'results', outputName: 'report.xml' }]
+  ]
 }

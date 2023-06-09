@@ -105,7 +105,7 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 
 		expect(out.body).toEqual(JSON.stringify({
-			sub: "ipv-core-stub",
+			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
@@ -344,7 +344,7 @@ describe("UserInfoRequestProcessor", () => {
 		});
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(out.body).toEqual(JSON.stringify({
-			sub: "ipv-core-stub",
+			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
