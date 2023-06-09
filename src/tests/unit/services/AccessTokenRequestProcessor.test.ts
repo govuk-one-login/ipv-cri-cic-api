@@ -51,9 +51,6 @@ function getMockSessionItem(): ISessionItem {
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
 		attemptCount: 1,
-		given_names: ["given", "name"],
-		family_names: ["family", "name"],
-		date_of_birth: "09-08-1961",
 		authSessionState: AuthSessionState.CIC_AUTH_CODE_ISSUED,
 	};
 	return sess;
@@ -90,7 +87,7 @@ describe("AccessTokenRequestProcessor", () => {
 			"token_type": Constants.BEARER,
 			"expires_in": Constants.TOKEN_EXPIRY_SECONDS,
 		}));
-		expect(out.statusCode).toBe(HttpCodesEnum.CREATED);
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 
 	it("Returns 401 Unauthorized response when body is missing", async () => {

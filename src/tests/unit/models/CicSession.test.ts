@@ -20,7 +20,7 @@ describe("CicSession", () => {
 
 	it("should throw error if given_names is empty in CicSession model", async () => {
 		const cicSession = new CicSession({
-			given_names: [],
+			given_names: [""],
 			family_names: ["Flintstone"],
 			date_of_birth: "1970-01-01",
 		});
@@ -31,7 +31,7 @@ describe("CicSession", () => {
 	it("should throw error if family_names is empty in CicSession model", async () => {
 		const cicSession = new CicSession({
 			given_names: ["Frederick", "Joseph"],
-			family_names: [],
+			family_names: [""],
 			date_of_birth: "1970-01-01",
 		});
 

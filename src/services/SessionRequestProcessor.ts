@@ -13,6 +13,7 @@ import { ISessionItem } from "../models/ISessionItem";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { JwtPayload, Jwt } from "../utils/IVeriCredential";
+import { MessageCodes } from "../models/enums/MessageCodes";
 
 
 interface ClientConfig {
@@ -24,7 +25,7 @@ interface ClientConfig {
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const CLIENT_CONFIG = process.env.CLIENT_CONFIG;
 const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
-const AUTH_SESSION_TTL = process.env.AUTH_SESSION_TTL;
+const AUTH_SESSION_TTL_IN_SECS = process.env.AUTH_SESSION_TTL;
 const ISSUER = process.env.ISSUER;
 
 export class SessionRequestProcessor {
@@ -42,9 +43,11 @@ export class SessionRequestProcessor {
 
 	constructor(logger: Logger, metrics: Metrics) {
 
-		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL || !ISSUER ) {
-			logger.error("Environment variable SESSION_TABLE or CLIENT_CONFIG or ENCRYPTION_KEY_IDS or AUTH_SESSION_TTL is not configured");
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
+		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL_IN_SECS || !ISSUER ) {
+			logger.error("Environment variable SESSION_TABLE or CLIENT_CONFIG or ENCRYPTION_KEY_IDS or AUTH_SESSION_TTL is not configured", {
+				messageCode: MessageCodes.MISSING_CONFIGURATION,
+			});
+			throw new AppError("Server Error", HttpCodesEnum.SERVER_ERROR );
 		}
 
 		this.logger = logger;
@@ -70,30 +73,44 @@ export class SessionRequestProcessor {
 		const clientIpAddress = event.headers["x-forwarded-for"];
 
 
-		let configClient;
-		if (CLIENT_CONFIG) {
-			const config = JSON.parse(CLIENT_CONFIG) as ClientConfig[];
+		let configClient: ClientConfig | undefined = undefined;
+		try {
+			const config = JSON.parse(CLIENT_CONFIG!) as ClientConfig[];
 			configClient = config.find(c => c.clientId === requestBodyClientId);
-		} else {
-			this.logger.error("MISSING_CLIENT_CONFIG");
-			return new Response(HttpCodesEnum.BAD_REQUEST, "Missing client config");
+		} catch (error) {
+			this.logger.error("Invalid or missing client configuration table", {
+				error,
+				messageCode: MessageCodes.MISSING_CONFIGURATION,
+			});
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+		}
+		if (!configClient) {
+			this.logger.error("Unrecognised client in request", {
+				messageCode: MessageCodes.UNRECOGNISED_CLIENT,
+			});
+			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}
 
-
-		let urlEncodedJwt;
+		let urlEncodedJwt: string;
 		try {
 			urlEncodedJwt = await this.kmsDecryptor.decrypt(deserialisedRequestBody.request);
 		} catch (error) {
-			this.logger.error("FAILED_DECRYPTING_JWE", { error });
-			return unauthorizedResponse("Invalid request: Request failed to be decrypted");
+			this.logger.error("Failed to decrypt supplied JWE request", {
+				error,
+				messageCode: MessageCodes.FAILED_DECRYPTING_JWE,
+			});
+			return unauthorizedResponse();
 		}
 
 		let parsedJwt: Jwt;
 		try {
 			parsedJwt = this.kmsDecryptor.decode(urlEncodedJwt);
 		} catch (error) {
-			this.logger.error("FAILED_DECODING_JWT", { error });
-			return unauthorizedResponse("Invalid request: Rejected jwt");
+			this.logger.error("Failed to decode supplied JWT", {
+				error,
+				messageCode: MessageCodes.FAILED_DECODING_JWT,
+			});
+			return unauthorizedResponse();
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
@@ -101,36 +118,54 @@ export class SessionRequestProcessor {
 			if (configClient?.jwksEndpoint) {
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
 				if (!payload) {
-					return unauthorizedResponse("JWT verification failed");
+					this.logger.error("Failed to verify JWT", {
+						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
+					});
+					return unauthorizedResponse();
 				}
 			} else {
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Missing client config");
+				this.logger.error("Incomplete Client Configuration", {
+					messageCode: MessageCodes.MISSING_CONFIGURATION,
+				});
+				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 			}
 		} catch (error) {
-			this.logger.debug("UNEXPECTED_ERROR_VERIFYING_JWT", { error });
-			return unauthorizedResponse("Invalid request: Could not verify jwt");
+			this.logger.error("Invalid request: Could not verify jwt", {
+				error,
+				messageCode: "UNEXPECTED_ERROR_VERIFYING_JWT",
+			});
+			return unauthorizedResponse();
 		}
 
-		if (configClient) {
-			const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
-			if (JwtErrors.length > 0) {
-				this.logger.error(JwtErrors);
-				return unauthorizedResponse("JWT validation/verification failed");
-			} 
-		} else {
-			this.logger.error("Missing Client Config");
-			return unauthorizedResponse("JWT validation/verification failed");
+		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
+		if (JwtErrors.length > 0) {
+			this.logger.error(JwtErrors, {
+				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
+			});
+			return unauthorizedResponse();
 		}
-		
 
 		const sessionId: string = randomUUID();
+		this.logger.appendKeys({
+			sessionId,
+			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+		});
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
-				this.logger.error("SESSION_ALREADY_EXISTS", { fieldName: "sessionId", value: sessionId, reason: "sessionId already exists in the database" });
+				this.logger.error("SESSION_ALREADY_EXISTS", {
+					fieldName: "sessionId",
+					value: sessionId,
+					reason: "sessionId already exists in the database",
+					messageCode: "SESSION_ALREADY_EXISTS",
+				});
 				return GenericServerError;
 			}
-		} catch (err) {
-			this.logger.error("UNEXPECTED_ERROR_SESSION_EXISTS", { error: err });
+		} catch (error) {
+			this.logger.error("Unexpected error accessing session table", {
+				error,
+				sessionId,
+				messageCode: MessageCodes.UNEXPECTED_ERROR_SESSION_EXISTS,
+			});
 			return GenericServerError;
 		}
 
@@ -139,8 +174,8 @@ export class SessionRequestProcessor {
 			clientId: jwtPayload.client_id,
 			clientSessionId: jwtPayload.govuk_signin_journey_id as string,
 			redirectUri: jwtPayload.redirect_uri,
-			expiryDate: Date.now() + Number(AUTH_SESSION_TTL) * 1000,
-			createdDate: Date.now(),
+			expiryDate: (Date.now() / 1000) + Number(AUTH_SESSION_TTL_IN_SECS),
+			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
 			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used
@@ -152,7 +187,11 @@ export class SessionRequestProcessor {
 		try {
 			await this.cicService.createAuthSession(session);
 		} catch (error) {
-			this.logger.error("FAILED_CREATING_SESSION", { error });
+			this.logger.error("Failed to create session in session table", {
+				error,
+				sessionId: session.sessionId,
+				messageCode: MessageCodes.FAILED_CREATING_SESSION,
+			});
 			return GenericServerError;
 		}
 
@@ -160,7 +199,11 @@ export class SessionRequestProcessor {
 			try {
 				await this.cicService.savePersonIdentity(jwtPayload.shared_claims, sessionId, session.expiryDate);
 			} catch (error) {
-				this.logger.error("FAILED_SAVING_PERSON_IDENTITY", { error });
+				this.logger.error("Failed to create session in person identity table", {
+					error,
+					sessionId: session.sessionId,
+					messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
+				});
 				return GenericServerError;
 			}
 		}
@@ -171,13 +214,11 @@ export class SessionRequestProcessor {
 				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress, absoluteTimeNow),
 			});
 		} catch (error) {
-			this.logger.error("FAILED_TO_WRITE_TXMA", {
-				session,
-				issues: ISSUER,
-				reason: "Auth session successfully created. Failed to send DCMAW_CRI_START event to TXMA",
+			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
+				sessionId: session.sessionId,
 				error,
+				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
 			});
-			return GenericServerError;
 		}
 
 		return {

@@ -13,6 +13,12 @@ export default {
   testTimeout: 10000,
   clearMocks: true,
   collectCoverage: true,
+  collectCoverageFrom: [
+    './**/*.ts',
+    '!./**/tests/**/*.ts',
+    '!./tests/**/*.ts',
+    '!./jest.config.ts'
+  ],
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   coveragePathIgnorePatterns: ['config.ts', 'node_modules/'],
@@ -20,5 +26,9 @@ export default {
   setupFiles: [
     './jest.setup.ts'
   ],
-  testEnvironment: 'node'
+  testEnvironment: 'node',
+  reporters: [
+    'default',
+    ['jest-junit', { outputDirectory: 'results', outputName: 'report.xml' }]
+  ]
 }
