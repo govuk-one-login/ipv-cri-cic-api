@@ -5,7 +5,6 @@
 
 const dotenv = require('dotenv');
 dotenv.config({ path: `./.${process.env.ENV}.env` });
-console.log("Env: " + `./.${process.env.ENV}.env`)
 
 export default {
   transform: {
