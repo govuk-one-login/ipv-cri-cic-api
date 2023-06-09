@@ -1,16 +1,14 @@
-FROM amazonlinux:2
+FROM ubuntu:latest
 
-RUN yum update -y && yum upgrade -y
+RUN apt update -y && apt upgrade -y
+RUN apt install -y curl
 
-RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash -
-RUN curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
-
-RUN yum install -y nodejs awscli yarn jq java-1.8.0-openjdk
-
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt install -y nodejs
 COPY . /
 WORKDIR /
 RUN chmod +x run-tests.sh
 
-# RUN cd /lambdas && yarn install
+RUN cd /src && npm ci
 
 ENTRYPOINT ["/run-tests.sh"]
