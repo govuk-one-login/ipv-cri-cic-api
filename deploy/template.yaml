@@ -494,7 +494,7 @@ Resources:
         userInfo:
           Type: Api
           Properties:
-            Path: /userInfo
+            Path: /userinfo
             Method: post
             RestApiId: !Ref CICRestApi
     Metadata: # Manage esbuild properties
