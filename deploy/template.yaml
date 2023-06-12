@@ -42,6 +42,10 @@ Parameters:
     Type: String
     Default: "INFO"
     Description: Lambda Powertools-for-Typescript Log Level
+  IPVStubStackName:
+    Type: String
+    Default: "cic-ipv-stub"
+    Description: The name of theIPV stub stack deployed.
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -78,31 +82,31 @@ Mappings:
       ISSUER: "https://review-c.dev.account.gov.uk"
       DNSSUFFIX: review-c.dev.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
-      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
-      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/redirect"}]'
-      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/redirect"}]'
-      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/redirect"}]'
-      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
@@ -373,7 +377,7 @@ Resources:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           PERSON_IDENTITY_TABLE_NAME:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
-          
+
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -424,7 +428,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
@@ -495,7 +499,7 @@ Resources:
         userInfo:
           Type: Api
           Properties:
-            Path: /userInfo
+            Path: /userinfo
             Method: post
             RestApiId: !Ref CICRestApi
     Metadata: # Manage esbuild properties
@@ -522,7 +526,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref UserInfoFunctionLogGroup
@@ -625,7 +629,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref SessionFunctionLogGroup
@@ -702,7 +706,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref TokenFunctionLogGroup
@@ -782,7 +786,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     # Condition: IsProdLikeEnvironment
     Properties:
-      DestinationArn: 
+      DestinationArn:
         !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
       FilterPattern: ""
       LogGroupName: !Ref AuthorizationFunctionLogGroup
@@ -801,7 +805,7 @@ Resources:
         !FindInMap [
           EnvironmentVariables,
           !Ref Environment,
-          MESSAGERETENTIONPERIODDAYS,
+          TXMAMESSAGERETENTIONPERIODDAYS,
         ]
       VisibilityTimeout: 60
       KmsMasterKeyId: !Ref TxMAKeyAlias
@@ -914,7 +918,7 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: cron(0 * * * ? *)
-            
+
       Environment:
         Variables:
           JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
@@ -963,3 +967,7 @@ Outputs:
           !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
     Export:
       Name: !Sub ${AWS::StackName}-CICBackendURL
+  CICIPVStubExecuteURL:
+    Description: "CIC IPV Stub"
+    Value:
+      Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'

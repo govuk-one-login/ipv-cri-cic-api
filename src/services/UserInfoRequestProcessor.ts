@@ -188,7 +188,7 @@ export class UserInfoRequestProcessor {
 			}
 			// return success response
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
-				sub: session.clientId,
+				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
 			}));
 		} else {

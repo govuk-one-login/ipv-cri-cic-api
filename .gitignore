@@ -3,7 +3,11 @@ node_modules/**
 **/node_modules/**
 coverage
 **/build/**
-
+cf-output.txt
+keys
+environmentVariables.json
+docker_vars.env
+results
 
 ### Logs ###
 **/.DS_Store
