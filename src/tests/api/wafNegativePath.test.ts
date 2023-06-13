@@ -11,6 +11,8 @@ describe("CIC backend API WAF association smoke test", () => {
 			validateStatus: status => (status >= 200 && status < 501),
 		});
 		expect(response.status).toBe(403);
-		expect(response.data).toBe("WAF Filtered");
+		expect(response.data).toEqual(expect.objectContaining({
+			message: "Forbidden",
+		}));
 	});
 });
