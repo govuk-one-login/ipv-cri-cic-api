@@ -948,6 +948,232 @@ Resources:
       FunctionName: !GetAtt JsonWebKeysFunction.Arn
       Principal: events.amazonaws.com
 
+# Alarms
+
+  5XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    # Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-5XXErrorAlarm"
+      # AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the backend api-gateway. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: errorThreshold
+          Label: errorThreshold
+          ReturnData: true
+          Expression: IF(invocations<10,0,errorPercentage)
+        - Id: invocations
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Count
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+            Period: 60
+            Stat: Sum
+        - Id: errorPercentage
+          Label: errorPercentage
+          ReturnData: false
+          Expression: (error/invocations)*100
+        - Id: error
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+            Period: 60
+            Stat: Sum
+
+  # 5XXErrorCriticalAlarm:
+  #   Type: AWS::CloudWatch::Alarm
+  #   # Condition: "DeployAlarms"
+  #   Properties:
+  #     AlarmName: !Sub "${AWS::StackName}-5XXErrorCriticalAlarm"
+  #     # AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the backend api-gateway. ${SupportManualURL}"
+  #     ActionsEnabled: true
+  #     OKActions:
+  #       - !ImportValue platform-alarm-topic-critical-alert
+  #     AlarmActions:
+  #       - !ImportValue platform-alarm-topic-critical-alert
+  #     InsufficientDataActions: [ ]
+  #     Dimensions: [ ]
+  #     EvaluationPeriods: 5
+  #     DatapointsToAlarm: 2
+  #     Threshold: 80
+  #     ComparisonOperator: GreaterThanOrEqualToThreshold
+  #     TreatMissingData: notBreaching
+  #     Metrics:
+  #       - Id: errorThreshold
+  #         Label: errorThreshold
+  #         ReturnData: true
+  #         Expression: IF(invocations<10,0,errorPercentage)
+  #       - Id: invocations
+  #         ReturnData: false
+  #         MetricStat:
+  #           Metric:
+  #             Namespace: AWS/ApiGateway
+  #             MetricName: Count
+  #             Dimensions:
+  #               - Name: ApiName
+  #                 Value: !Sub "cic-cri-${AWS::StackName}"
+  #           Period: 60
+  #           Stat: Sum
+  #       - Id: errorPercentage
+  #         Label: errorPercentage
+  #         ReturnData: false
+  #         Expression: (error/invocations)*100
+  #       - Id: error
+  #         ReturnData: false
+  #         MetricStat:
+  #           Metric:
+  #             Namespace: AWS/ApiGateway
+  #             MetricName: 5XXError
+  #             Dimensions:
+  #               - Name: ApiName
+  #                 Value: !Sub "cic-cri-${AWS::StackName}"
+  #           Period: 60
+  #           Stat: Sum
+
+  # UserInfo5XXApiGwErrorAlarm:
+  #   Type: AWS::CloudWatch::Alarm
+  #   # Condition: DeployAlarms
+  #   Properties:
+  #     AlarmName: !Sub "${AWS::StackName}-UserInfo5XXApiGwErrorAlarm"
+  #     # AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+  #     ActionsEnabled: true
+  #     OKActions:
+  #       - !ImportValue platform-alarm-topic-slack-warning-alert
+  #     AlarmActions:
+  #       - !ImportValue platform-alarm-topic-slack-warning-alert
+  #     InsufficientDataActions: [ ]
+  #     Dimensions: [ ]
+  #     EvaluationPeriods: 5
+  #     DatapointsToAlarm: 2
+  #     Threshold: 1
+  #     ComparisonOperator: GreaterThanOrEqualToThreshold
+  #     TreatMissingData: notBreaching
+  #     Metrics:
+  #       - Id: errorThreshold
+  #         Label: errorThreshold
+  #         ReturnData: true
+  #         Expression: IF(invocations<4 || error<2,0,errorPercentage)
+  #       - Id: invocations
+  #         ReturnData: false
+  #         MetricStat:
+  #           Metric:
+  #             Namespace: AWS/ApiGateway
+  #             MetricName: Count
+  #             Dimensions:
+  #               - Name: Method
+  #                 Value: POST
+  #               - Name: ApiName
+  #                 Value: !Sub "cic-cri-${AWS::StackName}"
+  #               - Name: Stage
+  #                 Value: !Ref Environment
+  #               - Name: Resource
+  #                 Value: /userinfo
+  #           Period: 60
+  #           Stat: Sum
+  #       - Id: errorPercentage
+  #         Label: errorPercentage
+  #         ReturnData: false
+  #         Expression: (error/invocations)*100
+  #       - Id: error
+  #         ReturnData: false
+  #         MetricStat:
+  #           Metric:
+  #             Namespace: AWS/ApiGateway
+  #             MetricName: 5XXError
+  #             Dimensions:
+  #               - Name: Method
+  #                 Value: POST
+  #               - Name: ApiName
+  #                 Value: !Sub "cic-cri-${AWS::StackName}"
+  #               - Name: Stage
+  #                 Value: !Ref Environment
+  #               - Name: Resource
+  #                 Value: /userinfo
+  #           Period: 60
+  #           Stat: Sum
+
+  # UserInfo5XXApiGwErrorCriticalAlarm:
+  #   Type: AWS::CloudWatch::Alarm
+  #   # Condition: DeployAlarms
+  #   Properties:
+  #     AlarmName: !Sub "${AWS::StackName}-UserInfo5XXApiGwErrorCriticalAlarm"
+  #     # AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+  #     ActionsEnabled: true
+  #     OKActions:
+  #       - !ImportValue platform-alarm-topic-critical-alert
+  #     AlarmActions:
+  #       - !ImportValue platform-alarm-topic-critical-alert
+  #     InsufficientDataActions: [ ]
+  #     Dimensions: [ ]
+  #     EvaluationPeriods: 5
+  #     DatapointsToAlarm: 2
+  #     Threshold: 80
+  #     ComparisonOperator: GreaterThanOrEqualToThreshold
+  #     TreatMissingData: notBreaching
+  #     Metrics:
+  #       - Id: errorThreshold
+  #         Label: errorThreshold
+  #         ReturnData: true
+  #         Expression: IF(invocations<10,0,errorPercentage)
+  #       - Id: invocations
+  #         ReturnData: false
+  #         MetricStat:
+  #           Metric:
+  #             Namespace: AWS/ApiGateway
+  #             MetricName: Count
+  #             Dimensions:
+  #               - Name: Method
+  #                 Value: POST
+  #               - Name: ApiName
+  #                 Value: !Sub "cic-cri-${AWS::StackName}"
+  #               - Name: Stage
+  #                 Value: !Ref Environment
+  #               - Name: Resource
+  #                 Value: /userinfo
+  #           Period: 60
+  #           Stat: Sum
+  #       - Id: errorPercentage
+  #         Label: errorPercentage
+  #         ReturnData: false
+  #         Expression: (error/invocations)*100
+  #       - Id: error
+  #         ReturnData: false
+  #         MetricStat:
+  #           Metric:
+  #             Namespace: AWS/ApiGateway
+  #             MetricName: 5XXError
+  #             Dimensions:
+  #               - Name: Method
+  #                 Value: POST
+  #               - Name: ApiName
+  #                 Value: !Sub "cic-cri-${AWS::StackName}"
+  #               - Name: Stage
+  #                 Value: !Ref Environment
+  #               - Name: Resource
+  #                 Value: /userinfo
+  #           Period: 60
+  #           Stat: Sum
+
 Outputs:
   CICApiGatewayId:
     Description: "API GatewayID of the CIC CRI API"
