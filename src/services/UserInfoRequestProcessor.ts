@@ -187,6 +187,18 @@ export class UserInfoRequestProcessor {
 				});
 			}
 			// return success response
+			try {
+				await this.cicService.sendToTXMA({
+					event_name: "CIC_CRI_END",
+					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+				});
+			} catch (error) {
+				this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
+					error, 
+					messageCode: MessageCodes.ERROR_WRITING_TXMA
+				});
+			}
+			
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
