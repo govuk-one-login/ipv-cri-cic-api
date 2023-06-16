@@ -179,6 +179,13 @@ export class UserInfoRequestProcessor {
 				await this.cicService.sendToTXMA({
 					event_name: "CIC_CRI_VC_ISSUED",
 					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+					restricted: {
+						name: [{
+							names
+						}
+					],
+					birthDate: [{ value: birthDate }]
+					}
 				});
 			} catch (error) {
 				this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
@@ -198,7 +205,7 @@ export class UserInfoRequestProcessor {
 					messageCode: MessageCodes.ERROR_WRITING_TXMA
 				});
 			}
-			
+
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
