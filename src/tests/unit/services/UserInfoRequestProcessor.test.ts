@@ -347,6 +347,44 @@ describe("UserInfoRequestProcessor", () => {
 			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("CIC_CRI_END", expect.anything());
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
+
+	it("Should return 200 when CIC_CRI_VC_ISSUED sent to TxMA", async () => {
+		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
+
+		mockCicService.sendToTXMA.mockRejectedValue({});
+		// @ts-ignore
+		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
+
+		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("CIC_CRI_VC_ISSUED", 
+			expect.anything(),
+			expect.objectContaining({
+				restricted: { }
+			})
+		);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+	})
+
+	it("should throw error when restricted fields not included in CIC_CRI_VC_ISSUED", async () => {
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+	})
 });
