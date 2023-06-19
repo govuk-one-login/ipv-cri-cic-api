@@ -1,3 +1,5 @@
+/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function */
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -64,13 +66,16 @@ export class UserInfoRequestProcessor {
 		try {
 			sub = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
 		} catch (error) {
+			console.log("ERROR START CATCH", error)
 			if (error instanceof AppError) {
+				console.log("LOGGER CALLED IN IF BLOCK")
 				this.logger.error("Error validating Authentication Access token from headers: ", {
 					error,
 					messageCode: MessageCodes.INVALID_AUTH_CODE,
 				});
 				return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 			}
+			console.log("LOGGER CALLED OUT OF IF BLOCK")
 			this.logger.error("Unexpected error occurred", {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
@@ -84,6 +89,7 @@ export class UserInfoRequestProcessor {
 		let session: ISessionItem | undefined;
 		let personInfo: PersonIdentityItem | undefined;
 		try {
+			console.log("ABOUT TO CALL getSessionById")
 			session = await this.cicService.getSessionById(sub);
 			if (!session) {
 				this.logger.error("No session found", {
@@ -181,11 +187,11 @@ export class UserInfoRequestProcessor {
 					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
 					restricted: {
 						name: [{
-							names
-						}
-					],
-					birthDate: [{ value: birthDate }]
-					}
+							names,
+						},
+						],
+						birthDate: [{ value: birthDate }],
+					},
 				});
 			} catch (error) {
 				this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
