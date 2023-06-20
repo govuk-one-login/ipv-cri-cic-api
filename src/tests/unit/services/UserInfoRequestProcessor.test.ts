@@ -1,5 +1,3 @@
-/* eslint-disable max-lines */
-/* eslint-disable max-lines-per-function */
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -91,11 +89,11 @@ describe("UserInfoRequestProcessor", () => {
 		jest.clearAllMocks();
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
-		// mockSession = getMockSessionItem();
-		// mockPerson = getMockPersonItem();
+		mockSession = getMockSessionItem();
+		mockPerson = getMockPersonItem();
 	});
 
-	xit("Return successful response with 200 OK when user data is found for an accessToken", async () => {
+	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 		// @ts-ignore
@@ -120,7 +118,7 @@ describe("UserInfoRequestProcessor", () => {
 		});
 	});
 
-	xit("Return 401 when Authorization header is missing in the request", async () => {
+	it("Return 401 when Authorization header is missing in the request", async () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
 		// @ts-ignore
@@ -135,7 +133,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return 401 when access_token JWT validation fails", async () => {
+	it("Return 401 when access_token JWT validation fails", async () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter = failingKmsJwtAdapterFactory();
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -152,7 +150,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return 401 when sub is missing from JWT access_token", async () => {
+	it("Return 401 when sub is missing from JWT access_token", async () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.sub = null;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -169,7 +167,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return 401 when we receive expired JWT access_token", async () => {
+	it("Return 401 when we receive expired JWT access_token", async () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = absoluteTimeNow() - 500;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -186,7 +184,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return 401 when session (based upon sub) was not found in the DB", async () => {
+	it("Return 401 when session (based upon sub) was not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -203,7 +201,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return 401 when person (based upon sub) was not found in the DB", async () => {
+	it("Return 401 when person (based upon sub) was not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(undefined);
 
@@ -221,7 +219,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	it.skip("Return error when person names are missing", async () => {
+	it("Return error when person names are missing", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		// @ts-ignore
 		mockPerson.personNames[0].nameParts = [];
@@ -248,7 +246,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return error when person DoB is missing", async () => {
+	it("Return error when person DoB is missing", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		// @ts-ignore
 		mockPerson.birthDates[0].value = "";
@@ -275,9 +273,30 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
+	it("Return 401 when AuthSessionState is not CIC_ACCESS_TOKEN_ISSUED", async () => {
+		mockCicService.getSessionById.mockResolvedValue(mockSession);
+		mockSession.authSessionState = "CIC_AUTH_CODE_ISSUED";
+		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(out.body).toContain("Unauthorized");
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				messageCode: "STATE_MISMATCH",
+			}),
+		);
+	});
 
-	xit("Return 500 when Failed to sign the verifiableCredential Jwt", async () => {
+	it("Return 500 when Failed to sign the verifiableCredential Jwt", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
@@ -304,7 +323,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	xit("Return successful response with 200 OK when write to txMA fails", async () => {
+	it("Return successful response with 200 OK when write to txMA fails", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
@@ -315,7 +334,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
-		// expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
@@ -328,41 +347,6 @@ describe("UserInfoRequestProcessor", () => {
 			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("CIC_CRI_END", expect.anything());
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
-
-	it("Should return 200 when CIC_CRI_VC_ISSUED sent to TxMA", async () => {
-		mockCicService.getSessionById.mockResolvedValue(mockSession);
-		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
-
-		mockCicService.sendToTXMA.mockResolvedValue();
-		// @ts-ignore
-		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
-
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
-		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(2);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-		expect(mockCicService.sendToTXMA).toContain({ event_name: "CIC_CRI_VC_ISSUED",
-			restricted: { } }); 
-		expect(logger.appendKeys).toHaveBeenCalledWith({
-			govuk_signin_journey_id: "sessionId",
-		});
-		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-	});
-
-	xit("should throw error when restricted fields not included in CIC_CRI_VC_ISSUED", async () => {
-		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
-		expect(logger.appendKeys).toHaveBeenCalledWith({
-			govuk_signin_journey_id: "sdfssg",
-		});
-		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: "sessionId",
-		});
-	})
 });

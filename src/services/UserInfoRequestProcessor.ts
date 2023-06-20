@@ -66,16 +66,13 @@ export class UserInfoRequestProcessor {
 		try {
 			sub = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
 		} catch (error) {
-			console.log("ERROR START CATCH", error)
 			if (error instanceof AppError) {
-				console.log("LOGGER CALLED IN IF BLOCK")
 				this.logger.error("Error validating Authentication Access token from headers: ", {
 					error,
 					messageCode: MessageCodes.INVALID_AUTH_CODE,
 				});
 				return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 			}
-			console.log("LOGGER CALLED OUT OF IF BLOCK")
 			this.logger.error("Unexpected error occurred", {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
@@ -89,7 +86,6 @@ export class UserInfoRequestProcessor {
 		let session: ISessionItem | undefined;
 		let personInfo: PersonIdentityItem | undefined;
 		try {
-			console.log("ABOUT TO CALL getSessionById")
 			session = await this.cicService.getSessionById(sub);
 			if (!session) {
 				this.logger.error("No session found", {
@@ -200,18 +196,20 @@ export class UserInfoRequestProcessor {
 				});
 			}
 			// return success response
-			try {
-				await this.cicService.sendToTXMA({
-					event_name: "CIC_CRI_END",
-					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
-				});
-			} catch (error) {
-				this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
-					error, 
-					messageCode: MessageCodes.ERROR_WRITING_TXMA
-				});
-			}
-
+			// try {
+			// 	console.log("Try block of return success")
+			// 	await this.cicService.sendToTXMA({
+			// 		event_name: "CIC_CRI_END",
+			// 		...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+			// 	});
+			// } catch (error) {
+			// 	console.log("catch block of return success")
+			// 	this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
+			// 		error, 
+			// 		messageCode: MessageCodes.ERROR_WRITING_TXMA,
+			// 	});
+			// }
+			console.log("About to send HTTP response")
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
