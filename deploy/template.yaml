@@ -92,30 +92,35 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      LAMBDACONCURRENCYTHRESHOLD: 128
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      LAMBDACONCURRENCYTHRESHOLD: 128
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      LAMBDACONCURRENCYTHRESHOLD: 128
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      LAMBDACONCURRENCYTHRESHOLD: 128
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      LAMBDACONCURRENCYTHRESHOLD: 128
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -1218,7 +1223,7 @@ Resources:
               MetricName: Count
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1239,7 +1244,7 @@ Resources:
               MetricName: 5XXError
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1280,7 +1285,7 @@ Resources:
               MetricName: Count
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1301,7 +1306,7 @@ Resources:
               MetricName: 5XXError
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1683,11 +1688,11 @@ Resources:
             Period: 60
             Stat: Sum
 
-  JsonWebKeyFunction5XXApiGwErrorAlarm:
+  JsonWebKeysFunction5XXApiGwErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-JsonWebKeyFunction5XXApiGwErrorAlarm"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction5XXApiGwErrorAlarm"
       AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
@@ -1745,11 +1750,11 @@ Resources:
             Period: 60
             Stat: Sum
 
-  JsonWebKeyFunction5XXApiGwErrorCriticalAlarm:
+  JsonWebKeysFunction5XXApiGwErrorCriticalAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-JsonWebKeyFunction5XXApiGwErrorCriticalAlarm"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction5XXApiGwErrorCriticalAlarm"
       AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
@@ -1902,7 +1907,7 @@ Resources:
               MetricName: Count
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1923,7 +1928,7 @@ Resources:
               MetricName: 4XXError
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1938,7 +1943,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Authorization4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the authorization endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2119,11 +2124,11 @@ Resources:
             Period: 60
             Stat: Sum
 
-  JsonWebKeyFunction4XXApiGwErrorAlarm:
+  JsonWebKeysFunction4XXApiGwErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-JsonWebKeyFunction4XXApiGwErrorAlarm"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction4XXApiGwErrorAlarm"
       AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the userInfo endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
@@ -2214,7 +2219,7 @@ Resources:
               MetricName: Count
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
             Period: 60
             Stat: Sum
         - Id: maxLatency
@@ -2225,7 +2230,7 @@ Resources:
               MetricName: Latency
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub "id-check-cri-${AWS::StackName}"
+                  Value: !Sub "cic-cri-${AWS::StackName}"
             Period: 60
             Stat: Maximum
 
@@ -2304,7 +2309,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: 128 # This is 80% of the reserved executions
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
@@ -2329,7 +2334,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: 128 # This is 80% of the reserved executions
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
@@ -2354,7 +2359,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: 128 # This is 80% of the reserved executions
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2379,7 +2384,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: 128 # This is 80% of the reserved executions
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2404,9 +2409,187 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: 128 # This is 80% of the reserved executions
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
+
+  JsonWebKeysConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of JsonWeb Keys concurrency is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${JsonWebKeysFunction}-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref JsonWebKeysFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !FindInMap [EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD]
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+# Throttle alarms
+
+  ClaimedIdentityThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${ClaimedIdentityFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${ClaimedIdentityFunction}-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ClaimedIdentityFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  SessionThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${SessionFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${SessionFunction}-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SessionFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  JsonWebKeysThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${JsonWebKeysFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${JsonWebKeysFunction}-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref JsonWebKeysFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  AuthorizationThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${AuthorizationFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${AuthorizationFunction}-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AuthorizationFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  
+  TokenThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${TokenFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${TokenFunction}-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref TokenFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  
+  UserInfoThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${UserInfoFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-${UserInfoFunction}-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UserInfoFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
 
   LambdaTimeoutAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -2427,7 +2610,7 @@ Resources:
         - Id: a1
           Label: AcumulatedLambdaTimeOuts
           ReturnData: true
-          Expression: (b1 + c1 + d1 + e1 + f1) >= 0
+          Expression: (b1 + c1 + d1 + e1 + f1 + g1) >= 0
         - Id: b1
           ReturnData: false
           MetricStat:
@@ -2468,6 +2651,82 @@ Resources:
               MetricName: UserInfoLambdaTimeOut
             Period: 60
             Stat: Sum
+        - Id: g1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+              MetricName: JsonWebKeysLambdaTimeOut
+            Period: 60
+            Stat: Sum
+      Metadata:
+        SamResourceId: LambdaTimeoutAlarm
+
+  UserInfoTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        Ref: "UserInfoFunctionLogGroup"
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+          MetricName: "UserInfoLambdaTimeOut"
+  
+  JsonWebKeysTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        Ref: "JsonWebKeysLogGroup"
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+          MetricName: "JsonWebKeysLambdaTimeOut"
+  
+  ClaimedIdentityTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        Ref: "ClaimedIdentityFunctionLogGroup"
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+          MetricName: "ClaimedIdentityLambdaTimeOut"
+  
+  AuthorizationTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        Ref: "AuthorizationFunctionLogGroup"
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+          MetricName: "ClaimedIdentityLambdaTimeOut"
+
+  TokenTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        Ref: "TokenFunctionLogGroup"
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+          MetricName: "TokenLambdaTimeOut"
+
+  SessionTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        Ref: "SessionFunctionLogGroup"
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+          MetricName: "SessionLambdaTimeOut"
 
   LambdaThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -2493,696 +2752,880 @@ Resources:
 
 # JourneyCompletionAlarms
 
-  # JourneyCompletionAlarm:
-    # DependsOn:
-    #   - "VerifyAuthorizeRequest200MetricFilter"
-    #   - "UserInfo200MetricFilter"
-  #   Type: AWS::CloudWatch::Alarm
-  #   Condition: "DeployAlarms"
-  #   Properties:
-  #     AlarmName: !Sub "${AWS::StackName}-JourneyCompletionLowPointAlarm"
-  #     AlarmDescription:
-  #       Fn::Sub: >-
-  #         Trigger a critical alert if the ratio of started v completed journeys falls below the expected minimum based on the anomaly detection model. ${SupportManualURL}
-  #     ActionsEnabled: false
-  #     OKActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     AlarmActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     InsufficientDataActions: [ ]
-  #     Dimensions: [ ]
-  #     EvaluationPeriods: 1
-  #     DatapointsToAlarm: 1
-  #     ThresholdMetricId: ad1
-  #     ComparisonOperator: LessThanLowerThreshold
-  #     TreatMissingData: notBreaching
-  #     Metrics:
-  #       - Id: s1
-  #         ReturnData: false
-  #         Label: VerifyAuthorizeRequest/StatusCodes/200
-  #         MetricStat:
-  #           Metric:
-  #             Namespace: VerifyAuthorizeRequest/StatusCodes
-  #             MetricName: 200Success
-  #           Period: 900 # This is 15 minutes, which is a sensible journey time
-  #           Stat: Sum
-  #       - Id: c1
-  #         ReturnData: false
-  #         Label: UserInfo/StatusCodes/200
-  #         MetricStat:
-  #           Metric:
-  #             Namespace: UserInfo/StatusCodes
-  #             MetricName: 200Success
-  #           Period: 900 # This is 15 minutes, which is a sensible journey time
-  #           Stat: Sum
-  #       - Id: cr1
-  #         ReturnData: true
-  #         # The expression below converts in to a completion percentage, and filters out data points where traffic
-  #         # volume is less than or equal to 5 journey starts over the 15 min period. The use of "1/0" creates a NaN
-  #         # result which CW interprets as missing data - see
-  #         # https://stackoverflow.com/questions/74450703/aws-cloudwatch-math-expressions-draw-null-empty
-  #         Expression: "IF(s1>5,(c1/s1)*100,1/0)"
-  #         Label: CompletionPercentage
-  #       - Id: ad1
-  #         ReturnData: true
-  #         Expression: ANOMALY_DETECTION_BAND(cr1, 3)
-  #         Label: CompletionPercentage (expected)
-
-  # JourneyCompletionLowPointAlarm:
-  #   DependsOn:
-  #     - "VerifyAuthorizeRequest200MetricFilter"
-  #     - "UserInfo200MetricFilter"
-  #   Type: AWS::CloudWatch::Alarm
-  #   Condition: "DeployAlarms"
-  #   Properties:
-  #     AlarmName: !Sub "${AWS::StackName}-JourneyCompletionLowPointAlarm"
-  #     AlarmDescription:
-  #       Fn::Sub: >-
-  #         Trigger a critical alert if the ratio of started v completed journeys falls below the expected minimum based on the anomaly detection model. ${SupportManualURL}
-  #     ActionsEnabled: false
-  #     OKActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     AlarmActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     InsufficientDataActions: [ ]
-  #     Dimensions: [ ]
-  #     EvaluationPeriods: 1
-  #     DatapointsToAlarm: 1
-  #     ThresholdMetricId: ad1
-  #     ComparisonOperator: LessThanLowerThreshold
-  #     TreatMissingData: notBreaching
-  #     Metrics:
-  #       - Id: s1
-  #         ReturnData: false
-  #         Label: VerifyAuthorizeRequest/StatusCodes/200
-  #         MetricStat:
-  #           Metric:
-  #             Namespace: VerifyAuthorizeRequest/StatusCodes
-  #             MetricName: 200Success
-  #           Period: 900 # This is 15 minutes, which is a sensible journey time
-  #           Stat: Sum
-  #       - Id: c1
-  #         ReturnData: false
-  #         Label: UserInfo/StatusCodes/200
-  #         MetricStat:
-  #           Metric:
-  #             Namespace: UserInfo/StatusCodes
-  #             MetricName: 200Success
-  #           Period: 900 # This is 15 minutes, which is a sensible journey time
-  #           Stat: Sum
-  #       - Id: cr1
-  #         ReturnData: true
-  #         # The expression below converts in to a completion percentage, and filters out data points where traffic
-  #         # volume is less than or equal to 5 journey starts over the 15 min period. The use of "1/0" creates a NaN
-  #         # result which CW interprets as missing data - see
-  #         # https://stackoverflow.com/questions/74450703/aws-cloudwatch-math-expressions-draw-null-empty
-  #         Expression: "IF(s1>5,(c1/s1)*100,1/0)"
-  #         Label: CompletionPercentage
-  #       - Id: ad1
-  #         ReturnData: true
-  #         Expression: ANOMALY_DETECTION_BAND(cr1, 3)
-  #         Label: CompletionPercentage (expected)
-
 # Alarm Dashboards
 
-  # CriticalAlarmDashboard:
-  #   Type: AWS::CloudWatch::Dashboard
-  #   Condition: "DeployAlarms"
-  #   Properties:
-  #     DashboardName: !Sub '${AWS::StackName}-Critical-Alarm-Overview'
-  #     DashboardBody:
-  #       Fn::Sub: >
-  #         {
-  #         "widgets": [
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 0,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo Vendor Broke Message Contract High Threshold - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfoVendorBrokeMessageContractHighThresholdAlarm.Arn}"]
-  #                    },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 0,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo Unexpected Document Type High Threshold - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfoUnexpectedDocumentTypeHighThresholdAlarm.Arn}"]
-  #                    },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 6,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "API Gateway 5XX critical - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${5XXErrorCriticalAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 6,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo 5XX critical - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfo5XXApiGwErrorCriticalAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 12,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Token 5XX critical - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${Token5XXApiGwErrorCriticalAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 12,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "TokenV2 5XX critical - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${TokenV25XXApiGwErrorCriticalAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 18,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Lambda Throttle Alarm - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${LambdaThrottleAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 18,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Journey Completion - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${JourneyCompletion.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 24,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Journey Completion Low Point - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${JourneyCompletionLowPoint.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 30,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo Vendor Broke Message Contract High Threshold - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfoVendorBrokeMessageContractHighThresholdAlarm.Arn}"]
-  #                    },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 36,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo Mobile Broke Message Contract High Threshold - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfoMobileBrokeMessageContractHighThresholdAlarm.Arn}"]
-  #                    },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 42,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo Unexpected Document Type High Threshold - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfoV2UnexpectedDocumentTypeHighThresholdAlarm.Arn}"]
-  #                    },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             }
-  #           ]
-  #         }
+  ConcurrencyAlarmDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Condition: DeployAlarms
+    Properties:
+      DashboardName: !Sub '${AWS::StackName}-Concurrency-Alarm-Overview'
+      DashboardBody:
+        Fn::Sub: >
+          {
+            "widgets": [
+              {
+                "height": 6,
+                  "width": 12,
+                  "y": 0,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "session 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${SessionConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 0,
+                  "x": 12,
+                  "type": "metric",
+                  "properties": {
+                    "title": "Token 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${TokenConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 6,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "Authorization 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${AuthorizationConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 6,
+                  "x": 12,
+                  "type": "metric",
+                  "properties": {
+                    "title": "Claimed Identity 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${ClaimedIdentityConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 12,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "json Webkeys 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${JsonWebKeysConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 12,
+                  "x": 12,
+                  "type": "metric",
+                  "properties": {
+                    "title": "User Info 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${UserInfoConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                }
+              }
+            ]
+          }
 
-  # WarningAlarmDashboard:
-  #   Type: AWS::CloudWatch::Dashboard
-  #   Condition: "DeployAlarms"
-  #   Properties:
-  #     DashboardName: !Sub '${AWS::StackName}-Warning-Alarm-Overview'
-  #     DashboardBody:
-  #       Fn::Sub: >
-  #         {
-  #           "widgets": [
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 0,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Latency Alarm - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${LatencyAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 0,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "200 Success OOH - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${200SuccessAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 6,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "User Info 500 - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfo500ErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 6,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "5XX Error Alarm - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${5XXErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 12,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "UserInfo 5XX ApiGw Error - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfo5XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 12,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Token 5XX ApiGw Error - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${Token5XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 18,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "User Info 4XX - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${UserInfo4XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 24,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Token 4XX - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${Token4XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 30,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Session 4XX - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${Session4XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 36,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Redirect 4XX - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${Redirect4XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 42,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "Token 4XX - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${Token4XXApiGwErrorAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 48,
-  #               "x": 12,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "TXMA SQS Old Messages - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${TXMASQSOldMessagesAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             },
-  #             {
-  #               "height": 6,
-  #               "width": 12,
-  #               "y": 54,
-  #               "x": 0,
-  #               "type": "metric",
-  #               "properties": {
-  #                 "title": "TXMA DLQ Messages Visible - ${AWS::StackName}",
-  #                 "annotations": {
-  #                   "alarms": ["${TXMADLQMessagesVisibleAlarm.Arn}"]
-  #                 },
-  #                 "view": "timeSeries",
-  #                 "stacked": false
-  #               }
-  #             }
-  #             }
-  #           ]
-  #         }
+  ThrottlesAlarmDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Condition: DeployAlarms
+    Properties:
+      DashboardName: !Sub '${AWS::StackName}-Throttles-Alarm-Overview'
+      DashboardBody:
+        Fn::Sub: >
+          {
+            "widgets": [
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 0,
+                  "x": 12,
+                  "type": "metric",
+                  "properties": {
+                    "title": "Session Throttles - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${SessionThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 6,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "TokenThrottleAlarm - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${TokenThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 6,
+                  "x": 12,
+                  "type": "metric",
+                  "properties": {
+                    "title": "User Info Throttles - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${UserInfoThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 12,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "Authorization Throttles - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${AuthorizationThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 12,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "Claimed Identity Throttles - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${ClaimedIdentityThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 12,
+                  "x": 12,
+                  "type": "metric",
+                  "properties": {
+                    "title": "json web keys Throttles - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${JsonWebKeysThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                }
+              ]
+            }
 
-  # ConcurrencyAlarmDashboard:
-  #   Type: AWS::CloudWatch::Dashboard
-  #   Condition: "DeployAlarms"
-  #   Properties:
-  #     DashboardName: !Sub '${AWS::StackName}-Concurrency-Alarm-Overview'
-  #     DashboardBody:
-  #       Fn::Sub: >
-  #         {
-  #           "widgets": [
-  #             {
-  #               "height": 6,
-  #                 "width": 12,
-  #                 "y": 0,
-  #                 "x": 0,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Verify Authorize 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${VerifyAuthorizeRequestConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 0,
-  #                 "x": 12,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Get Redirect 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${GetRedirectConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 6,
-  #                 "x": 0,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Issue Access Token 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${IssueAccessTokenConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 6,
-  #                 "x": 12,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "User Info 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${UserInfoConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 12,
-  #                 "x": 0,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Fetch Bio Token 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${FetchBiometricTokenConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 12,
-  #                 "x": 12,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Finish Bio Session 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${FinishBiometricSession2Concurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 18,
-  #                 "x": 0,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "User Abort Command 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${UserAbortCommandConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 18,
-  #                 "x": 12,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "App Info 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${AppInfoConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 24,
-  #                 "x": 0,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Generate Connection Code Concurrency 80 - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${GenerateConnectionCodeConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 24,
-  #                 "x": 12,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "Json Web Keys Concurrency 80 - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${JsonWebKeysConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               },
-  #               {
-  #                 "height": 6,
-  #                 "width": 12,
-  #                 "y": 30,
-  #                 "x": 0,
-  #                 "type": "metric",
-  #                 "properties": {
-  #                   "title": "App Info 80% Concurrency - ${AWS::StackName}",
-  #                   "annotations": {
-  #                     "alarms": ["${OpenidConfigurationConcurrency80Alarm.Arn}"]
-  #                   },
-  #                   "view": "timeSeries",
-  #                   "stacked": false
-  #                 }
-  #               }
-  #             ]
-  #           }
+  CriticalAlarmDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Condition: DeployAlarms
+    Properties:
+      DashboardName: !Sub '${AWS::StackName}-Critical-Alarm-Overview'
+      DashboardBody:
+        Fn::Sub: >
+          {
+          "widgets": [
+              {
+                "height": 6,
+                "width": 12,
+                "y": 6,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "API Gateway 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${5XXErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "DocumentSelection 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${DocumentSelection5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "userInfo 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfo5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Token 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Token5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Authorization 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Authorization5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Session 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Session5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "JsonWebKeys 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${JsonWebKeys5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "YotiCallback 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${YotiCallback5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },                                                              
+              {
+                "height": 6,
+                "width": 12,
+                "y": 18,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Journey Completion Critical Low Value - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${JourneyCompletionLowValueAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 24,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Journey Completion Critical Zero Value - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${JourneyCompletionZeroValueAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 24,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Zero Traffic - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${ZeroTrafficAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 36,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfoV2 Mobile Broke Message Contract High Threshold - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfoV2MobileBrokeMessageContractHighThresholdAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 42,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfo Unexpected Document Type High Threshold - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfoV2UnexpectedDocumentTypeHighThresholdAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              }
+            ]
+          }
 
-# MetricFilters
+  WarningAlarmDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Condition: DeployAlarms
+    Properties:
+      DashboardName: !Sub '${AWS::StackName}-Warning-Alarm-Overview'
+      DashboardBody:
+        Fn::Sub: >
+          {
+            "widgets": [
+              {
+                "height": 6,
+                "width": 12,
+                "y": 0,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Latency Alarm - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${LatencyAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 0,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "200 Success OOH - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${200SuccessAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 6,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "User Info 500 - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfo500ErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 6,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "5XX Error Alarm - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${5XXErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "DocumentSelection 5XX ApiGw Error - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${DocumentSelection5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 18,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "userInfo 5XX ApiGw Error - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfo5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 24,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Token 5XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Token5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 24,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Authorization 5XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Authorization5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 30,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Session 5XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Session5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 30,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Json Web Keys 5XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${JsonWebKeys5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 36,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Yoticallback 5XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${YotiCallback5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 36,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "DocumentSelection 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${DocumentSelection4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 42,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfo 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfo4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 42,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Token 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Token4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 48,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Authorization 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Authorization4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 48,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "Session 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${Session4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 54,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Yoticallback 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${YotiCallback4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 66,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "TXMA SQS Old Messages - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${TXMASQSOldMessagesAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 66,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "TXMA DLQ Messages Visible - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${TXMADLQMessagesVisibleAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 72,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "GovNotify SQS Old Messages - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${GovNotifySQSOldMessagesAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 78,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "GovNotify DLQ Messages Visible - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${GovNotifyDLQMessagesVisibleAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 78,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "YotiCallback SQS Old Messages - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${YotiCallbackOldMessagesAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 84,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "YotiCallback DLQ Messages Visible - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${YotiCallbackDLQMessagesVisibleAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 90,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "IPVCore SQS Old Messages - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${IPVCoreSQSOldMessagesAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 90,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "IPVCore DLQ Messages Visible - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${IPVCoreDLQMessagesVisibleAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 72,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "Journey completion low point - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${JourneyCompletionLowPointAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }             
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 84,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfoV2 Mobile Broke Message Contract - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfoV2MobileBrokeMessageContractAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 90,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfoV2 Vendor Broke Message Contract - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfoV2VendorBrokeMessageContractAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 90,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfoV2 Unexpected Document Type - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfoV2UnexpectedDocumentTypeAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 96,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "UserInfoV2 Vendor Exception - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${UserInfoV2VendorExceptionAlarm.Arn}"]
+                     },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+            ]
+          }
 
 Outputs:
   CICApiGatewayId:
