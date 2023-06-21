@@ -957,9 +957,8 @@ Outputs:
   CICBackendURL:
     Description: "CIC Backend URL"
     Value: !Sub
-      - "https://api-${AWS::StackName}.${DNSSUFFIX}/"
-      - DNSSUFFIX:
-          !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+      - "https://${CustomDomainName}"
+      - CustomDomainName: !Ref CICApiCustomDomainName
     Export:
       Name: !Sub ${AWS::StackName}-CICBackendURL
   CICIPVStubExecuteURL:
