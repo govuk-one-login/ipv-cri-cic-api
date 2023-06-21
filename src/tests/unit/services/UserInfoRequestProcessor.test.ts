@@ -102,7 +102,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
 
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
@@ -323,7 +323,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	it("Return successful response with 200 OK when write to txMA fails", async () => {
+	it("Return server error response with 500 SERVER ERROR when write to txMA fails", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
@@ -336,17 +336,7 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
-		expect(logger.appendKeys).toHaveBeenCalledWith({
-			govuk_signin_journey_id: "sdfssg",
-		});
-		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: "sessionId",
-		});
 		expect(logger.error).toHaveBeenCalledTimes(1);
-		expect(out.body).toEqual(JSON.stringify({
-			sub: "sub",
-			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
-		}));
-		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 	});
 });
