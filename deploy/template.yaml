@@ -1105,7 +1105,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /userinfo
+                  Value: /userInfo
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1167,7 +1167,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /userinfo
+                  Value: /userInfo
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1321,7 +1321,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Authorization5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the authorization endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1383,7 +1383,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Authorization5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the authorization endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
@@ -1445,7 +1445,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentity5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Claimed Identity endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1477,7 +1477,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /claimedidentity
+                  Value: /claimedIdentity
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1498,7 +1498,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /claimedidentity
+                  Value: /claimedIdentity
             Period: 60
             Stat: Sum
 
@@ -1507,7 +1507,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentity5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Claimed Identity endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
@@ -1539,7 +1539,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /claimedidentity
+                  Value: /claimedIdentity
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1560,7 +1560,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /claimedidentity
+                  Value: /claimedIdentity
             Period: 60
             Stat: Sum
 
@@ -1569,7 +1569,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Session5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Session endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1631,7 +1631,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Session5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Session endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
@@ -1688,12 +1688,12 @@ Resources:
             Period: 60
             Stat: Sum
 
-  JsonWebKeysFunction5XXApiGwErrorAlarm:
+  JsonWebKeys5XXApiGwErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Json Web Keys endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1750,12 +1750,12 @@ Resources:
             Period: 60
             Stat: Sum
 
-  JsonWebKeysFunction5XXApiGwErrorCriticalAlarm:
+  JsonWebKeys5XXApiGwErrorCriticalAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeys5XXApiGwErrorCriticalAlarm"
+      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Json Web Keys endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
@@ -1851,7 +1851,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /userinfo
+                  Value: /userInfo
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1872,7 +1872,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /userinfo
+                  Value: /userInfo
             Period: 60
             Stat: Sum
 
@@ -2005,7 +2005,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentity4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Claimed Identity endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2037,7 +2037,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /claimedidentity
+                  Value: /claimedIdentity
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -2058,7 +2058,7 @@ Resources:
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
-                  Value: /claimedidentity
+                  Value: /claimedIdentity
             Period: 60
             Stat: Sum
 
@@ -2067,7 +2067,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Session4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Session endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2124,12 +2124,12 @@ Resources:
             Period: 60
             Stat: Sum
 
-  JsonWebKeysFunction4XXApiGwErrorAlarm:
+  JsonWebKeys4XXApiGwErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeys4XXApiGwErrorAlarm"
+      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Json Web Keys endpoint. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2990,9 +2990,9 @@ Resources:
                 "x": 0,
                 "type": "metric",
                 "properties": {
-                  "title": "DocumentSelection 5XX critical - ${AWS::StackName}",
+                  "title": "Claimed Identity 5XX critical - ${AWS::StackName}",
                   "annotations": {
-                    "alarms": ["${DocumentSelection5XXApiGwErrorCriticalAlarm.Arn}"]
+                    "alarms": ["${ClaimedIdentity5XXApiGwErrorCriticalAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false
@@ -3005,7 +3005,7 @@ Resources:
                 "x": 12,
                 "type": "metric",
                 "properties": {
-                  "title": "userInfo 5XX critical - ${AWS::StackName}",
+                  "title": "User Info 5XX critical - ${AWS::StackName}",
                   "annotations": {
                     "alarms": ["${UserInfo5XXApiGwErrorCriticalAlarm.Arn}"]
                   },
@@ -3072,96 +3072,6 @@ Resources:
                   "view": "timeSeries",
                   "stacked": false
                 }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 12,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "YotiCallback 5XX critical - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${YotiCallback5XXApiGwErrorCriticalAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },                                                              
-              {
-                "height": 6,
-                "width": 12,
-                "y": 18,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "Journey Completion Critical Low Value - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${JourneyCompletionLowValueAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 24,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "Journey Completion Critical Zero Value - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${JourneyCompletionZeroValueAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 24,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "Zero Traffic - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${ZeroTrafficAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 36,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "UserInfoV2 Mobile Broke Message Contract High Threshold - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfoV2MobileBrokeMessageContractHighThresholdAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 42,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "UserInfo Unexpected Document Type High Threshold - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfoV2UnexpectedDocumentTypeHighThresholdAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
               }
             ]
           }
@@ -3209,21 +3119,6 @@ Resources:
                 "height": 6,
                 "width": 12,
                 "y": 6,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "User Info 500 - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfo500ErrorAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 6,
                 "x": 12,
                 "type": "metric",
                 "properties": {
@@ -3242,9 +3137,9 @@ Resources:
                 "x": 12,
                 "type": "metric",
                 "properties": {
-                  "title": "DocumentSelection 5XX ApiGw Error - ${AWS::StackName}",
+                  "title": "Claimed Identity 5XX ApiGw Error - ${AWS::StackName}",
                   "annotations": {
-                    "alarms": ["${DocumentSelection5XXApiGwErrorAlarm.Arn}"]
+                    "alarms": ["${ClaimedIdentity5XXApiGwErrorAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false
@@ -3257,7 +3152,7 @@ Resources:
                 "x": 0,
                 "type": "metric",
                 "properties": {
-                  "title": "userInfo 5XX ApiGw Error - ${AWS::StackName}",
+                  "title": "User Info 5XX ApiGw Error - ${AWS::StackName}",
                   "annotations": {
                     "alarms": ["${UserInfo5XXApiGwErrorAlarm.Arn}"]
                   },
@@ -3329,27 +3224,12 @@ Resources:
                 "height": 6,
                 "width": 12,
                 "y": 36,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "Yoticallback 5XX - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${YotiCallback5XXApiGwErrorAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 36,
                 "x": 12,
                 "type": "metric",
                 "properties": {
-                  "title": "DocumentSelection 4XX - ${AWS::StackName}",
+                  "title": "Claimed Identity 4XX - ${AWS::StackName}",
                   "annotations": {
-                    "alarms": ["${DocumentSelection4XXApiGwErrorAlarm.Arn}"]
+                    "alarms": ["${ClaimedIdentity4XXApiGwErrorAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false
@@ -3422,9 +3302,9 @@ Resources:
                 "x": 0,
                 "type": "metric",
                 "properties": {
-                  "title": "Yoticallback 4XX - ${AWS::StackName}",
+                  "title": "Json Web Keys 4XX - ${AWS::StackName}",
                   "annotations": {
-                    "alarms": ["${YotiCallback4XXApiGwErrorAlarm.Arn}"]
+                    "alarms": ["${JsonWebKeys4XXApiGwErrorAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false
@@ -3463,66 +3343,6 @@ Resources:
               {
                 "height": 6,
                 "width": 12,
-                "y": 72,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "GovNotify SQS Old Messages - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${GovNotifySQSOldMessagesAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 78,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "GovNotify DLQ Messages Visible - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${GovNotifyDLQMessagesVisibleAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 78,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "YotiCallback SQS Old Messages - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${YotiCallbackOldMessagesAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 84,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "YotiCallback DLQ Messages Visible - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${YotiCallbackDLQMessagesVisibleAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
                 "y": 90,
                 "x": 0,
                 "type": "metric",
@@ -3534,96 +3354,7 @@ Resources:
                   "view": "timeSeries",
                   "stacked": false
                 }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 90,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "IPVCore DLQ Messages Visible - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${IPVCoreDLQMessagesVisibleAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 72,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "Journey completion low point - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${JourneyCompletionLowPointAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }             
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 84,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "UserInfoV2 Mobile Broke Message Contract - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfoV2MobileBrokeMessageContractAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 90,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "UserInfoV2 Vendor Broke Message Contract - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfoV2VendorBrokeMessageContractAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 90,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "UserInfoV2 Unexpected Document Type - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfoV2UnexpectedDocumentTypeAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 96,
-                "x": 0,
-                "type": "metric",
-                "properties": {
-                  "title": "UserInfoV2 Vendor Exception - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${UserInfoV2VendorExceptionAlarm.Arn}"]
-                     },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
+              }
             ]
           }
 
