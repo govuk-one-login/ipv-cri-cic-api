@@ -194,8 +194,8 @@ export class UserInfoRequestProcessor {
 					error,
 					messageCode: MessageCodes.ERROR_WRITING_TXMA,
 				});
-				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error")
 			}
+			
 			// return success response
 			try {
 				await this.cicService.sendToTXMA({
@@ -207,7 +207,6 @@ export class UserInfoRequestProcessor {
 					error, 
 					messageCode: MessageCodes.ERROR_WRITING_TXMA,
 				});
-				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error")
 			}
 
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
