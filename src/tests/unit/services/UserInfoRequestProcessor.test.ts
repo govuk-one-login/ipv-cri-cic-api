@@ -103,7 +103,6 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
-
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
