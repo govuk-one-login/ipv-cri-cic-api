@@ -2659,8 +2659,6 @@ Resources:
               MetricName: JsonWebKeysLambdaTimeOut
             Period: 60
             Stat: Sum
-      Metadata:
-        SamResourceId: LambdaTimeoutAlarm
 
   UserInfoTimeOutMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -2851,7 +2849,6 @@ Resources:
                     },
                     "view": "timeSeries",
                     "stacked": false
-                  }
                 }
               }
             ]
@@ -3095,21 +3092,6 @@ Resources:
                   "title": "Latency Alarm - ${AWS::StackName}",
                   "annotations": {
                     "alarms": ["${LatencyAlarm.Arn}"]
-                  },
-                  "view": "timeSeries",
-                  "stacked": false
-                }
-              },
-              {
-                "height": 6,
-                "width": 12,
-                "y": 0,
-                "x": 12,
-                "type": "metric",
-                "properties": {
-                  "title": "200 Success OOH - ${AWS::StackName}",
-                  "annotations": {
-                    "alarms": ["${200SuccessAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false
