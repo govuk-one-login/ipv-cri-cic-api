@@ -56,7 +56,6 @@ export class CicService {
 	}
 
 	async getSessionById(sessionId: string): Promise<ISessionItem | undefined> {
-		console.log("getSessionById has been called - START OF FUNC")
 		this.logger.debug("Table name " + this.tableName);
 		const getSessionCommand = new GetCommand({
 			TableName: this.tableName,
