@@ -62,9 +62,9 @@ export class UserInfoRequestProcessor {
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		// Validate the Authentication header and retrieve the sub (sessionId) from the JWT token.
-		let sub: string;
+		let sessionId: string;
 		try {
-			sub = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
+			sessionId = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
 		} catch (error) {
 			if (error instanceof AppError) {
 				this.logger.error("Error validating Authentication Access token from headers: ", {
@@ -80,10 +80,13 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
+		// add sessionId to all subsequent log messages
+		this.logger.appendKeys({ sessionId });
+
 		let session: ISessionItem | undefined;
 		let personInfo: PersonIdentityItem | undefined;
 		try {
-			session = await this.cicService.getSessionById(sub);
+			session = await this.cicService.getSessionById(sessionId);
 			if (!session) {
 				this.logger.error("No session found", {
 					messageCode: MessageCodes.SESSION_NOT_FOUND,
@@ -117,7 +120,7 @@ export class UserInfoRequestProcessor {
 		this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
 		try {
-			personInfo = await this.cicService.getPersonIdentityBySessionId(sub);
+			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId);
 			if (!personInfo) {
 				this.logger.error("No person found with this session ID", {
 					messageCode: MessageCodes.PERSON_NOT_FOUND,

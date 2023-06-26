@@ -112,6 +112,9 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
 	});
 
 	it("Return 401 when Authorization header is missing in the request", async () => {
@@ -231,6 +234,9 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
@@ -255,6 +261,9 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
@@ -274,6 +283,9 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
 		});
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
@@ -299,6 +311,9 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
@@ -322,6 +337,9 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
 		});
 		expect(logger.error).toHaveBeenCalledTimes(2);
 		expect(out.body).toEqual(JSON.stringify({
