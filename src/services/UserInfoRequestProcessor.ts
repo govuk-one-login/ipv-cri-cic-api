@@ -80,9 +80,6 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
-		// add sessionId to all subsequent log messages
-		this.logger.appendKeys({ sessionId: sub });
-
 		let session: ISessionItem | undefined;
 		let personInfo: PersonIdentityItem | undefined;
 		try {
@@ -95,7 +92,6 @@ export class UserInfoRequestProcessor {
 			}
 		} catch (error) {
 			this.logger.error("Error finding session", {
-				sessionId: sub,
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
@@ -130,14 +126,13 @@ export class UserInfoRequestProcessor {
 			}
 		} catch (error) {
 			this.logger.error("Error finding person", {
-				sessionId: sub,
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
-		this.logger.info("Found Person");
+		this.logger.info("Found person by session ID");
   
 		this.metrics.addMetric("found person", MetricUnits.Count, 1);
 		
