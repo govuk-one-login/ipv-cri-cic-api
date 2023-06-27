@@ -194,7 +194,6 @@ export class UserInfoRequestProcessor {
 				});
 			}
 			
-			// return success response
 			try {
 				await this.cicService.sendToTXMA({
 					event_name: "CIC_CRI_END",
@@ -207,6 +206,7 @@ export class UserInfoRequestProcessor {
 				});
 			}
 
+			// return success response
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
