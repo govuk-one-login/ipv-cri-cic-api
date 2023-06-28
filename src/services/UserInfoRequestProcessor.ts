@@ -1,3 +1,5 @@
+/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function */
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -60,9 +62,9 @@ export class UserInfoRequestProcessor {
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		// Validate the Authentication header and retrieve the sub (sessionId) from the JWT token.
-		let sub: string;
+		let sessionId: string;
 		try {
-			sub = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
+			sessionId = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
 		} catch (error) {
 			if (error instanceof AppError) {
 				this.logger.error("Error validating Authentication Access token from headers: ", {
@@ -79,12 +81,12 @@ export class UserInfoRequestProcessor {
 		}
 
 		// add sessionId to all subsequent log messages
-		this.logger.appendKeys({ sessionId: sub });
+		this.logger.appendKeys({ sessionId });
 
 		let session: ISessionItem | undefined;
 		let personInfo: PersonIdentityItem | undefined;
 		try {
-			session = await this.cicService.getSessionById(sub);
+			session = await this.cicService.getSessionById(sessionId);
 			if (!session) {
 				this.logger.error("No session found", {
 					messageCode: MessageCodes.SESSION_NOT_FOUND,
@@ -93,7 +95,6 @@ export class UserInfoRequestProcessor {
 			}
 		} catch (error) {
 			this.logger.error("Error finding session", {
-				sessionId: sub,
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
@@ -119,7 +120,7 @@ export class UserInfoRequestProcessor {
 		this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
 		try {
-			personInfo = await this.cicService.getPersonIdentityBySessionId(sub);
+			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId);
 			if (!personInfo) {
 				this.logger.error("No person found with this session ID", {
 					messageCode: MessageCodes.PERSON_NOT_FOUND,
@@ -128,14 +129,13 @@ export class UserInfoRequestProcessor {
 			}
 		} catch (error) {
 			this.logger.error("Error finding person", {
-				sessionId: sub,
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
-		this.logger.info("Found Person");
+		this.logger.info("Found person by session ID");
   
 		this.metrics.addMetric("found person", MetricUnits.Count, 1);
 		
@@ -179,6 +179,13 @@ export class UserInfoRequestProcessor {
 				await this.cicService.sendToTXMA({
 					event_name: "CIC_CRI_VC_ISSUED",
 					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+					restricted: {
+						name: [{
+							names,
+						},
+						],
+						birthDate: [{ value: birthDate }],
+					},
 				});
 			} catch (error) {
 				this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
@@ -186,13 +193,25 @@ export class UserInfoRequestProcessor {
 					messageCode: MessageCodes.ERROR_WRITING_TXMA,
 				});
 			}
+			
+			try {
+				await this.cicService.sendToTXMA({
+					event_name: "CIC_CRI_END",
+					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+				});
+			} catch (error) {
+				this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
+					error, 
+					messageCode: MessageCodes.ERROR_WRITING_TXMA,
+				});
+			}
+
 			// return success response
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
 			}));
 		} else {
-
 			this.logger.error("Claimed Identity data invalid", {
 				messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
 			});
