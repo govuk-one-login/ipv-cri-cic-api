@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
 import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
@@ -208,18 +209,18 @@ export class CicService {
 		};
 
 		this.logger.info("Sending message to TxMA", {
-			messageBody: event,
+			event_name: event.event_name,
 		});
 		try {
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA", {
-				messageBody: event,
+				event_name: event.event_name,
 			});
 		} catch (error) {
 			this.logger.error("got error ", {
 				error,
 			});
-			throw new AppError("sending event - failed ", HttpCodesEnum.SERVER_ERROR);
+			throw new AppError("Sending event - failed ", HttpCodesEnum.SERVER_ERROR);
 		}
 	}
 
