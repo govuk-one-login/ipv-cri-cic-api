@@ -50,5 +50,4 @@ describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, null, sessionId);
 		expect(calimedIdentityResponse.status).toBe(400);
 	});
-
 });
