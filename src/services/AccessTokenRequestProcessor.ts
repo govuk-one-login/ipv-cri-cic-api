@@ -103,9 +103,9 @@ export class AccessTokenRequestProcessor {
     				expires_in: Constants.TOKEN_EXPIRY_SECONDS,
     			}),
     		};
-    	} catch (err: any) {
-    		this.logger.error({ message: "Error while trying to create access token ", err });
-    		return new Response(err.statusCode, err.message);
+    	} catch (error: any) {
+    		this.logger.error({ message: "Error while trying to create access token ", error });
+    		return new Response(error.statusCode, error.message);
     	}
     }
 }
