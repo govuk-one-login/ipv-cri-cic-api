@@ -72,7 +72,6 @@ export class SessionRequestProcessor {
 		const requestBodyClientId = deserialisedRequestBody.client_id;
 		const clientIpAddress = event.headers["x-forwarded-for"];
 
-
 		let configClient: ClientConfig | undefined = undefined;
 		try {
 			const config = JSON.parse(CLIENT_CONFIG!) as ClientConfig[];

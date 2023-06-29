@@ -13,7 +13,7 @@ CFN_CICBackendURL_NoQuotes=$(remove_quotes "$CFN_CICBackendURL")
 export DEV_CRI_CIC_API_URL=$(echo ${CFN_CICBackendURL_NoQuotes%/})
 export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)/start
 
-cd ./src; npm run test:e2e
+cd /src; npm run test:e2e
 error_code=$?
 
 cp -rf results $TEST_REPORT_ABSOLUTE_DIR
