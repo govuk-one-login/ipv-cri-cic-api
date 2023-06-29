@@ -187,13 +187,13 @@ export class CicService {
 			},
 		});
 
-		this.logger.info("updating authorizationCode dynamodb", { updateSessionCommand });
+		this.logger.info("Updating authorizationCode dynamodb", { tableName: this.tableName });
 
 		try {
 			await this.dynamo.send(updateSessionCommand);
-			this.logger.info("updated authorizationCode in dynamodb");
+			this.logger.info("Updated authorizationCode in dynamodb");
 		} catch (error) {
-			this.logger.error("got error setting auth code", { error });
+			this.logger.error("Got error setting auth code", { error });
 			throw new AppError(
 				"Failed to set authorization code ",
 				HttpCodesEnum.SERVER_ERROR,
