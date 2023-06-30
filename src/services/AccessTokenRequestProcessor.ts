@@ -64,10 +64,10 @@ export class AccessTokenRequestProcessor {
     				return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
     			}
     			this.logger.appendKeys({ sessionId: session.sessionId });
-    		} catch (err) {
+    		} catch (error) {
     			this.logger.error("Error while retrieving the session", {
     				messageCode: MessageCodes.SESSION_NOT_FOUND,
-    				error: err,
+    				error,
     			});
     			return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
     		}
@@ -86,6 +86,7 @@ export class AccessTokenRequestProcessor {
     		} catch (error) {
     			this.logger.error("Failed to sign the accessToken Jwt", {
     				messageCode: MessageCodes.FAILED_SIGNING_JWT,
+    				error,
     			});
     			return new Response( HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt" );
     		}
@@ -104,7 +105,7 @@ export class AccessTokenRequestProcessor {
     			}),
     		};
     	} catch (error: any) {
-    		this.logger.error({ message: "Error while trying to create access token ", error });
+    		this.logger.error({ message: "Error while trying to create access token ", error, messageCode: MessageCodes.FAILED_CREATING_ACCESS_TOKEN });
     		return new Response(error.statusCode, error.message);
     	}
     }
