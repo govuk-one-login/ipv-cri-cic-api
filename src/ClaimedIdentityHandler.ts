@@ -9,6 +9,7 @@ import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { HttpVerbsEnum } from "./utils/HttpVerbsEnum";
 import { Constants } from "./utils/Constants";
+import { MessageCodes } from "./models/enums/MessageCodes";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : Constants.DEBUG;
@@ -25,33 +26,46 @@ class ClaimedIdentity implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
+
+		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
+		logger.setPersistentLogAttributes({});
+		logger.addContext(context);
+
 		switch (event.resource) {
 			case ResourcesEnum.CLAIMEDIDENTITY:
 				if (event.httpMethod === HttpVerbsEnum.POST) {
 					let sessionId;
 					try {
-						logger.info("Event received", { event });
+						logger.info("Received claimed identity request", { requestId: event.requestContext.requestId });
+
 						if (event.headers) {
 							sessionId = event.headers[Constants.X_SESSION_ID];
 							if (sessionId) {
-								logger.info({ message: "Session id", sessionId });
+								logger.appendKeys({ sessionId });
+
 								if (!Constants.REGEX_UUID.test(sessionId)) {
+									logger.error("Session id not not a valid uuid", { messageCode: MessageCodes.FAILED_VALIDATING_SESSION_ID });
 									return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
 								}
 							} else {
+								logger.error("Missing header: x-govuk-signin-session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
 								return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required");
 							}
 						} else {
+							logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 						}
 
 						if (event.body) {
 							return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
 						} else {
+							logger.error("Empty payload", { messageCode: MessageCodes.MISSING_PAYLOAD });
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 						}
+
 					} catch (err: any) {
 						logger.error({ message: "An error has occurred.", err });
+
 						if (err instanceof AppError) {
 							return new Response(err.statusCode, err.message);
 						}
@@ -61,6 +75,10 @@ class ClaimedIdentity implements LambdaInterface {
 				return new Response(HttpCodesEnum.NOT_FOUND, "");
 
 			default:
+				logger.error("Requested resource does not exist", {
+					resource: event.resource,
+					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
+				});
 				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
 		}
 

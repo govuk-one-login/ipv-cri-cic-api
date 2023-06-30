@@ -24,6 +24,7 @@ import {
 	PersonIdentityNamePart,
 	PersonIdentityName,
 } from "../models/PersonIdentityItem";
+import { MessageCodes } from "../models/enums/MessageCodes";
 
 export class CicService {
 	readonly tableName: string;
@@ -143,9 +144,8 @@ export class CicService {
 		});
 
 		this.logger.info({
-			message: "updating CIC data in dynamodb",
-			saveCICPersonInfoCommand,
-			updateSessionAuthStateCommand,
+			message: "Updating CIC data in dynamodb",
+			tableName: this.tableName,
 		});
 
 		try {
@@ -161,9 +161,9 @@ export class CicService {
 
 		try {
 			await this.dynamo.send(updateSessionAuthStateCommand);
-			this.logger.info({ message: "updated CIC data in dynamodb" });
+			this.logger.info({ message: "Updated CIC data in dynamodb" });
 		} catch (error) {
-			this.logger.error({ message: "got error saving CIC data", error });
+			this.logger.error({ message: "Got error saving CIC data", error, messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY });
 			throw new AppError(
 				"Failed to set claimed identity data ",
 				HttpCodesEnum.SERVER_ERROR,
