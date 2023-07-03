@@ -8,6 +8,7 @@ import { Response } from "./utils/Response";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { AppError } from "./utils/AppError";
 import { AccessTokenRequestProcessor } from "./services/AccessTokenRequestProcessor";
+import { MessageCodes } from "./models/enums/MessageCodes";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
@@ -23,11 +24,16 @@ export class AccessToken implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
+
+		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
+		logger.setPersistentLogAttributes({});
+		logger.addContext(context);
+
 		switch (event.resource) {
 			case ResourcesEnum.TOKEN:
 				if (event.httpMethod === "POST") {
 					try {
-						logger.info("Got token request:", { event });
+						logger.info("Received token request", { requestId: event.requestContext.requestId });
 						return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
 					} catch (err) {
 						logger.error({ message: "An error has occurred. ", err });
@@ -37,6 +43,10 @@ export class AccessToken implements LambdaInterface {
 				return new Response(HttpCodesEnum.NOT_FOUND, "");
 
 			default:
+				logger.error("Requested resource does not exist", {
+					resource: event.resource,
+					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
+				});
 				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
 
 		}
