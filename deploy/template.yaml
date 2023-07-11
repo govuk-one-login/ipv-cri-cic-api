@@ -54,6 +54,14 @@ Parameters:
     Description: "Set to the string value `true` to deploy alarms in a DEV environment"
     Type: String
     Default: true
+  SupportManualURL:
+    Description: "Link to the CIC support manual"
+    Type: String
+    Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3602251909/CIC+Support+Documentation'
+  DeployAlarmsInNonProdLikeEnvironment:
+    Description: "Set to the string value `true` to deploy alarms in a DEV environment"
+    Type: String
+    Default: true
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -92,35 +100,35 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCYTHRESHOLD: 16
+      LAMBDACONCURRENCY80THRESHOLD: 16
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCYTHRESHOLD: 16
+      LAMBDACONCURRENCY80THRESHOLD: 16
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCYTHRESHOLD: 16
+      LAMBDACONCURRENCY80THRESHOLD: 16
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCYTHRESHOLD: 16
+      LAMBDACONCURRENCY80THRESHOLD: 16
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCYTHRESHOLD: 16
+      LAMBDACONCURRENCY80THRESHOLD: 16
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -147,6 +155,8 @@ Conditions:
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
+  IsNotProdLikeEnvironment: !Not
+    - !Condition IsProdLikeEnvironment
   IsPersonalIdentifiableInformationEnvironment: !Or
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
@@ -2309,7 +2319,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
@@ -2334,7 +2344,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
@@ -2359,7 +2369,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2384,7 +2394,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2409,7 +2419,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2434,7 +2444,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD]
+      Threshold: !FindInMap [EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD]
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2462,7 +2472,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   SessionThrottleAlarm:
@@ -2487,7 +2497,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   JsonWebKeysThrottleAlarm:
@@ -2512,7 +2522,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   AuthorizationThrottleAlarm:
@@ -2537,7 +2547,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
   
   TokenThrottleAlarm:
@@ -2562,7 +2572,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
   
   UserInfoThrottleAlarm:
@@ -2587,7 +2597,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCYTHRESHOLD ]
+      Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
 
@@ -2702,7 +2712,7 @@ Resources:
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "ClaimedIdentityLambdaTimeOut"
+          MetricName: "AuthorizationLambdaTimeOut"
 
   TokenTimeOutMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -3341,6 +3351,7 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-CICBackendURL
   CICIPVStubExecuteURL:
+    Condition: IsNotProdLikeEnvironment
     Description: "CIC IPV Stub"
     Value:
       Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'

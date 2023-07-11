@@ -10,6 +10,7 @@ import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
+import { MessageCodes } from "../models/enums/MessageCodes";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
@@ -29,7 +30,9 @@ export class AuthorizationRequestProcessor {
 
 	constructor(logger: Logger, metrics: Metrics) {
 		if (!SESSION_TABLE || !TXMA_QUEUE_URL || !ISSUER) {
-			logger.error("Environment variable SESSION_TABLE or TXMA_QUEUE_URL or ISSUER is not configured");
+			logger.error("Environment variable SESSION_TABLE or TXMA_QUEUE_URL or ISSUER is not configured", {
+				messageCode: MessageCodes.MISSING_CONFIGURATION,
+			});
 			throw new AppError( "Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
 		}
 		this.logger = logger;
@@ -51,21 +54,23 @@ export class AuthorizationRequestProcessor {
 
 		if (session != null) {
 			if (session.expiryDate < absoluteTimeNow()) {
+				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.logger.info({ message: "found session", session });
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
+
 			if (session.authSessionState !== AuthSessionState.CIC_DATA_RECEIVED) {
-				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}`);
+				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}`, { 
+					messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+				});
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
 			const authorizationCode = randomUUID();
-
 			await this.cicService.setAuthorizationCode(sessionId, authorizationCode);
-
 			this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
+
 			try {
 				await this.cicService.sendToTXMA({
 					event_name: "CIC_CRI_AUTH_CODE_ISSUED",
@@ -73,7 +78,9 @@ export class AuthorizationRequestProcessor {
 
 				});
 			} catch (error) {
-				this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.");
+				this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", {
+					messageCode: MessageCodes.ERROR_WRITING_TXMA,
+				});
 			}
 
 			const cicResp = {
@@ -86,6 +93,9 @@ export class AuthorizationRequestProcessor {
 
 			return new Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
 		} else {
+			this.logger.error("No session found for session id", {
+				messageCode: MessageCodes.SESSION_NOT_FOUND,
+			});
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
 	}
