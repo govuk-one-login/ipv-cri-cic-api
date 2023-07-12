@@ -46,10 +46,6 @@ Parameters:
     Type: String
     Default: "cic-ipv-stub"
     Description: The name of theIPV stub stack deployed.
-  SupportManualURL:
-    Description: "Link to the CIC support manual"
-    Type: String
-    Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3602251909/CIC+Support+Documentation'
   DeployAlarmsInNonProdLikeEnvironment:
     Description: "Set to the string value `true` to deploy alarms in a DEV environment"
     Type: String
