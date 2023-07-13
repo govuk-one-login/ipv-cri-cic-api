@@ -52,11 +52,12 @@ export class ClaimedIdRequestProcessor {
 			const bodyParsed = JSON.parse(event.body as string);
 			// Convert given_names and family_names string into string[]
 			bodyParsed.given_names = bodyParsed.given_names.split(" ");
-			bodyParsed.family_names = bodyParsed.family_names.split(" ");
 		
 			cicSession = new CicSession(bodyParsed);
+			console.log("CICSESSION: ", cicSession)
 			await this.validationHelper.validateModel(cicSession, this.logger);
 			this.logger.debug({ message: "CIC Session is", cicSession });
+			console.log("GOT CIC SESSION")
 		} catch (error) {
 			this.logger.error("Missing mandatory fields in the request payload", {
 				error,
@@ -66,7 +67,7 @@ export class ClaimedIdRequestProcessor {
 		}
 
 		const session = await this.cicService.getSessionById(sessionId);
-
+		console.log("GOT SESSIONID")
 		if (session != null) {
 			if (session.expiryDate < absoluteTimeNow()) {
 				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
@@ -81,7 +82,7 @@ export class ClaimedIdRequestProcessor {
 				});
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
-
+			console.log("ABOUT TO SAVE CIC DATA")
 			await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
 			return new Response(HttpCodesEnum.OK, "");
 		} else {

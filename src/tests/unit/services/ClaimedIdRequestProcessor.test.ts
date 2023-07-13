@@ -57,6 +57,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(sess);
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		console.log("OUT: ", out)
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("");
