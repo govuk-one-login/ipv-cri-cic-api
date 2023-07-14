@@ -22,7 +22,6 @@ import {
 	PersonIdentityDateOfBirth,
 	PersonIdentityItem,
 	PersonIdentityNamePart,
-	PersonIdentityName,
 } from "../models/PersonIdentityItem";
 import { MessageCodes } from "../models/enums/MessageCodes";
 
@@ -309,7 +308,7 @@ export class CicService {
 	private mapCICNames(givenNames: string[], familyNames: string) {
 		const nameParts: PersonIdentityNamePart[] = [];
 		givenNames.forEach((givenName) => {
-			if (givenName.match(Constants.GIVEN_NAME_REGEX)) {
+			if (Constants.GIVEN_NAME_REGEX.exec(givenName)) {
 				nameParts.push(
 					{
 						type: "GivenName",
