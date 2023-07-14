@@ -328,7 +328,7 @@ export class CicService {
 					},
 				];
 			} else {
-				throw new AppError(`Given name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, HttpCodesEnum.BAD_REQUEST)
+				throw new AppError(`Given name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, HttpCodesEnum.BAD_REQUEST);
 			}
 		});
 		

@@ -4,7 +4,7 @@ import {
 	IsISO8601,
 	IsNotEmpty,
 	ArrayNotContains,
-  Matches
+	Matches,
 } from "class-validator";
 import { ICicSession } from "./ISessionItem";
 
