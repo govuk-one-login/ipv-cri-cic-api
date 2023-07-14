@@ -56,10 +56,10 @@ class AuthorizationCodeHandler implements LambdaInterface {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 						}
 						return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
-					} catch (err: any) {
-						logger.error({ message: "An error has occurred.", err });
-						if (err instanceof  AppError) {
-							return new Response(err.statusCode, err.message);
+					} catch (error: any) {
+						logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
+						if (error instanceof  AppError) {
+							return new Response(error.statusCode, error.message);
 						}
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 					}
