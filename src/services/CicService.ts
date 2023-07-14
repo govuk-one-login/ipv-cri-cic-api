@@ -306,30 +306,30 @@ export class CicService {
 		}
 	}
 
-	private mapCICNames(givenNames: string[], familyNames: string): PersonIdentityName[] {
+	private mapCICNames(givenNames: string[], familyName: string): PersonIdentityName[] {
 		const nameParts: PersonIdentityNamePart[] = [];
-		givenNames.forEach((givenName) => {
-			if (!Constants.GIVEN_NAME_REGEX.exec(givenName)) {
+	
+		const validateName = (name: string) => {
+			if (!Constants.GIVEN_NAME_REGEX.exec(name)) {
 				throw new AppError(`Given name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, HttpCodesEnum.BAD_REQUEST);
-			} 
-			nameParts.push(
-				{
-					type: "GivenName",
-					value: givenName,
-				},
-			);
-			nameParts.push(
-				{
-					type: "FamilyName",
-					value: familyNames,
-				},
-			);
+			}
+		};
+	
+		givenNames.forEach((givenName) => {
+			validateName(givenName);
+			nameParts.push({
+				type: "GivenName",
+				value: givenName,
+			});
 		});
-		return [
-			{
-				nameParts,
-			},
-		];
+	
+		validateName(familyName);
+		nameParts.push({
+			type: "FamilyName",
+			value: familyName,
+		});
+	
+		return [{ nameParts }];
 	}
 
 	private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {

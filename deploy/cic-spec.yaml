@@ -787,7 +787,7 @@ components:
         given_names:
           type: string
           example: Frederick Joseph
-          pattern: ^[a-zA-Z.'-]*$
+          pattern: ^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$
           description: claimed given legal name
         family_names:
           type: string
