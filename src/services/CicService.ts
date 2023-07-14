@@ -22,6 +22,7 @@ import {
 	PersonIdentityDateOfBirth,
 	PersonIdentityItem,
 	PersonIdentityNamePart,
+	PersonIdentityName,
 } from "../models/PersonIdentityItem";
 import { MessageCodes } from "../models/enums/MessageCodes";
 
@@ -305,33 +306,30 @@ export class CicService {
 		}
 	}
 
-	private mapCICNames(givenNames: string[], familyNames: string) {
+	private mapCICNames(givenNames: string[], familyNames: string): PersonIdentityName[] {
 		const nameParts: PersonIdentityNamePart[] = [];
 		givenNames.forEach((givenName) => {
-			if (Constants.GIVEN_NAME_REGEX.exec(givenName)) {
-				nameParts.push(
-					{
-						type: "GivenName",
-						value: givenName,
-					},
-				);
-				nameParts.push(
-					{
-						type: "FamilyName",
-						value: familyNames,
-					},
-				);
-				return [
-					{
-						nameParts,
-					},
-				];
-			} else {
+			if (!Constants.GIVEN_NAME_REGEX.exec(givenName)) {
 				throw new AppError(`Given name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, HttpCodesEnum.BAD_REQUEST);
-			}
+			} 
+			nameParts.push(
+				{
+					type: "GivenName",
+					value: givenName,
+				},
+			);
+			nameParts.push(
+				{
+					type: "FamilyName",
+					value: familyNames,
+				},
+			);
 		});
-		
-		
+		return [
+			{
+				nameParts,
+			},
+		];
 	}
 
 	private mapCICBirthDay(birthDay: string): PersonIdentityDateOfBirth[] {
