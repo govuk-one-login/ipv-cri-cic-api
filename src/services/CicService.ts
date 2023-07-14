@@ -309,7 +309,6 @@ export class CicService {
 	private mapCICNames(givenNames: string[], familyNames: string) {
 		const nameParts: PersonIdentityNamePart[] = [];
 		givenNames.forEach((givenName) => {
-			console.log("GIVEN NAME: ", givenName)
 			if (givenName.match(Constants.GIVEN_NAME_REGEX)) {
 				nameParts.push(
 					{
@@ -323,7 +322,6 @@ export class CicService {
 						value: familyNames,
 					},
 				);
-				console.log("NAMEPARTS: ", nameParts)
 				return [
 					{
 						nameParts,
