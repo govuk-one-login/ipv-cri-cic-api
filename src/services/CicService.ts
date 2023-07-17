@@ -311,7 +311,7 @@ export class CicService {
 	
 		const validateName = (name: string) => {
 			if (!Constants.GIVEN_NAME_REGEX.test(name)) {
-				this.logger.error(`Name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, { messageCode: MessageCodes.INVALID_NAME_REGEX })
+				this.logger.error(`Name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, { messageCode: MessageCodes.INVALID_NAME_REGEX });
 				throw new AppError(`Name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, HttpCodesEnum.BAD_REQUEST);
 			}
 		};
