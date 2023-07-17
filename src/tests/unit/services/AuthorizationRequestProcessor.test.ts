@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
+import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -65,13 +67,26 @@ describe("AuthorizationRequestProcessor", () => {
 			state: "Y@atr",
 		}));
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_sign_in_journey_id: session.clientSessionId });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+	});
+
+	it("Return 401 when session is in incorrect state", async () => {
+		const session = getMockSessionItem();
+		session.authSessionState = "UNKNOWN";
+		mockCicService.getSessionById.mockResolvedValue(session);
+
+		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(out.body).toBe(`Session is in the wrong state: ${session.authSessionState}`);
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith(
+			`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}`,
+			{ messageCode: MessageCodes.INCORRECT_SESSION_STATE },
+		);
 	});
 
 	it("Return 401 when session is expired", async () => {
@@ -81,10 +96,10 @@ describe("AuthorizationRequestProcessor", () => {
 
 		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("Session with session id: 1234 has expired");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
 	});
 
 	it("Return 401 when session with that session id not found in the DB", async () => {
@@ -92,10 +107,10 @@ describe("AuthorizationRequestProcessor", () => {
 
 		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: 1234");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
 	});
 
 	it("Return 200 when write to txMA fails", async () => {
@@ -115,12 +130,9 @@ describe("AuthorizationRequestProcessor", () => {
 			state: "Y@atr",
 		}));
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", { error: {}, messageCode: "ERROR_WRITING_TXMA" });
+		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", { error: {}, messageCode: MessageCodes.ERROR_WRITING_TXMA });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 });

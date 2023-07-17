@@ -1,10 +1,21 @@
-import { lambdaHandler } from "../../AuthorizationCodeHandler";
+/* eslint-disable @typescript-eslint/unbound-method */
+import { lambdaHandler, logger, metrics } from "../../AuthorizationCodeHandler";
 import { mock } from "jest-mock-extended";
-import { RESOURCE_NOT_FOUND, UNSUPPORTED_AUTHCODE, VALID_AUTHCODE } from "./data/auth-events";
-
+import { RESOURCE_NOT_FOUND, UNSUPPORTED_AUTHCODE, VALID_AUTHCODE, INVALID_SESSION_ID, MISSING_SESSION_ID } from "./data/auth-events";
 import { Response } from "../../utils/Response";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
+import { MessageCodes } from "../../models/enums/MessageCodes";
 import { AuthorizationRequestProcessor } from "../../services/AuthorizationRequestProcessor";
+
+jest.mock("@aws-lambda-powertools/logger", () => ({
+	Logger: jest.fn().mockImplementation(() => ({
+		setPersistentLogAttributes: jest.fn(),
+		addContext: jest.fn(),
+		appendKeys: jest.fn(),
+		info: jest.fn(),
+		error: jest.fn(),
+	})),
+}));
 
 const mockedAuthorizationRequestProcessor = mock<AuthorizationRequestProcessor>();
 
@@ -20,21 +31,57 @@ describe("AuthorizationCodeHandler", () => {
 
 		await lambdaHandler(VALID_AUTHCODE, "AUTH_CODE");
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockedAuthorizationRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
+		expect(logger.appendKeys).toHaveBeenCalledWith({ sessionId: VALID_AUTHCODE.headers["session-id"] });
+	});
+
+	it("returns bad request when sessionId is missing", async () => {
+		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+
+		await expect(lambdaHandler(MISSING_SESSION_ID, "AUTH_CODE")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required"));
+		expect(logger.error).toHaveBeenCalledWith("Missing header: session-id is required", expect.objectContaining({
+			messageCode: MessageCodes.MISSING_HEADER,
+		}));
+	});
+
+	it("returns bad request when sessionId is not valid", async () => {
+		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+
+		await expect(lambdaHandler(INVALID_SESSION_ID, "AUTH_CODE")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid"));
+		expect(logger.error).toHaveBeenCalledWith("Session id not not a valid uuid", expect.objectContaining({
+			messageCode: MessageCodes.FAILED_VALIDATING_SESSION_ID,
+		}));
 	});
 
 	it("return not found when unsupported http method tried for authorization", async () => {
 		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
-	     return expect(lambdaHandler(UNSUPPORTED_AUTHCODE, "CIC")).resolves.toEqual(new Response(HttpCodesEnum.NOT_FOUND, ""));
+		return expect(lambdaHandler(UNSUPPORTED_AUTHCODE, "CIC")).resolves.toEqual(new Response(HttpCodesEnum.NOT_FOUND, ""));
+	});
+
+	it("returns server error where AuthorizationRequestProcessor fails", async () => {
+		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+		const instance  = AuthorizationRequestProcessor.getInstance(logger, metrics);
+		instance.processRequest = jest.fn().mockRejectedValueOnce({});
+
+		await expect(lambdaHandler(VALID_AUTHCODE, "AUTH_CODE")).resolves.toEqual(new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred"));
+		expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+			message: "An error has occurred.",
+			error: {},
+			messageCode: MessageCodes.SERVER_ERROR,
+		}));
 	});
 
 	it("return not found when resource not found", async () => {
 		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
-		return expect(lambdaHandler(RESOURCE_NOT_FOUND, "AUTH_CODE")).rejects.toThrow(expect.objectContaining({
+		await expect(lambdaHandler(RESOURCE_NOT_FOUND, "AUTH_CODE")).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.NOT_FOUND,
+			message: "Requested resource does not exist" + { resource: RESOURCE_NOT_FOUND },
+		}));
+		expect(logger.error).toHaveBeenCalledWith("Requested resource does not exist", expect.objectContaining({
+			resource: RESOURCE_NOT_FOUND.resource,
+			messageCode: MessageCodes.RESOURCE_NOT_FOUND,
 		}));
 	});
 });
