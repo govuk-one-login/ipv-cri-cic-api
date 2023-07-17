@@ -131,7 +131,7 @@ export class SessionRequestProcessor {
 		} catch (error) {
 			this.logger.error("Invalid request: Could not verify jwt", {
 				error,
-				messageCode: "UNEXPECTED_ERROR_VERIFYING_JWT",
+				messageCode: MessageCodes.UNEXPECTED_ERROR_VERIFYING_JWT,
 			});
 			return unauthorizedResponse();
 		}
