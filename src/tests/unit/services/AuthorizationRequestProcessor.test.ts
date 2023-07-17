@@ -17,7 +17,7 @@ const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem(): ISessionItem {
-	const sess: ISessionItem = {
+	const session: ISessionItem = {
 		sessionId: "sdfsdg",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
@@ -35,7 +35,7 @@ function getMockSessionItem(): ISessionItem {
 		attemptCount: 1,
 		authSessionState: AuthSessionState.CIC_DATA_RECEIVED,
 	};
-	return sess;
+	return session;
 }
 
 describe("AuthorizationRequestProcessor", () => {
@@ -50,8 +50,8 @@ describe("AuthorizationRequestProcessor", () => {
 	});
 
 	it("Return successful response with 200 OK when auth code", async () => {
-		const sess = getMockSessionItem();
-		mockCicService.getSessionById.mockResolvedValue(sess);
+		const session = getMockSessionItem();
+		mockCicService.getSessionById.mockResolvedValue(session);
 
 		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
@@ -69,13 +69,15 @@ describe("AuthorizationRequestProcessor", () => {
 		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_sign_in_journey_id: session.clientSessionId });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 
 	it("Return 401 when session is expired", async () => {
-		const sess = getMockSessionItem();
-		sess.expiryDate = 1675458564;
-		mockCicService.getSessionById.mockResolvedValue(sess);
+		const session = getMockSessionItem();
+		session.expiryDate = 1675458564;
+		mockCicService.getSessionById.mockResolvedValue(session);
 
 		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
@@ -97,8 +99,8 @@ describe("AuthorizationRequestProcessor", () => {
 	});
 
 	it("Return 200 when write to txMA fails", async () => {
-		const sess = getMockSessionItem();
-		mockCicService.getSessionById.mockResolvedValue(sess);
+		const session = getMockSessionItem();
+		mockCicService.getSessionById.mockResolvedValue(session);
 		mockCicService.sendToTXMA.mockRejectedValue({});
 
 		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
