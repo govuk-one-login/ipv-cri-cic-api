@@ -293,10 +293,10 @@ export class CicService {
 		});
 
 		this.logger.info({
-			message:
-				"Saving session data in DynamoDB: " +
-				JSON.stringify([putSessionCommand]),
+			message: "Saving session data in DynamoDB",
+			tableName: this.tableName,
 		});
+
 		try {
 			await this.dynamo.send(putSessionCommand);
 			this.logger.info("Successfully created session in dynamodb");

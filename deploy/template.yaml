@@ -134,6 +134,8 @@ Conditions:
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
+  IsNotProdLikeEnvironment: !Not
+    - !Condition IsProdLikeEnvironment
   IsPersonalIdentifiableInformationEnvironment: !Or
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
@@ -962,6 +964,7 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-CICBackendURL
   CICIPVStubExecuteURL:
+    Condition: IsNotProdLikeEnvironment
     Description: "CIC IPV Stub"
     Value:
       Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
