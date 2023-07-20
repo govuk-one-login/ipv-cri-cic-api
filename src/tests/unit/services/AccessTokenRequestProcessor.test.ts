@@ -17,6 +17,9 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { randomUUID } from "crypto";
 import { AppError } from "../../../utils/AppError";
 
+/* eslint @typescript-eslint/unbound-method: 0 */
+/* eslint jest/unbound-method: error */
+
 let accessTokenRequestProcessorTest: AccessTokenRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
@@ -24,11 +27,7 @@ jest.mock("../../../utils/KmsJwtAdapter");
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsSigningTokenJwtAdapter();
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
 
-
-const logger = new Logger({
-	logLevel: "DEBUG",
-	serviceName: "CIC",
-});
+const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 const ENCODED_REDIRECT_URI = encodeURIComponent("http://localhost:8085/callback");
 const AUTHORIZATION_CODE = randomUUID();
@@ -79,7 +78,6 @@ describe("AccessTokenRequestProcessor", () => {
 		mockCicService.getSessionByAuthorizationCode.mockResolvedValue(mockSession);
 
 		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionByAuthorizationCode).toHaveBeenCalledTimes(1);
 
 		expect(out.body).toEqual(JSON.stringify({
@@ -88,6 +86,12 @@ describe("AccessTokenRequestProcessor", () => {
 			"expires_in": Constants.TOKEN_EXPIRY_SECONDS,
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "b0668808-67ce-8jc7-a2fc-132b81612111",
+		});
 	});
 
 	it("Returns 401 Unauthorized response when body is missing", async () => {
