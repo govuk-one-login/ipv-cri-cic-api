@@ -124,6 +124,7 @@ describe("AuthorizationRequestProcessor", () => {
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", { messageCode: "ERROR_WRITING_TXMA" });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
