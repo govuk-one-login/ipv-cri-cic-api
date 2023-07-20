@@ -22,7 +22,6 @@ describe("E2E Happy Path Tests", () => {
 		// Claimed Identity
 		const calimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
 		expect(calimedIdentityResponse.status).toBe(200);
-		console.log(calimedIdentityResponse.data);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 		console.log(authResponse.data);
