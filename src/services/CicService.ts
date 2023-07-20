@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
 import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
@@ -23,6 +24,7 @@ import {
 	PersonIdentityNamePart,
 	PersonIdentityName,
 } from "../models/PersonIdentityItem";
+import { MessageCodes } from "../models/enums/MessageCodes";
 
 export class CicService {
 	readonly tableName: string;
@@ -142,9 +144,8 @@ export class CicService {
 		});
 
 		this.logger.info({
-			message: "updating CIC data in dynamodb",
-			saveCICPersonInfoCommand,
-			updateSessionAuthStateCommand,
+			message: "Updating CIC data in dynamodb",
+			tableName: this.tableName,
 		});
 
 		try {
@@ -160,9 +161,9 @@ export class CicService {
 
 		try {
 			await this.dynamo.send(updateSessionAuthStateCommand);
-			this.logger.info({ message: "updated CIC data in dynamodb" });
+			this.logger.info({ message: "Updated CIC data in dynamodb" });
 		} catch (error) {
-			this.logger.error({ message: "got error saving CIC data", error });
+			this.logger.error({ message: "Got error saving CIC data", error, messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY });
 			throw new AppError(
 				"Failed to set claimed identity data ",
 				HttpCodesEnum.SERVER_ERROR,
@@ -186,13 +187,13 @@ export class CicService {
 			},
 		});
 
-		this.logger.info("updating authorizationCode dynamodb", { updateSessionCommand });
+		this.logger.info("Updating authorizationCode dynamodb", { tableName: this.tableName });
 
 		try {
 			await this.dynamo.send(updateSessionCommand);
-			this.logger.info("updated authorizationCode in dynamodb");
+			this.logger.info("Updated authorizationCode in dynamodb");
 		} catch (error) {
-			this.logger.error("got error setting auth code", { error });
+			this.logger.error("Got error setting auth code", { error });
 			throw new AppError(
 				"Failed to set authorization code ",
 				HttpCodesEnum.SERVER_ERROR,
@@ -208,18 +209,18 @@ export class CicService {
 		};
 
 		this.logger.info("Sending message to TxMA", {
-			messageBody: event,
+			event_name: event.event_name,
 		});
 		try {
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA", {
-				messageBody: event,
+				event_name: event.event_name,
 			});
 		} catch (error) {
 			this.logger.error("got error ", {
 				error,
 			});
-			throw new AppError("sending event - failed ", HttpCodesEnum.SERVER_ERROR);
+			throw new AppError("Sending event - failed ", HttpCodesEnum.SERVER_ERROR);
 		}
 	}
 
@@ -292,10 +293,10 @@ export class CicService {
 		});
 
 		this.logger.info({
-			message:
-				"Saving session data in DynamoDB: " +
-				JSON.stringify([putSessionCommand]),
+			message: "Saving session data in DynamoDB",
+			tableName: this.tableName,
 		});
+
 		try {
 			await this.dynamo.send(putSessionCommand);
 			this.logger.info("Successfully created session in dynamodb");

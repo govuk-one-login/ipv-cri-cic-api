@@ -102,8 +102,42 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
+			event_name: "CIC_CRI_END",
+			client_id: mockSession.clientId,
+			component_id: process.env.ISSUER,
+			timestamp: absoluteTimeNow(),
+			user: {
+				govuk_signin_journey_id: mockSession.clientSessionId,
+				ip_address: mockSession.clientIpAddress,
+				persistent_session_id: mockSession.persistentSessionId,
+				session_id: mockSession.sessionId,
+				transaction_id: "",
+				user_id: mockSession.clientId,
+			},
+		});
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
+			event_name: "CIC_CRI_VC_ISSUED",
+			client_id: mockSession.clientId,
+			component_id: process.env.ISSUER,
+			timestamp: absoluteTimeNow(),
+			user: {
+				govuk_signin_journey_id: mockSession.clientSessionId,
+				ip_address: mockSession.clientIpAddress,
+				persistent_session_id: mockSession.persistentSessionId,
+				session_id: mockSession.sessionId,
+				transaction_id: "",
+				user_id: mockSession.clientId,
+			},
+			restricted: {
+				name: [{
+					names: mockPerson.personNames[0].nameParts,
+				},
+				],
+				birthDate: [{ value: mockPerson.birthDates[0].value }],
+			},
+		});
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
@@ -323,7 +357,7 @@ describe("UserInfoRequestProcessor", () => {
 		);
 	});
 
-	it("Return successful response with 200 OK when write to txMA fails", async () => {
+	it("Log errors when write to txMA fails", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
@@ -334,15 +368,16 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
+		expect(logger.error).toHaveBeenCalledTimes(2);
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", expect.anything());
+		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_END to SQS queue", expect.anything());
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			sessionId: "sessionId",
 		});
-		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],

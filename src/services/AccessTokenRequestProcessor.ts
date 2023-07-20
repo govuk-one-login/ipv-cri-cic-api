@@ -32,7 +32,9 @@ export class AccessTokenRequestProcessor {
 
     constructor(logger: Logger, metrics: Metrics) {
     	if (!SESSION_TABLE || !KMS_KEY_ARN || !ISSUER) {
-    		logger.error("Environment variable SESSION_TABLE or KMS_KEY_ARN or ISSUER is not configured");
+    		logger.error("Environment variable SESSION_TABLE or KMS_KEY_ARN or ISSUER is not configured", {
+    			messageCode: MessageCodes.MISSING_CONFIGURATION,
+    		});
     		throw new AppError("Service incorrectly configured, missing some environment variables.", HttpCodesEnum.SERVER_ERROR);
     	}
     	this.logger = logger;
@@ -55,14 +57,17 @@ export class AccessTokenRequestProcessor {
     		let session :ISessionItem | undefined;
     		try {
     			session = await this.cicService.getSessionByAuthorizationCode(requestPayload.code);
-    			this.logger.info({ message :"Found Session: " + JSON.stringify(session) });
     			if (!session) {
+    				this.logger.error("No session found", {
+    					messageCode: MessageCodes.SESSION_NOT_FOUND,
+    				});
     				return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
     			}
-    		} catch (err) {
+    			this.logger.appendKeys({ sessionId: session.sessionId });
+    		} catch (error) {
     			this.logger.error("Error while retrieving the session", {
     				messageCode: MessageCodes.SESSION_NOT_FOUND,
-    				error: err,
+    				error,
     			});
     			return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
     		}
@@ -79,6 +84,10 @@ export class AccessTokenRequestProcessor {
     		try {
     			accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
     		} catch (error) {
+    			this.logger.error("Failed to sign the accessToken Jwt", {
+    				messageCode: MessageCodes.FAILED_SIGNING_JWT,
+    				error,
+    			});
     			return new Response( HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt" );
     		}
 
@@ -95,8 +104,9 @@ export class AccessTokenRequestProcessor {
     				expires_in: Constants.TOKEN_EXPIRY_SECONDS,
     			}),
     		};
-    	} catch (err: any) {
-    		return new Response(err.statusCode, err.message);
+    	} catch (error: any) {
+    		this.logger.error({ message: "Error while trying to create access token ", error, messageCode: MessageCodes.FAILED_CREATING_ACCESS_TOKEN });
+    		return new Response(error.statusCode, error.message);
     	}
     }
 }
