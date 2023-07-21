@@ -87,7 +87,7 @@ export const handler = async (
       request,
       responseType: "code",
       clientId: config.clientId,
-      AuthorizeLocation: `${process.env.OIDC_FRONT_BASE_URI}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
+      AuthorizeLocation: `${process.env.OIDC_API_BASE_URI}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
     }),
   };
 };
@@ -104,7 +104,7 @@ export function getConfig(): {
     process.env.JWKS_URI == null ||
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
-    process.env.OIDC_FRONT_BASE_URI == null
+    process.env.OIDC_API_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
   }
@@ -114,7 +114,7 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
-    oidcUri: process.env.OIDC_FRONT_BASE_URI,
+    oidcUri: process.env.OIDC_API_BASE_URI,
   };
 }
 
