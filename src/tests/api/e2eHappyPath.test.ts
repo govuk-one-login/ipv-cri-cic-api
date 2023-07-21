@@ -36,13 +36,11 @@ describe("E2E Happy Path Tests", () => {
 	});
 });
 
-
-	describe("E2E Happy Path Well Known Endpoint", () => {
-		it("E2E Happy Path Journey - Well Known", async () => {
-			// Well Known
-			const wellKnownResponse = await wellKnownGet();
-			validateWellKnownReponse(wellKnownResponse.data);
-			expect(wellKnownResponse.status).toBe(200);
-		});
+describe("E2E Happy Path Well Known Endpoint", () => {
+	it("E2E Happy Path Journey - Well Known", async () => {
+		// Well Known
+		const wellKnownResponse = await wellKnownGet();
+		validateWellKnownReponse(wellKnownResponse.data);
+		expect(wellKnownResponse.status).toBe(200);
 	});
-
+});
