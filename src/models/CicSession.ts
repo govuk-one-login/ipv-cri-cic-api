@@ -4,6 +4,7 @@ import {
 	IsISO8601,
 	IsNotEmpty,
 	ArrayNotContains,
+	Matches,
 } from "class-validator";
 import { ICicSession } from "./ISessionItem";
 
@@ -23,8 +24,7 @@ export class CicSession implements ICicSession {
   @IsNotEmpty()
   date_of_birth: string;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @ArrayNotContains([""])
-  family_names: string[];
+  @Matches(/^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$/)
+  @IsNotEmpty()
+  family_names: string;
 }

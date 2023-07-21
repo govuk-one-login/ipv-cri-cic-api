@@ -52,7 +52,6 @@ export class ClaimedIdRequestProcessor {
 			const bodyParsed = JSON.parse(event.body as string);
 			// Convert given_names and family_names string into string[]
 			bodyParsed.given_names = bodyParsed.given_names.split(" ");
-			bodyParsed.family_names = bodyParsed.family_names.split(" ");
 		
 			cicSession = new CicSession(bodyParsed);
 			await this.validationHelper.validateModel(cicSession, this.logger);
@@ -66,7 +65,6 @@ export class ClaimedIdRequestProcessor {
 		}
 
 		const session = await this.cicService.getSessionById(sessionId);
-
 		if (session != null) {
 			if (session.expiryDate < absoluteTimeNow()) {
 				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
@@ -81,7 +79,6 @@ export class ClaimedIdRequestProcessor {
 				});
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
-
 			await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
 			return new Response(HttpCodesEnum.OK, "");
 		} else {
