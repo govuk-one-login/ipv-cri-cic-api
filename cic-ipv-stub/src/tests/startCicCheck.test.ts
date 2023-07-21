@@ -80,7 +80,7 @@ describe("Start CIC Check Endpoint", () => {
     process.env.CLIENT_ID = "test-id";
     process.env.SIGNING_KEY = "key-id";
     process.env.OIDC_API_BASE_URI = "api-target.com";
-		process.env.OIDC_FRONT_BASE_URI = "test-target.com";
+    process.env.OIDC_FRONT_BASE_URI = "test-target.com";
 
     const response = await handler(startDefault);
     expect(response.statusCode).toBe(201);
