@@ -3,7 +3,7 @@ import dataBjorn from "../data/happyPathBjörn.json";
 import dataManuel from "../data/happyPathManuel.json";
 import dataBillyJoe from "../data/happyPathBillyJoe.json";
 
-import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, userInfoPost, validateJwtToken } from "../utils/ApiTestSteps";
+import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, userInfoPost, validateJwtToken, wellKnownGet, validateWellKnownReponse } from "../utils/ApiTestSteps";
 
 
 describe("E2E Happy Path Tests", () => {
@@ -34,5 +34,15 @@ describe("E2E Happy Path Tests", () => {
 		validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
 		expect(userInfoResponse.status).toBe(200);
 	});
-
 });
+
+
+	describe("E2E Happy Path Well Known Endpoint", () => {
+		it("E2E Happy Path Journey - Well Known", async () => {
+			// Well Known
+			const wellKnownResponse = await wellKnownGet();
+			validateWellKnownReponse(wellKnownResponse.data);
+			expect(wellKnownResponse.status).toBe(200);
+		});
+	});
+
