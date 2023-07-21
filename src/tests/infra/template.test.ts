@@ -177,4 +177,18 @@ describe("Infra", () => {
 			},
 		);
 	});
+
+	describe("WAF Associations", () => {
+		it("there should be a WAF associated with every REST APIGW", async () => {
+			const apigws = template.findResources("AWS::Serverless::Api")
+			const apigwList = Object.keys(apigws);
+			apigwList.forEach((apigw) => {
+				template.hasResourceProperties("AWS::WAFv2::WebACLAssociation", {
+					ResourceArn: {
+						"Fn::Sub": "arn:aws:apigateway:${AWS::Region}::/restapis/${"+apigw+"}/stages/${"+apigw+".Stage}",
+					}
+				})
+			});
+		})
+	});
 });
