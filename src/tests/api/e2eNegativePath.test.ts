@@ -1,5 +1,10 @@
 import { stubStartPost, sessionPost, startStubServiceAndReturnSessionId, claimedIdentityPost } from "../utils/ApiTestSteps";
-import * as dataSlim from "../data/happyPathSlim.json";
+import dataSlim from "../data/happyPathSlim.json";
+import dataNumeric from "../data/dataNumeric.json";
+import dataInvalidChar from "../data/dataInvalidChar.json";
+import dataDoubleSpace from "../data/dataDoubleSpace.json";
+import dataSpaceStart from "../data/dataSpaceStart.json";
+import dataSpaceEnd from "../data/dataSpaceEnd.json";
 
 
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {
@@ -50,4 +55,25 @@ describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, null, sessionId);
 		expect(calimedIdentityResponse.status).toBe(400);
 	});
+});
+
+describe("Claimed Identity Negative Path Tests", () => {
+
+	it.each([
+		[dataNumeric],
+		[dataInvalidChar],
+		[dataDoubleSpace],
+		[dataSpaceStart],
+		[dataSpaceEnd],
+	])("E2E Happy Path Journey - User Info", async (userData: any) => {
+		const sessionResponse = await startStubServiceAndReturnSessionId();
+		console.log(sessionResponse.data);
+		const sessionId = sessionResponse.data.session_id;
+		console.log(sessionId);
+		expect(sessionId).toBeTruthy();
+		// Claimed Identity
+		const calimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		expect(calimedIdentityResponse.status).toBe(400);
+	});
+
 });

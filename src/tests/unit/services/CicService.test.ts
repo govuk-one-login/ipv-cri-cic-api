@@ -60,10 +60,35 @@ describe("Cic Service", () => {
 
 	it("should throw 500 if request fails during save CIC data", async () => {
 		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
-		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: ["Family", "name"], date_of_birth: "1970-01-01" });
+		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: "Family name", date_of_birth: "1970-01-01" });
 
 		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,
+		}));
+	});
+
+	it("should resolve if given_names and family_names correctly provided in CicSession", async () => {
+		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+		const cicSess = new CicSession({ given_names: ["Geralt", "Rivia"], family_names: "Maximus Dec'mus", date_of_birth: "1970-01-01" });
+
+		return expect(cicService.saveCICData("1234", cicSess, expiryDate)).resolves.not.toThrow();
+	});
+
+	it("should throw bad request if given_name has a symbol in CicSession", async () => {
+		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		const cicSess = new CicSession({ given_names: ["Ger#lt", "Ri%ia"], family_names: "Family name", date_of_birth: "1970-01-01" });
+
+		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
+			statusCode: HttpCodesEnum.BAD_REQUEST,
+		}));
+	});
+
+	it("should throw bad request error if given_name has a space in CicSession", async () => {
+		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		const cicSess = new CicSession({ given_names: ["Cairne ", " Bloodhoof "], family_names: "Hammerfell", date_of_birth: "1970-01-01" });
+
+		return expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
+			statusCode: HttpCodesEnum.BAD_REQUEST,
 		}));
 	});
 
