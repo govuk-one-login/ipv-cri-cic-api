@@ -63,11 +63,11 @@ class ClaimedIdentity implements LambdaInterface {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 						}
 
-					} catch (err: any) {
-						logger.error({ message: "An error has occurred.", err });
+					} catch (error: any) {
+						logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 
-						if (err instanceof AppError) {
-							return new Response(err.statusCode, err.message);
+						if (error instanceof AppError) {
+							return new Response(error.statusCode, error.message);
 						}
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 					}
