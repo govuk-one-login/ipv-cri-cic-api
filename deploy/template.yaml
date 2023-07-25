@@ -49,12 +49,15 @@ Parameters:
   DeployAlarmsInNonProdLikeEnvironment:
     Description: "Set to the string value `true` to deploy alarms in a DEV environment"
     Type: String
-    Default: true
+    Default: "true"
   SupportManualURL:
     Description: "Link to the CIC support manual"
     Type: String
     Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3602251909/CIC+Support+Documentation'
-
+  LambdaConcurrency:
+    Description: "Reserved concurrency for Lambdas running in non-dev environments"
+    Type: Number
+    Default: 20
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -144,6 +147,8 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
+  IsNotDevEnvironment: !Not
+    - !Condition CreateDevResources
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -390,6 +395,10 @@ Resources:
       FunctionName: !Sub "CIC-ClaimedIdentity-${AWS::StackName}"
       Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - IsNotDevEnvironment
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
@@ -468,6 +477,10 @@ Resources:
       FunctionName: !Sub "User-Info-${AWS::StackName}"
       Handler: UserInfoHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - IsNotDevEnvironment
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
@@ -565,6 +578,10 @@ Resources:
     Properties:
       FunctionName: !Sub "CIC-Session-${AWS::StackName}"
       Handler: SessionHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - IsNotDevEnvironment
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       CodeUri: ../src/
       Environment:
         Variables:
@@ -669,6 +686,10 @@ Resources:
       FunctionName: !Sub "Access-Token-${AWS::StackName}"
       Handler: AccessTokenHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - IsNotDevEnvironment
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AccessTokenHandler
@@ -745,6 +766,10 @@ Resources:
       FunctionName: !Sub "CIC-Authorization-${AWS::StackName}"
       Handler: AuthorizationCodeHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - IsNotDevEnvironment
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationCodeHandler
@@ -916,8 +941,8 @@ Resources:
       CodeUri: ../src/
       Handler: JwksHandler.lambdaHandler
       ReservedConcurrentExecutions: !If
-        - IsProdLikeEnvironment
-        - 80
+        - IsNotDevEnvironment
+        - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Policies:
         - AWSXRayDaemonWriteAccess
