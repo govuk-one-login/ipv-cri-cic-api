@@ -84,6 +84,7 @@ Resources:
               - "redirectUri"
               - "clientId"
               - "authSessionState"
+              - "expiryDate"
             ProjectionType: "INCLUDE"
         - IndexName: "authCode-index"
           KeySchema:

@@ -71,6 +71,10 @@ export class AccessTokenRequestProcessor {
     				messageCode: MessageCodes.SESSION_NOT_FOUND,
     				error,
     			});
+
+    			if (error instanceof AppError) {
+    				return new Response(error.statusCode, error.message);
+    			}
     			return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
     		}
 
