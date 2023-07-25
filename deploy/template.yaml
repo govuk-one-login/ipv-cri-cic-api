@@ -55,9 +55,13 @@ Parameters:
     Type: String
     Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3602251909/CIC+Support+Documentation'
   LambdaConcurrency:
-    Description: "Reserved concurrency for Lambdas running in non-dev environments"
+    Description: "Reserved concurrency for Lambdas running in non-DEV environments"
     Type: Number
     Default: 20
+  ApplyReservedConcurrencyInDev:
+    Description: "Set to true to apply reserved concurrency when deploying in DEV environments"
+    Type: String
+    Default: "false"
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -147,8 +151,10 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
-  IsNotDevEnvironment: !Not
-    - !Condition CreateDevResources
+  ApplyReservedConcurrency: !Or
+    - !Not
+      - !Condition CreateDevResources
+    - !Equals [!Ref ApplyReservedConcurrencyInDev, "true"]
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -396,7 +402,7 @@ Resources:
       Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
-        - IsNotDevEnvironment
+        - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Environment:
@@ -478,7 +484,7 @@ Resources:
       Handler: UserInfoHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
-        - IsNotDevEnvironment
+        - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Environment:
@@ -579,7 +585,7 @@ Resources:
       FunctionName: !Sub "CIC-Session-${AWS::StackName}"
       Handler: SessionHandler.lambdaHandler
       ReservedConcurrentExecutions: !If
-        - IsNotDevEnvironment
+        - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       CodeUri: ../src/
@@ -687,7 +693,7 @@ Resources:
       Handler: AccessTokenHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
-        - IsNotDevEnvironment
+        - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Environment:
@@ -767,7 +773,7 @@ Resources:
       Handler: AuthorizationCodeHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
-        - IsNotDevEnvironment
+        - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Environment:
@@ -941,7 +947,7 @@ Resources:
       CodeUri: ../src/
       Handler: JwksHandler.lambdaHandler
       ReservedConcurrentExecutions: !If
-        - IsNotDevEnvironment
+        - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Policies:
