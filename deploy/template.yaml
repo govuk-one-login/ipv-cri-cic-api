@@ -49,7 +49,7 @@ Parameters:
   DeployAlarmsInNonProdLikeEnvironment:
     Description: "Set to the string value `true` to deploy alarms in a DEV environment"
     Type: String
-    Default: "true"
+    Default: true
   SupportManualURL:
     Description: "Link to the CIC support manual"
     Type: String
