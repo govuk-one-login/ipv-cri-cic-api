@@ -23,7 +23,7 @@ export const handler = async (
   const overrides = event.body !== null ? JSON.parse(event.body) : null;
   let addSharedClaims = true;
   if (overrides?.target != null) {
-    config.oidcUri = overrides.target;
+    config.backendUri = overrides.target;
   }
   if (overrides?.addSharedClaims != null) {
     addSharedClaims = overrides.addSharedClaims;
@@ -61,7 +61,7 @@ export const handler = async (
     redirect_uri: config.redirectUri,
     response_type: "code",
     govuk_signin_journey_id: crypto.randomBytes(16).toString("hex"),
-    aud: config.oidcUri,
+    aud: config.frontUri,
     iss: "https://ipv.core.account.gov.uk",
     client_id: config.clientId,
     state: crypto.randomBytes(16).toString("hex"),
@@ -97,13 +97,15 @@ export function getConfig(): {
   jwksUri: string;
   clientId: string;
   signingKey: string;
-  oidcUri: string;
+  frontUri: string;
+  backendUri: string;
 } {
   if (
     process.env.REDIRECT_URI == null ||
     process.env.JWKS_URI == null ||
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
+    process.env.OIDC_API_BASE_URI == null ||
     process.env.OIDC_FRONT_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
@@ -114,16 +116,17 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
-    oidcUri: process.env.OIDC_FRONT_BASE_URI,
+    frontUri: process.env.OIDC_FRONT_BASE_URI,
+    backendUri: process.env.OIDC_API_BASE_URI,
   };
 }
 
 async function getPublicEncryptionKey(config: {
-  oidcUri: string;
+  backendUri: string;
 }): Promise<CryptoKey> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
   const oidcProviderJwks = (
-    await axios.get(`${config.oidcUri}/.well-known/jwks.json`)
+    await axios.get(`${config.backendUri}/.well-known/jwks.json`)
   ).data as Jwks;
   const publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(

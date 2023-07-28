@@ -54,10 +54,12 @@ Mappings:
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       DNSSUFFIX: review-c.dev.account.gov.uk
-      IPVSTUBURL: "https://cic-cri-front.review-c.dev.account.gov.uk"
+      BASEFRONTURL: "https://cic-cri-front.review-c.dev.account.gov.uk"
+      BASEAPIURL: "https://api-cic-cri-api.review-c.dev.account.gov.uk"
     build:
       DNSSUFFIX: review-c.build.account.gov.uk
-      IPVSTUBURL: "https://www.review-c.build.account.gov.uk"
+      BASEFRONTURL: "https://www.review-c.build.account.gov.uk"
+      BASEAPIURL: "https://api.review-c.build.account.gov.uk"
     staging:
       DNSSUFFIX: review-c.staging.account.gov.uk
     integration:
@@ -344,7 +346,8 @@ Resources:
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
           JWKS_URI: !Sub "https://api.review-c.${Environment}.account.gov.uk/.well-known/jwks.json"
-          OIDC_FRONT_BASE_URI: !FindInMap [ EnvironmentVariables, !Ref Environment, IPVSTUBURL ]
+          OIDC_API_BASE_URI: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEAPIURL ]
+          OIDC_FRONT_BASE_URI: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEFRONTURL ]
       Policies:
         - Statement:
             - Sid: KMSSignPolicy

@@ -1,6 +1,6 @@
 export interface ICicSession {
 	given_names?: string[];
-	family_names?: string[];
+	family_names?: string;
 	date_of_birth?: string;
 }
 
