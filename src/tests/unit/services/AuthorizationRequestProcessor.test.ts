@@ -69,7 +69,7 @@ describe("AuthorizationRequestProcessor", () => {
 
 		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
-		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_sign_in_journey_id: session.clientSessionId });
+		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 	});
 
