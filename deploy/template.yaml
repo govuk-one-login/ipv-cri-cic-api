@@ -181,6 +181,9 @@ Conditions:
   DeployAlarms: !Or
     - Condition: IsProdLikeEnvironment
     - !Equals [!Ref DeployAlarmsInNonProdLikeEnvironment, true]
+  DeployConcurrencyAlarms: !And
+    - Condition: DeployAlarms
+    - Condition: ApplyReservedConcurrency
   
 
 Globals:
@@ -2328,7 +2331,7 @@ Resources:
 
   UserInfoConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2347,16 +2350,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !If
-        - ApplyReservedConcurrency
-        - !Ref LambdaConcurrencyThreshold
-        - !Ref AWS::NoValue
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
   TokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2375,16 +2375,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !If
-        - ApplyReservedConcurrency
-        - !Ref LambdaConcurrencyThreshold
-        - !Ref AWS::NoValue
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
   AuthorizationConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2403,16 +2400,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !If
-        - ApplyReservedConcurrency
-        - !Ref LambdaConcurrencyThreshold
-        - !Ref AWS::NoValue
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   ClaimedIdentityConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2431,16 +2425,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !If
-        - ApplyReservedConcurrency
-        - !Ref LambdaConcurrencyThreshold
-        - !Ref AWS::NoValue
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   SessionConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2459,16 +2450,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !If
-        - ApplyReservedConcurrency
-        - !Ref LambdaConcurrencyThreshold
-        - !Ref AWS::NoValue
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   JsonWebKeysConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2487,10 +2475,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !If
-        - ApplyReservedConcurrency
-        - !Ref LambdaConcurrencyThreshold
-        - !Ref AWS::NoValue
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2812,7 +2797,7 @@ Resources:
 
   ConcurrencyAlarmDashboard:
     Type: AWS::CloudWatch::Dashboard
-    Condition: DeployAlarms
+    Condition: DeployConcurrencyAlarms
     Properties:
       DashboardName: !Sub '${AWS::StackName}-Concurrency-Alarm-Overview'
       DashboardBody:
