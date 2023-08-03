@@ -70,7 +70,7 @@ export class SessionRequestProcessor {
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
-		const clientIpAddress = event.headers["x-forwarded-for"];
+		const clientIpAddress = event.requestContext.identity?.sourceIp ?? null;
 
 		let configClient: ClientConfig | undefined = undefined;
 		try {
