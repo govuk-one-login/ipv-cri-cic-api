@@ -178,7 +178,7 @@ export class SessionRequestProcessor {
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
 			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used
-			clientIpAddress: clientIpAddress as string,
+			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
 		};
