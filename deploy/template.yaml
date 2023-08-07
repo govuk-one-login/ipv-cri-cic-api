@@ -54,7 +54,18 @@ Parameters:
     Description: "Link to the CIC support manual"
     Type: String
     Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3602251909/CIC+Support+Documentation'
-
+  LambdaConcurrency:
+    Description: "Reserved concurrency for Lambdas running in non-DEV environments"
+    Type: Number
+    Default: 20
+  LambdaConcurrencyThreshold:
+    Description: "Threshold for Reserved concurrency running in non-DEV environments"
+    Type: Number
+    Default: 16  #80% of Lambda concurrency
+  ApplyReservedConcurrencyInDev:
+    Description: "Set to true to apply reserved concurrency when deploying in DEV environments"
+    Type: String
+    Default: "false"
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -93,35 +104,30 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -144,6 +150,10 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
+  ApplyReservedConcurrency: !Or
+    - !Not
+      - !Condition CreateDevResources
+    - !Equals [!Ref ApplyReservedConcurrencyInDev, "true"]
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -171,6 +181,9 @@ Conditions:
   DeployAlarms: !Or
     - Condition: IsProdLikeEnvironment
     - !Equals [!Ref DeployAlarmsInNonProdLikeEnvironment, true]
+  DeployConcurrencyAlarms: !And
+    - Condition: DeployAlarms
+    - Condition: ApplyReservedConcurrency
   
 
 Globals:
@@ -390,6 +403,10 @@ Resources:
       FunctionName: !Sub "CIC-ClaimedIdentity-${AWS::StackName}"
       Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
@@ -468,6 +485,10 @@ Resources:
       FunctionName: !Sub "User-Info-${AWS::StackName}"
       Handler: UserInfoHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
@@ -565,6 +586,10 @@ Resources:
     Properties:
       FunctionName: !Sub "CIC-Session-${AWS::StackName}"
       Handler: SessionHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       CodeUri: ../src/
       Environment:
         Variables:
@@ -669,6 +694,10 @@ Resources:
       FunctionName: !Sub "Access-Token-${AWS::StackName}"
       Handler: AccessTokenHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AccessTokenHandler
@@ -745,6 +774,10 @@ Resources:
       FunctionName: !Sub "CIC-Authorization-${AWS::StackName}"
       Handler: AuthorizationCodeHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationCodeHandler
@@ -916,8 +949,8 @@ Resources:
       CodeUri: ../src/
       Handler: JwksHandler.lambdaHandler
       ReservedConcurrentExecutions: !If
-        - IsProdLikeEnvironment
-        - 80
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Policies:
         - AWSXRayDaemonWriteAccess
@@ -2298,7 +2331,7 @@ Resources:
 
   UserInfoConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2307,7 +2340,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${UserInfoFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2317,13 +2350,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
   TokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2332,7 +2365,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${TokenFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-TokenFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2342,13 +2375,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
   AuthorizationConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2357,7 +2390,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${AuthorizationFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2367,13 +2400,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   ClaimedIdentityConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2382,7 +2415,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${ClaimedIdentityFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2392,13 +2425,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   SessionConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2407,7 +2440,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${SessionFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2417,13 +2450,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   JsonWebKeysConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2432,7 +2465,7 @@ Resources:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of JsonWeb Keys concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${JsonWebKeysFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2442,7 +2475,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2459,7 +2492,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${ClaimedIdentityFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${ClaimedIdentityFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2484,7 +2517,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${SessionFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${SessionFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2509,7 +2542,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${JsonWebKeysFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${JsonWebKeysFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2534,7 +2567,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${AuthorizationFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${AuthorizationFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2559,7 +2592,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${TokenFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${TokenFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-TokenFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2584,7 +2617,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${UserInfoFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${UserInfoFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2764,7 +2797,7 @@ Resources:
 
   ConcurrencyAlarmDashboard:
     Type: AWS::CloudWatch::Dashboard
-    Condition: DeployAlarms
+    Condition: DeployConcurrencyAlarms
     Properties:
       DashboardName: !Sub '${AWS::StackName}-Concurrency-Alarm-Overview'
       DashboardBody:
