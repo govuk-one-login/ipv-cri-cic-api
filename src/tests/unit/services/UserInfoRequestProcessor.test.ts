@@ -114,7 +114,7 @@ describe("UserInfoRequestProcessor", () => {
 				persistent_session_id: mockSession.persistentSessionId,
 				session_id: mockSession.sessionId,
 				transaction_id: "",
-				user_id: mockSession.clientId,
+				user_id: mockSession.subject,
 			},
 		});
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
@@ -128,7 +128,7 @@ describe("UserInfoRequestProcessor", () => {
 				persistent_session_id: mockSession.persistentSessionId,
 				session_id: mockSession.sessionId,
 				transaction_id: "",
-				user_id: mockSession.clientId,
+				user_id: mockSession.subject,
 			},
 			restricted: {
 				name: [{

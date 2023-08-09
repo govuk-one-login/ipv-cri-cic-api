@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -6,21 +7,19 @@ import { VALID_CLAIMEDID } from "../data/cic-events";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { Response } from "../../../utils/Response";
-import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
+import { MessageCodes } from "../../../models/enums/MessageCodes";
 
 let claimedIdRequestProcessorTest: ClaimedIdRequestProcessor;
 const mockCicService = mock<CicService>();
 
-const logger = new Logger({
-	logLevel: "DEBUG",
-	serviceName: "CIC",
-});
+const logger = mock<Logger>();
+
 const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem(): ISessionItem {
-	const sess: ISessionItem = {
+	const session: ISessionItem = {
 		sessionId: "sdfsdg",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
@@ -38,7 +37,7 @@ function getMockSessionItem(): ISessionItem {
 		attemptCount: 1,
 		authSessionState: AuthSessionState.CIC_SESSION_CREATED,
 	};
-	return sess;
+	return session;
 }
 
 describe("ClaimedIdRequestProcessor", () => {
@@ -53,27 +52,41 @@ describe("ClaimedIdRequestProcessor", () => {
 	});
 
 	it("Return successful response with 200 OK when session is found", async () => {
-		const sess = getMockSessionItem();
-		mockCicService.getSessionById.mockResolvedValue(sess);
+		const session = getMockSessionItem();
+		mockCicService.getSessionById.mockResolvedValue(session);
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("");
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 	});
 
 	it("Return 401 when session is expired", async () => {
-		const sess = getMockSessionItem();
-		sess.expiryDate = 1675458564;
-		mockCicService.getSessionById.mockResolvedValue(sess);
+		const session = getMockSessionItem();
+		session.expiryDate = 1675458564;
+		mockCicService.getSessionById.mockResolvedValue(session);
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("Session with session id: 1234 has expired");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
+	});
+
+	it("Return 401 when session is in the wrong state", async () => {
+		const session = getMockSessionItem();
+		mockCicService.getSessionById.mockResolvedValue({ ...session, authSessionState: AuthSessionState.CIC_SESSION_ABORTED });
+
+		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(out.body).toBe(`Session is in the wrong state: ${AuthSessionState.CIC_SESSION_ABORTED}`);
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith(`Session is in the wrong state: ${AuthSessionState.CIC_SESSION_ABORTED}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`, { 
+			messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+		});
 	});
 
 	it("Return 401 when session with that session id not found in the DB", async () => {
@@ -81,9 +94,11 @@ describe("ClaimedIdRequestProcessor", () => {
 
 		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: 1234");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith("No session found for session id", {
+			messageCode: MessageCodes.SESSION_NOT_FOUND,
+		});
 	});
 });
