@@ -66,6 +66,8 @@ export class ClaimedIdRequestProcessor {
 
 		const session = await this.cicService.getSessionById(sessionId);
 		if (session != null) {
+			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+
 			if (session.expiryDate < absoluteTimeNow()) {
 				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
