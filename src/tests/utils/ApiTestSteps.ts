@@ -6,7 +6,7 @@ import { jwtUtils } from "../../utils/JwtUtils";
 import { ISessionItem } from "../../models/ISessionItem";
 
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
-const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_F2F_TEST_HARNESS_URL });
+const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
 const awsSigv4Interceptor = aws4Interceptor({
 	options: {
 		region: "eu-west-2",
