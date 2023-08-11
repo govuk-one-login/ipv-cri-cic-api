@@ -145,60 +145,6 @@ paths:
           default:
             statusCode: "200"
         type: aws
-
-  getSessionByYotiId/{tableName}/{yotiSessionId}:
-    get:
-      operationId: getSessionByIds
-      summary: Get a session by using yotiSessionId-index from DynamoDB
-      description: |
-        Endpoint to get a session from DynamoDB using either yotiSessionId as the primary key.
-      parameters:
-        - name: tableName
-          in: path
-          description: The name of the table to find the record in DynamoDB
-          required: true
-          schema:
-            type: string
-        - name: yotiSessionId
-          in: path
-          description: The value of the secondary index identifier to find the record in DynamoDB
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-      x-amazon-apigateway-request-validator: "requestParamsOnly"
-      x-amazon-apigateway-integration:
-        httpMethod: POST
-        credentials:
-          Fn::GetAtt: [ "DynamoDbAccessRole", "Arn" ]
-        uri: "arn:aws:apigateway:${AWS::Region}:dynamodb:action/Query"
-        passthroughBehavior: when_no_match
-        requestParameters:
-          integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
-          integration.request.path.tableName: "method.request.path.tableName"
-          integration.request.path.yotiSessionId: "method.request.path.yotiSessionId"
-        requestTemplates:
-          application/json: |
-            {
-              "TableName":"$input.params('tableName')",
-              "IndexName":"yotiSessionId-index",
-              "KeyConditionExpression": "yotiSessionId = :yotiSessionId",
-              "ExpressionAttributeValues":{
-                  ":yotiSessionId":{
-                    "S":"$input.params('yotiSessionId')"
-                  }
-              }
-            }
-        responses:
-          default:
-            statusCode: "200"
-        type: aws
   
   /bucket/:
     get:
