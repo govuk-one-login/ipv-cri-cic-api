@@ -2,12 +2,19 @@ import dataSlim from "../data/happyPathSlim.json";
 import dataBjorn from "../data/happyPathBjörn.json";
 import dataManuel from "../data/happyPathManuel.json";
 import dataBillyJoe from "../data/happyPathBillyJoe.json";
-
-import { authorizationGet, claimedIdentityPost, tokenPost, startStubServiceAndReturnSessionId, userInfoPost, validateJwtToken, wellKnownGet, validateWellKnownReponse } from "../utils/ApiTestSteps";
+import {
+	authorizationGet,
+	claimedIdentityPost,
+	tokenPost,
+	startStubServiceAndReturnSessionId,
+	userInfoPost,
+	validateJwtToken,
+	wellKnownGet,
+	validateWellKnownResponse,
+} from "../utils/ApiTestSteps";
 
 
 describe("E2E Happy Path Tests", () => {
-
 	it.each([
 		[dataSlim],
 		[dataBjorn],
@@ -20,8 +27,8 @@ describe("E2E Happy Path Tests", () => {
 		console.log(sessionId);
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
-		const calimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
-		expect(calimedIdentityResponse.status).toBe(200);
+		const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		expect(claimedIdentityResponse.status).toBe(200);
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 		console.log(authResponse.data);
@@ -40,7 +47,7 @@ describe("E2E Happy Path Well Known Endpoint", () => {
 	it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
-		validateWellKnownReponse(wellKnownResponse.data);
+		validateWellKnownResponse(wellKnownResponse.data);
 		expect(wellKnownResponse.status).toBe(200);
 	});
 });

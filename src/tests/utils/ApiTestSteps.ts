@@ -1,7 +1,20 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
+import { aws4Interceptor } from "aws4-axios";
+import { XMLParser } from "fast-xml-parser";
 import { constants } from "../utils/ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
+import { ISessionItem } from "../../models/ISessionItem";
+
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
+const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_F2F_TEST_HARNESS_URL });
+const awsSigv4Interceptor = aws4Interceptor({
+	options: {
+		region: "eu-west-2",
+		service: "execute-api",
+	},
+});
+HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
+const xmlParser = new XMLParser();
 
 export async function startStubServiceAndReturnSessionId(): Promise<any> {
 	const stubResponse = await stubStartPost();
@@ -93,8 +106,7 @@ export function validateJwtToken(responseString:any, data:any):void {
 	validateRawBody(rawBody, data);
 }
 
-
-export function validateWellKnownReponse(response:any):void {
+export function validateWellKnownResponse(response:any):void {
 	expect(response.keys).toHaveLength(2);
 	expect(response.keys[0].use).toBe("sig");
 	expect(response.keys[1].use).toBe("enc");
@@ -117,6 +129,45 @@ function getJwtTokenUserInfo(responseString:any): any {
 	}  
 }
 
+export async function getSessionById(sessionId: string, tableName: string): Promise<ISessionItem | undefined> {
+	interface OriginalValue {
+		N?: string;
+		S?: string;
+	}
+
+	interface OriginalSessionItem {
+		[key: string]: OriginalValue;
+	}
+
+	let session: ISessionItem | undefined;
+	try {
+		const response = await HARNESS_API_INSTANCE.get<{ Item: OriginalSessionItem }>(`getRecordBySessionId/${tableName}/${sessionId}`, {});
+		const originalSession = response.data.Item;
+		session = Object.fromEntries(
+			Object.entries(originalSession).map(([key, value]) => [key, value.N ?? value.S]),
+		) as unknown as ISessionItem;
+		console.log("transformedData", session);
+	} catch (error: any) {
+		console.error({ message: "getSessionById - failed getting session from Dynamo", error });
+	}
+
+	console.log("getSessionById Response", session);
+	return session;
+}
+
+export async function getSessionByAuthCode(sessionId: string, tableName: string): Promise<ISessionItem | undefined> {
+	let session;
+	try {
+		const response = await HARNESS_API_INSTANCE.get(`getSessionByAuthCode/${tableName}/${sessionId}`, {});
+		session = response.data;
+	} catch (e: any) {
+		console.error({ message: "getSessionByAuthCode - failed getting session from Dynamo", e });
+	}
+
+	console.log("getSessionByAuthCode Response", session.Items[0]);
+	return session.Items[0] as ISessionItem;
+}
+
 function validateRawHead(rawHead:any): void {
 	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
 	expect(decodeRawHead.alg).toBe("ES256");
@@ -130,3 +181,23 @@ function validateRawBody(rawBody:any, data: any): void {
 	expect(decodedRawBody.vc.credentialSubject.birthDate[0].value).toBe(data.dateOfBirth);
 }
 
+export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
+	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
+		params: {
+			prefix: "txma/" + prefix,
+		},
+	});
+	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
+	if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
+		return undefined;
+	}
+	let key: string;
+	if (Array.isArray(listObjectsParsedResponse?.ListBucketResult?.Contents)) {
+		key = listObjectsParsedResponse.ListBucketResult.Contents.at(-1).Key;
+	} else {
+		key = listObjectsParsedResponse.ListBucketResult.Contents.Key;
+	}
+
+	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
+	return getObjectResponse.data;
+}
