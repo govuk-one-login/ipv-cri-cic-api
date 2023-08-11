@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import Ajv from "ajv";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
 import { constants } from "../utils/ApiConstants";
@@ -15,6 +16,8 @@ const awsSigv4Interceptor = aws4Interceptor({
 });
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 const xmlParser = new XMLParser();
+const ajv = new Ajv({ strictTuples: false });
+
 
 export async function startStubServiceAndReturnSessionId(): Promise<any> {
 	const stubResponse = await stubStartPost();
@@ -200,4 +203,51 @@ export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
 
 	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
 	return getObjectResponse.data;
+}
+
+export async function getSqsEventList(folder: string, prefix: string, txmaEventSize:number): Promise<any> {
+	let keys: any[];
+	let keyList: any[];
+	let i:any;
+	do {
+		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
+			params: {
+				prefix: folder + prefix,
+			},
+		});
+		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
+		if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
+			return undefined;
+		}
+		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
+		console.log(listObjectsParsedResponse?.ListBucketResult?.Contents);
+		keyList = [];
+		for (i = 0; i < keys.length; i++) {
+			keyList.push(listObjectsParsedResponse?.ListBucketResult?.Contents.at(i).Key);
+		} 
+	} while (keys.length < txmaEventSize );
+	return keyList;
+}
+
+
+export async function validateTxMAEventData(keyList: any): Promise<any> {
+	let i:any;
+	for (i = 0; i < keyList.length; i++) {
+		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
+		let valid = true;
+		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json" )
+			.then((jsonSchema) => {
+				const validate = ajv.compile(jsonSchema);
+				valid = validate(getObjectResponse.data);
+				if (!valid) {
+					console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+				}
+			})
+			.catch((err) => {
+				console.log(err.message);
+			})
+			.finally(() => {
+				expect(valid).toBe(true);
+			});
+	}
 }

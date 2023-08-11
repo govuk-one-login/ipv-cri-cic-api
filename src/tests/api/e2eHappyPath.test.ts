@@ -11,6 +11,8 @@ import {
 	validateJwtToken,
 	wellKnownGet,
 	validateWellKnownResponse,
+	getSqsEventList,
+	validateTxMAEventData,
 } from "../utils/ApiTestSteps";
 
 
@@ -40,6 +42,12 @@ describe("E2E Happy Path Tests", () => {
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
 		expect(userInfoResponse.status).toBe(200);
+		// Validate TxMA Queue
+		let sqsMessage;
+		do {
+			sqsMessage = await getSqsEventList("txma/", sessionId, 4);
+		} while (!sqsMessage);
+		await validateTxMAEventData(sqsMessage);
 	});
 });
 

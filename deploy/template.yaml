@@ -3608,7 +3608,7 @@ Outputs:
       Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-arn"
     Export:
       Name: !Sub ${AWS::StackName}-PersonIdentityTableEncryptionKey-arn
-  F2FTestHarnessURL:
+  CICTestHarnessURL:
     Condition: IsNotProdLikeEnvironment
     Description: "F2F Test Harness"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
