@@ -1,14 +1,24 @@
-import { lambdaHandler } from "../../SessionHandler";
+/* eslint-disable @typescript-eslint/unbound-method */
+import { lambdaHandler, logger, metrics } from "../../SessionHandler";
 import { mock } from "jest-mock-extended";
-import { VALID_SESSION } from "./data/session-events";
 import { SessionRequestProcessor } from "../../services/SessionRequestProcessor";
 import { UserInfoRequestProcessor } from "../../services/UserInfoRequestProcessor";
+import { VALID_SESSION } from "./data/session-events";
 import { RESOURCE_NOT_FOUND } from "./data/userInfo-events";
 import { CONTEXT } from "./data/context";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
+import { Response } from "../../utils/Response";
+import { MessageCodes } from "../../models/enums/MessageCodes";
 
 const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();
-
+jest.mock("@aws-lambda-powertools/logger", () => ({
+	Logger: jest.fn().mockImplementation(() => ({
+		setPersistentLogAttributes: jest.fn(),
+		addContext: jest.fn(),
+		info: jest.fn(),
+		error: jest.fn(),
+	})),
+}));
 jest.mock("../../services/SessionRequestProcessor", () => {
 	return {
 		SessionRequestProcessor: jest.fn(() => mockedSessionRequestProcessor),
@@ -21,15 +31,31 @@ describe("SessionHandler", () => {
 
 		await lambdaHandler(VALID_SESSION, CONTEXT);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(logger.info).toHaveBeenCalledWith("Received session request", { requestId: VALID_SESSION.requestContext.requestId });
 		expect(mockedSessionRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
+	});
+
+	it("returns server error where SessionRequestProcessor fails", async () => {
+		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
+		const instance  = SessionRequestProcessor.getInstance(logger, metrics);
+		instance.processRequest = jest.fn().mockRejectedValueOnce({});
+
+		await expect(lambdaHandler(VALID_SESSION, CONTEXT)).resolves.toEqual(new Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
+		expect(logger.error).toHaveBeenCalledWith("An error has occurred.", {
+			error: {},
+			messageCode: MessageCodes.SERVER_ERROR,
+		});
 	});
 
 	it("return not found when resource not found", async () => {
 		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
 
-		return expect(lambdaHandler(RESOURCE_NOT_FOUND, CONTEXT)).rejects.toThrow(expect.objectContaining({
+		await expect(lambdaHandler(RESOURCE_NOT_FOUND, CONTEXT)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.NOT_FOUND,
 		}));
+		expect(logger.error).toHaveBeenCalledWith("Requested resource does not exist", {
+			resource: RESOURCE_NOT_FOUND.resource,
+			messageCode: MessageCodes.RESOURCE_NOT_FOUND,
+		});
 	});
 });
