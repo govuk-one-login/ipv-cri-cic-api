@@ -131,7 +131,7 @@ export class SessionRequestProcessor {
 		} catch (error) {
 			this.logger.error("Invalid request: Could not verify jwt", {
 				error,
-				messageCode: "UNEXPECTED_ERROR_VERIFYING_JWT",
+				messageCode: MessageCodes.UNEXPECTED_ERROR_VERIFYING_JWT,
 			});
 			return unauthorizedResponse();
 		}
@@ -151,18 +151,14 @@ export class SessionRequestProcessor {
 		});
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
-				this.logger.error("SESSION_ALREADY_EXISTS", {
-					fieldName: "sessionId",
-					value: sessionId,
-					reason: "sessionId already exists in the database",
-					messageCode: "SESSION_ALREADY_EXISTS",
+				this.logger.error("sessionId already exists in the database", {
+					messageCode: MessageCodes.SESSION_ALREADY_EXISTS,
 				});
 				return GenericServerError;
 			}
 		} catch (error) {
 			this.logger.error("Unexpected error accessing session table", {
 				error,
-				sessionId,
 				messageCode: MessageCodes.UNEXPECTED_ERROR_SESSION_EXISTS,
 			});
 			return GenericServerError;
@@ -188,7 +184,6 @@ export class SessionRequestProcessor {
 		} catch (error) {
 			this.logger.error("Failed to create session in session table", {
 				error,
-				sessionId: session.sessionId,
 				messageCode: MessageCodes.FAILED_CREATING_SESSION,
 			});
 			return GenericServerError;
@@ -200,7 +195,6 @@ export class SessionRequestProcessor {
 			} catch (error) {
 				this.logger.error("Failed to create session in person identity table", {
 					error,
-					sessionId: session.sessionId,
 					messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
 				});
 				return GenericServerError;
@@ -214,7 +208,6 @@ export class SessionRequestProcessor {
 			});
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
-				sessionId: session.sessionId,
 				error,
 				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
 			});

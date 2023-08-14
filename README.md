@@ -104,6 +104,9 @@ sam deploy --resolve-s3 --stack-name "YOUR_STACK_NAME" --confirm-changeset --con
   "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" CommonStackName=\"common-cri-api\" L2DynamoStackName=\"infra-l2-dynamo\" L2KMSStackName=\"infra-l2-kms\" PowertoolsLogLevel=\"DEBUG\""
 ```
 
+If you need the reserved concurrencies set in DEV then add `ApplyReservedConcurrencyInDev=\"true\"` in to the `--parameter-overrides`.
+Please only do this whilst you need them, if lots of stacks are deployed with these in DEV then deployments will start failing.
+
 # Generating JWKS
 
 The public JWKS is not generated automatically when deploying a stack. In order to run the E2E tests, or to successfully call the ./wellknown/jwks endpoint, the key needs to be generated. It can be done as follows:
