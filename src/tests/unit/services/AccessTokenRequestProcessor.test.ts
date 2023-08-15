@@ -24,6 +24,8 @@ let mockSession: ISessionItem;
 jest.mock("../../../utils/KmsJwtAdapter");
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsSigningTokenJwtAdapter();
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
+
+
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 const ENCODED_REDIRECT_URI = encodeURIComponent("http://localhost:8085/callback");

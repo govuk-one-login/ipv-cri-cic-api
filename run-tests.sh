@@ -12,6 +12,7 @@ declare error_code
 CFN_CICBackendURL_NoQuotes=$(remove_quotes "$CFN_CICBackendURL")
 export DEV_CRI_CIC_API_URL=$(echo ${CFN_CICBackendURL_NoQuotes%/})
 export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)/start
+export DEV_CIC_TEST_HARNESS_URL=$(remove_quotes "$CFN_CICTestHarnessURL")
 
 cd /src; npm run test:e2e
 error_code=$?

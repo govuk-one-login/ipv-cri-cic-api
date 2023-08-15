@@ -84,6 +84,7 @@ Resources:
               - "redirectUri"
               - "clientId"
               - "authSessionState"
+              - "clientSessionId"
             ProjectionType: "INCLUDE"
         - IndexName: "authCode-index"
           KeySchema:

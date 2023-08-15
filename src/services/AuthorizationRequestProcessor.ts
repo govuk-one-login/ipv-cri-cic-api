@@ -67,6 +67,9 @@ export class AuthorizationRequestProcessor {
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
+			// add govuk_signin_journey_id to all subsequent log messages
+			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+
 			const authorizationCode = randomUUID();
 			await this.cicService.setAuthorizationCode(sessionId, authorizationCode);
 			this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
