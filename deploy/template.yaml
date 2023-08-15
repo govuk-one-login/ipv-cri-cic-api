@@ -104,12 +104,14 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.dev.account.gov.uk"
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
+      TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.build.account.gov.uk"
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
@@ -3572,3 +3574,41 @@ Outputs:
     Description: "CIC IPV Stub"
     Value:
       Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
+  TxMASQSQueue: 
+    Description: "Arn of the TxMASQSQueue"
+    Value: !GetAtt TxMASQSQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TxMASQSQueue-arn
+  TxMAKMSEncryptionKey: 
+    Description: "Arn of the TxMAKMSEncryptionKey"
+    Value: !GetAtt TxMAKMSEncryptionKey.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TxMAKMSEncryptionKey-arn
+  SessionTableARN: 
+    Description: "Arn of the Session DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTable-arn
+  SessionTableEcryptionARN: 
+    Description: "Arn of the SessionTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTableEncryptionKey-arn
+  PersonIdentityTableARN: 
+    Description: "Arn of the Person Identity DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTable-arn
+  PersonIdentityTableEncryptionARN: 
+    Description: "Arn of the PersonTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTableEncryptionKey-arn
+  CICTestHarnessURL:
+    Condition: IsNotProdLikeEnvironment
+    Description: "CIC Test Harness"
+    Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
