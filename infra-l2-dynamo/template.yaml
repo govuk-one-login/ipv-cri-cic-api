@@ -84,6 +84,19 @@ Resources:
               - "redirectUri"
               - "clientId"
               - "authSessionState"
+              - "clientSessionId"
+            ProjectionType: "INCLUDE"
+        - IndexName: "authCode-index"
+          KeySchema:
+            - AttributeName: "authorizationCode"
+              KeyType: "HASH"
+          Projection:
+            NonKeyAttributes:
+              - "sessionId"
+              - "redirectUri"
+              - "clientId"
+              - "authSessionState"
+              - "clientSessionId"
             ProjectionType: "INCLUDE"
       TimeToLiveSpecification:
         AttributeName: expiryDate

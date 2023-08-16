@@ -46,14 +46,14 @@ describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 	it("E2E Negative Path Journey - Claimed Identity: No Name in Payload", async () => {
 		// Session Post      
 		console.log(sessionId);
-		const calimedIdentityResponse = await claimedIdentityPost(null, null, dataSlim.dateOfBirth, sessionId);
-		expect(calimedIdentityResponse.status).toBe(400);
+		const claimedIdentityResponse = await claimedIdentityPost(null, null, dataSlim.dateOfBirth, sessionId);
+		expect(claimedIdentityResponse.status).toBe(400);
 	});
 
 	it("E2E Negative Path Journey - Claimed Identity: No DoB in Payload", async () => {
 		// Session Post
-		const calimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, null, sessionId);
-		expect(calimedIdentityResponse.status).toBe(400);
+		const claimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, null, sessionId);
+		expect(claimedIdentityResponse.status).toBe(400);
 	});
 });
 
@@ -72,8 +72,8 @@ describe("Claimed Identity Negative Path Tests", () => {
 		console.log(sessionId);
 		expect(sessionId).toBeTruthy();
 		// Claimed Identity
-		const calimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
-		expect(calimedIdentityResponse.status).toBe(400);
+		const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		expect(claimedIdentityResponse.status).toBe(400);
 	});
 
 });
