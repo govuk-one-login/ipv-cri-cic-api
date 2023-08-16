@@ -45,7 +45,7 @@
                         {
                             "type": "object",
                             "properties": {
-                                "names": {
+                                "nameParts": {
                                     "type": "array",
                                     "items": [
                                         {
@@ -82,7 +82,7 @@
                                 }
                             },
                             "required": [
-                                "names"
+                                "nameParts"
                             ]
                         }
                     ]

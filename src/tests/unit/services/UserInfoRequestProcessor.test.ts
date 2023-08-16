@@ -132,7 +132,7 @@ describe("UserInfoRequestProcessor", () => {
 			},
 			restricted: {
 				name: [{
-					names: mockPerson.personNames[0].nameParts,
+					nameParts: mockPerson.personNames[0].nameParts,
 				},
 				],
 				birthDate: [{ value: mockPerson.birthDates[0].value }],
