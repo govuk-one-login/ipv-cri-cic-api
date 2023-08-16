@@ -15,12 +15,12 @@ const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : Constants.DEBUG;
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.AUTHORIZATION_LOGGER_SVC_NAME;
 
-const logger = new Logger({
+export const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
-const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
+export const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
 class AuthorizationCodeHandler implements LambdaInterface {
 
@@ -56,10 +56,10 @@ class AuthorizationCodeHandler implements LambdaInterface {
 							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 						}
 						return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
-					} catch (err: any) {
-						logger.error({ message: "An error has occurred.", err });
-						if (err instanceof  AppError) {
-							return new Response(err.statusCode, err.message);
+					} catch (error: any) {
+						logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
+						if (error instanceof  AppError) {
+							return new Response(error.statusCode, error.message);
 						}
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 					}

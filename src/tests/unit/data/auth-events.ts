@@ -147,3 +147,13 @@ export const UNSUPPORTED_AUTHCODE = {
 	resource: "/authorization",
 	stageVariables: {},
 };
+
+export const INVALID_SESSION_ID = {
+	...VALID_AUTHCODE,
+	headers: { "session-id": "invalid" },
+};
+
+export const MISSING_SESSION_ID = {
+	...VALID_AUTHCODE,
+	headers: { },
+};
