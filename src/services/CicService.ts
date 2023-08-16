@@ -68,10 +68,11 @@ export class CicService {
 		let session;
 		try {
 			session = await this.dynamo.send(getSessionCommand);
-		} catch (e: any) {
+		} catch (error: any) {
 			this.logger.error({
 				message: "getSessionById - failed executing get from dynamodb:",
-				e,
+				error,
+				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
 			});
 			throw new AppError(
 				"Error retrieving Session",
@@ -81,6 +82,7 @@ export class CicService {
 
 		if (session.Item) {
 			if (session.Item.expiryDate < absoluteTimeNow()) {
+				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
 				throw new AppError(`Session with session id: ${sessionId} has expired`, HttpCodesEnum.UNAUTHORIZED);
 			}
 			return session.Item as ISessionItem;
@@ -193,7 +195,7 @@ export class CicService {
 			await this.dynamo.send(updateSessionCommand);
 			this.logger.info("Updated authorizationCode in dynamodb");
 		} catch (error) {
-			this.logger.error("Got error setting auth code", { error });
+			this.logger.error("Got error setting auth code", { error, messageCode: MessageCodes.FAILED_SAVING_AUTH_CODE });
 			throw new AppError(
 				"Failed to set authorization code ",
 				HttpCodesEnum.SERVER_ERROR,
@@ -217,8 +219,9 @@ export class CicService {
 				event_name: event.event_name,
 			});
 		} catch (error) {
-			this.logger.error("got error ", {
+			this.logger.error("Error sending message to TxMA ", {
 				error,
+				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
 			});
 			throw new AppError("Sending event - failed ", HttpCodesEnum.SERVER_ERROR);
 		}

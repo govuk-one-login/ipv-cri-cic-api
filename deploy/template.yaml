@@ -54,7 +54,18 @@ Parameters:
     Description: "Link to the CIC support manual"
     Type: String
     Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3602251909/CIC+Support+Documentation'
-
+  LambdaConcurrency:
+    Description: "Reserved concurrency for Lambdas running in non-DEV environments"
+    Type: Number
+    Default: 20
+  LambdaConcurrencyThreshold:
+    Description: "Threshold for Reserved concurrency running in non-DEV environments"
+    Type: Number
+    Default: 16  #80% of Lambda concurrency
+  ApplyReservedConcurrencyInDev:
+    Description: "Set to true to apply reserved concurrency when deploying in DEV environments"
+    Type: String
+    Default: "false"
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -93,35 +104,32 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://ipvstub.review-c.dev.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
+      TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.dev.account.gov.uk"
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
+      TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.build.account.gov.uk"
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F", "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342", "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=claimedIdentity"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      LAMBDACONCURRENCY80THRESHOLD: 16
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -144,6 +152,10 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
+  ApplyReservedConcurrency: !Or
+    - !Not
+      - !Condition CreateDevResources
+    - !Equals [!Ref ApplyReservedConcurrencyInDev, "true"]
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -171,6 +183,9 @@ Conditions:
   DeployAlarms: !Or
     - Condition: IsProdLikeEnvironment
     - !Equals [!Ref DeployAlarmsInNonProdLikeEnvironment, true]
+  DeployConcurrencyAlarms: !And
+    - Condition: DeployAlarms
+    - Condition: ApplyReservedConcurrency
   
 
 Globals:
@@ -332,6 +347,42 @@ Resources:
         - Key: Name
           Value: APIGatewayAccessLogGroup
 
+  CICAPIGatewayFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref CICAPIGatewayAccessLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "CICAPIGateway-Fatalerror"
+
+  CICAPIGatewayFatalErrorAlarm:
+    DependsOn:
+      - "CICAPIGatewayFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-CICAPIGateway-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: CICAPIGateway-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   ### End of API Gateway definition.
 
   ### API Gateway Custom Domain definition
@@ -390,6 +441,10 @@ Resources:
       FunctionName: !Sub "CIC-ClaimedIdentity-${AWS::StackName}"
       Handler: ClaimedIdentityHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
@@ -460,6 +515,42 @@ Resources:
       FunctionName: !Ref ClaimedIdentityFunction
       Principal: apigateway.amazonaws.com
 
+  ClaimedIdentityFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "ClaimedIdentityFunction-Fatalerror"
+
+  ClaimedIdentityFunctionFatalErrorAlarm:
+    DependsOn:
+      - "ClaimedIdentityFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: ClaimedIdentityFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   ## UserInfo
   UserInfoFunction:
     Type: AWS::Serverless::Function
@@ -468,6 +559,10 @@ Resources:
       FunctionName: !Sub "User-Info-${AWS::StackName}"
       Handler: UserInfoHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
@@ -558,6 +653,42 @@ Resources:
       FunctionName: !Ref UserInfoFunction
       Principal: apigateway.amazonaws.com
 
+  UserInfoFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref UserInfoFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "UserInfoFunction-Fatalerror"
+
+  UserInfoFunctionFatalErrorAlarm:
+    DependsOn:
+      - "UserInfoFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: UserInfoFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   # SessionHandler
   SessionFunction:
     Type: AWS::Serverless::Function
@@ -565,6 +696,10 @@ Resources:
     Properties:
       FunctionName: !Sub "CIC-Session-${AWS::StackName}"
       Handler: SessionHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       CodeUri: ../src/
       Environment:
         Variables:
@@ -661,6 +796,42 @@ Resources:
       FunctionName: !Ref SessionFunction
       Principal: apigateway.amazonaws.com
 
+  SessionFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref SessionFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "SessionFunction-Fatalerror"
+
+  SessionFunctionFatalErrorAlarm:
+    DependsOn:
+      - "SessionFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: SessionFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   ## AccessToken
   TokenFunction:
     Type: AWS::Serverless::Function
@@ -669,6 +840,10 @@ Resources:
       FunctionName: !Sub "Access-Token-${AWS::StackName}"
       Handler: AccessTokenHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AccessTokenHandler
@@ -738,6 +913,42 @@ Resources:
       FunctionName: !Ref TokenFunction
       Principal: apigateway.amazonaws.com
 
+  TokenFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref TokenFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "TokenFunction-Fatalerror"
+
+  TokenFunctionFatalErrorAlarm:
+    DependsOn:
+      - "TokenFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-TokenFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: TokenFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   AuthorizationFunction:
     Type: AWS::Serverless::Function
     DependsOn: AuthorizationFunctionLogGroup
@@ -745,6 +956,10 @@ Resources:
       FunctionName: !Sub "CIC-Authorization-${AWS::StackName}"
       Handler: AuthorizationCodeHandler.lambdaHandler
       CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationCodeHandler
@@ -817,6 +1032,42 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref AuthorizationFunction
       Principal: apigateway.amazonaws.com
+
+  AuthorizationFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref AuthorizationFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "AuthorizationFunction-Fatalerror"
+
+  AuthorizationFunctionFatalErrorAlarm:
+    DependsOn:
+      - "AuthorizationFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: AuthorizationFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
   TxMASQSQueue:
     Type: AWS::SQS::Queue
@@ -916,8 +1167,8 @@ Resources:
       CodeUri: ../src/
       Handler: JwksHandler.lambdaHandler
       ReservedConcurrentExecutions: !If
-        - IsProdLikeEnvironment
-        - 80
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
       Policies:
         - AWSXRayDaemonWriteAccess
@@ -972,6 +1223,42 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt JsonWebKeysFunction.Arn
       Principal: events.amazonaws.com
+
+  JsonWebKeysFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref JsonWebKeysLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "JsonWebKeysFunction-Fatalerror"
+
+  JsonWebKeysFunctionFatalErrorAlarm:
+    DependsOn:
+      - "JsonWebKeysFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: JsonWebKeysFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
 # Alarms
 # BackEnd5xxAlarms
@@ -2298,7 +2585,7 @@ Resources:
 
   UserInfoConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2307,7 +2594,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${UserInfoFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2317,13 +2604,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
   TokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2332,7 +2619,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${TokenFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-TokenFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2342,13 +2629,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
   
   AuthorizationConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2357,7 +2644,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${AuthorizationFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2367,13 +2654,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   ClaimedIdentityConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2382,7 +2669,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${ClaimedIdentityFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2392,13 +2679,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   SessionConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2407,7 +2694,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${SessionFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2417,13 +2704,13 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [ EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD ]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
   JsonWebKeysConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: "DeployConcurrencyAlarms"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2432,7 +2719,7 @@ Resources:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of JsonWeb Keys concurrency is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${JsonWebKeysFunction}-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
@@ -2442,7 +2729,7 @@ Resources:
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: !FindInMap [EnvironmentVariables, !Ref Environment, LAMBDACONCURRENCY80THRESHOLD]
+      Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
@@ -2459,7 +2746,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${ClaimedIdentityFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${ClaimedIdentityFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2484,7 +2771,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${SessionFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${SessionFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2509,7 +2796,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${JsonWebKeysFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${JsonWebKeysFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2534,7 +2821,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${AuthorizationFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${AuthorizationFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2559,7 +2846,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${TokenFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${TokenFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-TokenFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2584,7 +2871,7 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${UserInfoFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-${UserInfoFunction}-throttles"
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -2668,72 +2955,6 @@ Resources:
             Period: 60
             Stat: Sum
 
-  UserInfoTimeOutMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName:
-        Ref: "UserInfoFunctionLogGroup"
-      FilterPattern: "Task timed out"
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "UserInfoLambdaTimeOut"
-  
-  JsonWebKeysTimeOutMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName:
-        Ref: "JsonWebKeysLogGroup"
-      FilterPattern: "Task timed out"
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "JsonWebKeysLambdaTimeOut"
-  
-  ClaimedIdentityTimeOutMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName:
-        Ref: "ClaimedIdentityFunctionLogGroup"
-      FilterPattern: "Task timed out"
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "ClaimedIdentityLambdaTimeOut"
-  
-  AuthorizationTimeOutMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName:
-        Ref: "AuthorizationFunctionLogGroup"
-      FilterPattern: "Task timed out"
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "AuthorizationLambdaTimeOut"
-
-  TokenTimeOutMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName:
-        Ref: "TokenFunctionLogGroup"
-      FilterPattern: "Task timed out"
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "TokenLambdaTimeOut"
-
-  SessionTimeOutMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName:
-        Ref: "SessionFunctionLogGroup"
-      FilterPattern: "Task timed out"
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
-          MetricName: "SessionLambdaTimeOut"
-
   LambdaThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployAlarms"
@@ -2764,7 +2985,7 @@ Resources:
 
   ConcurrencyAlarmDashboard:
     Type: AWS::CloudWatch::Dashboard
-    Condition: DeployAlarms
+    Condition: DeployConcurrencyAlarms
     Properties:
       DashboardName: !Sub '${AWS::StackName}-Concurrency-Alarm-Overview'
       DashboardBody:
@@ -3353,3 +3574,41 @@ Outputs:
     Description: "CIC IPV Stub"
     Value:
       Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
+  TxMASQSQueue: 
+    Description: "Arn of the TxMASQSQueue"
+    Value: !GetAtt TxMASQSQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TxMASQSQueue-arn
+  TxMAKMSEncryptionKey: 
+    Description: "Arn of the TxMAKMSEncryptionKey"
+    Value: !GetAtt TxMAKMSEncryptionKey.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TxMAKMSEncryptionKey-arn
+  SessionTableARN: 
+    Description: "Arn of the Session DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTable-arn
+  SessionTableEcryptionARN: 
+    Description: "Arn of the SessionTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTableEncryptionKey-arn
+  PersonIdentityTableARN: 
+    Description: "Arn of the Person Identity DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTable-arn
+  PersonIdentityTableEncryptionARN: 
+    Description: "Arn of the PersonTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTableEncryptionKey-arn
+  CICTestHarnessURL:
+    Condition: IsNotProdLikeEnvironment
+    Description: "CIC Test Harness"
+    Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
