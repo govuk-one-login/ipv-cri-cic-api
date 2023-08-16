@@ -26,7 +26,7 @@ export async function startStubServiceAndReturnSessionId(): Promise<any> {
 
 export async function stubStartPost():Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
-	const postRequest = await axios.post(`${path}`, { target:constants.DEV_CRI_CIC_API_URL });
+	const postRequest = await axios.post(`${path}`);
 	expect(postRequest.status).toBe(201);
 	return postRequest;
 }
@@ -234,6 +234,7 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	let i:any;
 	for (i = 0; i < keyList.length; i++) {
 		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
+		console.log(JSON.stringify(getObjectResponse.data));
 		let valid = true;
 		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json" )
 			.then((jsonSchema) => {

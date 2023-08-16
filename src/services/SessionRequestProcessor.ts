@@ -70,7 +70,7 @@ export class SessionRequestProcessor {
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
-		const clientIpAddress = event.headers["x-forwarded-for"];
+		const clientIpAddress = event.requestContext.identity?.sourceIp ?? null;
 
 		let configClient: ClientConfig | undefined = undefined;
 		try {
@@ -174,7 +174,7 @@ export class SessionRequestProcessor {
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
 			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used
-			clientIpAddress: clientIpAddress as string,
+			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
 		};
