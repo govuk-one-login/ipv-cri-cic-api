@@ -181,7 +181,7 @@ export class UserInfoRequestProcessor {
 					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
 					restricted: {
 						name: [{
-							names,
+							nameParts: names,
 						},
 						],
 						birthDate: [{ value: birthDate }],
