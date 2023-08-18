@@ -1,5 +1,5 @@
 Transform: "AWS::Serverless-2016-10-31"
-Description: "Digital Identity CIC Test Automation Harness"
+Description: "Digital Identity CIC Test Automation Harness."
 
 Parameters:
   CodeSigningConfigArn:
