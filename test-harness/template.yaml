@@ -1,5 +1,5 @@
 Transform: "AWS::Serverless-2016-10-31"
-Description: "Digital Identity CIC Test Automation Harness"
+Description: "Digital Identity CIC Test Automation Harness."
 
 Parameters:
   CodeSigningConfigArn:
@@ -281,6 +281,7 @@ Resources:
   TestHarnessRestApi:
     Type: AWS::Serverless::Api
     Properties:
+      AlwaysDeploy: true
       StageName: !Ref Environment
       OpenApiVersion: 3.0.1
       AccessLogSetting:
