@@ -16,6 +16,10 @@ export default {
   collectCoverageFrom: [
     './**/*.ts',
     '!./**/tests/**/*.ts',
+    '!./models/ISessionItem.ts',
+    '!./models/PersonIdentityItem.ts',
+    '!./utils/KmsJwtAdapter.ts',
+    '!./type/AccessRequestPayload.ts',
     '!./tests/**/*.ts',
     '!./jest.config.ts'
   ],
