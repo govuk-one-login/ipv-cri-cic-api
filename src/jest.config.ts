@@ -20,6 +20,7 @@ export default {
     '!./models/PersonIdentityItem.ts',
     '!./utils/KmsJwtAdapter.ts',
     '!./type/AccessRequestPayload.ts',
+    '!./JwksHandler.ts',
     '!./tests/**/*.ts',
     '!./jest.config.ts'
   ],
