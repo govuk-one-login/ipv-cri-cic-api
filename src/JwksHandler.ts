@@ -11,16 +11,12 @@ import * as AWS from "@aws-sdk/client-kms";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
-const logger = new Logger({
+export const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
-const SIGNING_KEY_IDS = process.env.SIGNING_KEY_IDS;
-const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
-const JWKS_BUCKET_NAME = process.env.JWKS_BUCKET_NAME;
-
-const s3Client = new S3Client({
+export const s3Client = new S3Client({
 	region: process.env.REGION,
 	maxAttempts: 2,
 	requestHandler: new NodeHttpHandler({
@@ -29,13 +25,17 @@ const s3Client = new S3Client({
 	}),
 });
 
-const kmsClient = new AWS.KMS({
+export const kmsClient = new AWS.KMS({
 	region: process.env.REGION,
 });
 
 class JwksHandler implements LambdaInterface {
 
 	async handler(): Promise<string> {
+		const SIGNING_KEY_IDS = process.env.SIGNING_KEY_IDS;
+		const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
+		const JWKS_BUCKET_NAME = process.env.JWKS_BUCKET_NAME;
+
 		if (!SIGNING_KEY_IDS || !ENCRYPTION_KEY_IDS || !JWKS_BUCKET_NAME) {
 			logger.error({ message:"Environment variable SIGNING_KEY_IDS or ENCRYPTION_KEY_IDS or JWKS_BUCKET_NAME is not configured" });
 			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
@@ -73,7 +73,7 @@ class JwksHandler implements LambdaInterface {
 
 	}
 }
-const getAsJwk = async (keyId: string): Promise<Jwk | null> => {
+export const getAsJwk = async (keyId: string): Promise<Jwk | null> => {
 	let kmsKey;
 	try {
 		kmsKey = await kmsClient.getPublicKey({ KeyId: keyId });
@@ -107,7 +107,7 @@ const getAsJwk = async (keyId: string): Promise<Jwk | null> => {
 	return null;
 };
 
-const getKeySpecMap = (
+export const getKeySpecMap = (
 	spec?: string,
 ): { keySpec: string; algorithm: Algorithm } | undefined => {
 	if (spec == null) return undefined;
@@ -123,5 +123,6 @@ const getKeySpecMap = (
 	];
 	return conversions.find(x => x.keySpec === spec);
 };
+
 const handlerClass = new JwksHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
