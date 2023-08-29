@@ -8,5 +8,4 @@ process.env.ENCRYPTION_KEY_IDS = 'EncryptionKeyArn'
 process.env.AUTH_SESSION_TTL = '950400'
 process.env.REGION = 'eu-west-2'
 process.env.SIGNING_KEY_IDS = "cic-cri-api-vc-signing-key";
-process.env.ENCRYPTION_KEY_IDS = "cic-cri-api-encryption-key";
 process.env.JWKS_BUCKET_NAME = "cic-cri-api-jwks-dev";
