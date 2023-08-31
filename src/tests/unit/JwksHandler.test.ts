@@ -73,6 +73,7 @@ describe("JwksHandler", () => {
 	describe("#getAsJwk", () => {
 		it("gets the kms key with the given KeyId and returns jwk with public key", async () => {
 			const keyId = "cic-cri-api-vc-signing-key";
+			// pragma: allowlist nextline secret
 			const publicKey = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAES4sDJifz8h3GDznZZ6NC3QN5qlQn8Zf2mck4yBmlwqvXzZu7Wkwc4QuOxXhGHXamfkoG5d0UJVXJwwvFxiSzRQ==";
 			jest.spyOn(kmsClient, "getPublicKey").mockImplementationOnce(() => ({
 				KeySpec: "ECC_NIST_P256",
@@ -109,6 +110,7 @@ describe("JwksHandler", () => {
 
 		it("logs error if fetched key does not contain KeySpec", async () => {
 			const keyId = "cic-cri-api-vc-signing-key";
+			// pragma: allowlist nextline secret
 			const publicKey = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAES4sDJifz8h3GDznZZ6NC3QN5qlQn8Zf2mck4yBmlwqvXzZu7Wkwc4QuOxXhGHXamfkoG5d0UJVXJwwvFxiSzRQ==";
 			jest.spyOn(kmsClient, "getPublicKey").mockImplementationOnce(() => ({
 				KeyId: keyId,
@@ -142,7 +144,6 @@ describe("JwksHandler", () => {
 
 		it("logs error if fetched key does not contain PublicKey", async () => {
 			const keyId = "cic-cri-api-vc-signing-key";
-			const publicKey = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAES4sDJifz8h3GDznZZ6NC3QN5qlQn8Zf2mck4yBmlwqvXzZu7Wkwc4QuOxXhGHXamfkoG5d0UJVXJwwvFxiSzRQ==";
 			jest.spyOn(kmsClient, "getPublicKey").mockImplementationOnce(() => ({
 				KeySpec: "ECC_NIST_P256",
 				KeyUsage: "ENCRYPT_DECRYPT",
