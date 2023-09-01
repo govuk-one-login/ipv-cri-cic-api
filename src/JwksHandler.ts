@@ -16,20 +16,19 @@ export const logger = new Logger({
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
-export const s3Client = new S3Client({
-	region: process.env.REGION,
-	maxAttempts: 2,
-	requestHandler: new NodeHttpHandler({
-		connectionTimeout: 29000,
-		socketTimeout: 29000,
-	}),
-});
-
-export const kmsClient = new AWS.KMS({
-	region: process.env.REGION,
-});
-
 class JwksHandler implements LambdaInterface {
+	readonly s3Client = new S3Client({
+		region: process.env.REGION,
+		maxAttempts: 2,
+		requestHandler: new NodeHttpHandler({
+			connectionTimeout: 29000,
+			socketTimeout: 29000,
+		}),
+	});
+
+	readonly kmsClient = new AWS.KMS({
+		region: process.env.REGION,
+	});
 
 	async handler(): Promise<string> {
 		const SIGNING_KEY_IDS = process.env.SIGNING_KEY_IDS;
@@ -48,7 +47,7 @@ class JwksHandler implements LambdaInterface {
 		logger.info({ message:"Building wellknown JWK endpoint with keys" + kmsKeyIds });
 
 		const jwks = await Promise.all(
-			kmsKeyIds.map(async id => getAsJwk(id)),
+			kmsKeyIds.map(async id => this.getAsJwk(id)),
 		);
 		jwks.forEach(jwk => {
 			if (jwk != null) {
@@ -64,7 +63,7 @@ class JwksHandler implements LambdaInterface {
 		};
 
 		try {
-			await s3Client.send(new PutObjectCommand(uploadParams));
+			await this.s3Client.send(new PutObjectCommand(uploadParams));
 		} catch (err) {
 			logger.error({ message: "Error writing keys to S3 bucket" + err });
 			throw new Error("Error writing keys to S3 bucket");
@@ -72,57 +71,56 @@ class JwksHandler implements LambdaInterface {
 		return JSON.stringify(body);
 
 	}
+
+	async getAsJwk(keyId: string): Promise<Jwk | null> {
+		let kmsKey;
+		try {
+			kmsKey = await this.kmsClient.getPublicKey({ KeyId: keyId });
+		} catch (error) {
+			logger.warn({ message:"Failed to fetch key from KMS" }, { error });
+		}
+	
+		const map = this.getKeySpecMap(kmsKey?.KeySpec);
+		if (
+			kmsKey != null &&
+					map != null &&
+					kmsKey.KeyId != null &&
+					kmsKey.PublicKey != null
+		) {
+			const use = kmsKey.KeyUsage === "ENCRYPT_DECRYPT" ? "enc" : "sig";
+			const publicKey = crypto
+				.createPublicKey({
+					key: kmsKey.PublicKey as Buffer,
+					type: "spki",
+					format: "der",
+				})
+				.export({ format: "jwk" });
+			return {
+				...publicKey,
+				use,
+				kid: keyId.split("/").pop(),
+				alg: map.algorithm,
+			} as unknown as Jwk;
+		}
+		logger.error({ message: "Failed to build JWK from key" + keyId }, JSON.stringify(map));
+		return null;
+	}
+	
+	getKeySpecMap(spec?: string): { keySpec: string; algorithm: Algorithm } | undefined {
+		if (spec == null) return undefined;
+		const conversions = [
+			{
+				keySpec: "ECC_NIST_P256",
+				algorithm: "ES256" as Algorithm,
+			},
+			{
+				keySpec: "RSA_2048",
+				algorithm: "RS256" as Algorithm,
+			},
+		];
+		return conversions.find(x => x.keySpec === spec);
+	}
 }
-export const getAsJwk = async (keyId: string): Promise<Jwk | null> => {
-	let kmsKey;
-	try {
-		kmsKey = await kmsClient.getPublicKey({ KeyId: keyId });
-	} catch (error) {
-		logger.warn({ message:"Failed to fetch key from KMS" }, { error });
-	}
 
-	const map = getKeySpecMap(kmsKey?.KeySpec);
-	if (
-		kmsKey != null &&
-        map != null &&
-        kmsKey.KeyId != null &&
-        kmsKey.PublicKey != null
-	) {
-		const use = kmsKey.KeyUsage === "ENCRYPT_DECRYPT" ? "enc" : "sig";
-		const publicKey = crypto
-			.createPublicKey({
-				key: kmsKey.PublicKey as Buffer,
-				type: "spki",
-				format: "der",
-			})
-			.export({ format: "jwk" });
-		return {
-			...publicKey,
-			use,
-			kid: keyId.split("/").pop(),
-			alg: map.algorithm,
-		} as unknown as Jwk;
-	}
-	logger.error({ message: "Failed to build JWK from key" + keyId }, JSON.stringify(map));
-	return null;
-};
-
-export const getKeySpecMap = (
-	spec?: string,
-): { keySpec: string; algorithm: Algorithm } | undefined => {
-	if (spec == null) return undefined;
-	const conversions = [
-		{
-			keySpec: "ECC_NIST_P256",
-			algorithm: "ES256" as Algorithm,
-		},
-		{
-			keySpec: "RSA_2048",
-			algorithm: "RS256" as Algorithm,
-		},
-	];
-	return conversions.find(x => x.keySpec === spec);
-};
-
-const handlerClass = new JwksHandler();
+export const handlerClass = new JwksHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
