@@ -111,7 +111,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-c.build.account.gov.uk/redirect"}]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "950400" # 11 days in seconds
-      TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.build.account.gov.uk"
+      TESTHARNESSURL: "https://testharness.review-c.build.account.gov.uk"
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
