@@ -133,7 +133,7 @@ paths:
           application/json: |
             {
               "TableName":"$input.params('tableName')",
-              "IndexName":"authCode-updated-index",
+              "IndexName":"authCode-index",
               "KeyConditionExpression": "authorizationCode = :authorizationCode",
               "ExpressionAttributeValues":{
                   ":authorizationCode":{
