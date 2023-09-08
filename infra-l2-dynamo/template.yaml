@@ -74,17 +74,6 @@ Resources:
         - AttributeName: "sessionId"
           KeyType: "HASH"
       GlobalSecondaryIndexes:
-        - IndexName: "authorizationCode-index"
-          KeySchema:
-            - AttributeName: "authorizationCode"
-              KeyType: "HASH"
-          Projection:
-            NonKeyAttributes:
-              - "sessionId"
-              - "redirectUri"
-              - "clientId"
-              - "authSessionState"
-            ProjectionType: "INCLUDE"
         - IndexName: "authCode-index"
           KeySchema:
             - AttributeName: "authorizationCode"
@@ -96,6 +85,19 @@ Resources:
               - "clientId"
               - "authSessionState"
               - "clientSessionId"
+            ProjectionType: "INCLUDE"
+        - IndexName: "authCode-updated-index"
+          KeySchema:
+            - AttributeName: "authorizationCode"
+              KeyType: "HASH"
+          Projection:
+            NonKeyAttributes:
+              - "sessionId"
+              - "redirectUri"
+              - "clientId"
+              - "authSessionState"
+              - "clientSessionId"
+              - "expiryDate"
             ProjectionType: "INCLUDE"
       TimeToLiveSpecification:
         AttributeName: expiryDate
