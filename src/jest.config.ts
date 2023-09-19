@@ -16,6 +16,8 @@ export default {
   collectCoverageFrom: [
     './**/*.ts',
     '!./**/tests/**/*.ts',
+    '!./models/**/*.ts',
+    '!./type/**/*.ts',
     '!./tests/**/*.ts',
     '!./jest.config.ts'
   ],
