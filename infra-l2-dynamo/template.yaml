@@ -74,18 +74,6 @@ Resources:
         - AttributeName: "sessionId"
           KeyType: "HASH"
       GlobalSecondaryIndexes:
-        - IndexName: "authCode-index"
-          KeySchema:
-            - AttributeName: "authorizationCode"
-              KeyType: "HASH"
-          Projection:
-            NonKeyAttributes:
-              - "sessionId"
-              - "redirectUri"
-              - "clientId"
-              - "authSessionState"
-              - "clientSessionId"
-            ProjectionType: "INCLUDE"
         - IndexName: "authCode-updated-index"
           KeySchema:
             - AttributeName: "authorizationCode"
