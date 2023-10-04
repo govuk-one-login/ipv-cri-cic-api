@@ -67,6 +67,7 @@ describe("Cic Service", () => {
 		}));
 	});
 
+
 	it("should resolve if given_names and family_names correctly provided in CicSession", async () => {
 		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 		const cicSess = new CicSession({ given_names: ["Geralt", "Rivia"], family_names: "Maximus Dec'mus", date_of_birth: "1970-01-01" });
