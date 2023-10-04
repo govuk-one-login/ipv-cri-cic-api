@@ -66,6 +66,7 @@ export class ClaimedIdRequestProcessor {
 
 		const session = await this.cicService.getSessionById(sessionId);
 		if (session != null) {
+
 			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 			if (session.expiryDate < absoluteTimeNow()) {
@@ -76,6 +77,7 @@ export class ClaimedIdRequestProcessor {
 			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
 			
 			if (session.authSessionState === AuthSessionState.CIC_DATA_RECEIVED) {
+				this.logger.info(`Duplicate request for session with id: ${sessionId}, returning status 200`)
 				return new Response(HttpCodesEnum.OK, "");
 			} else if (session.authSessionState !== AuthSessionState.CIC_SESSION_CREATED) {
 				this.logger.error(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`, { 
@@ -83,10 +85,10 @@ export class ClaimedIdRequestProcessor {
 				});
 				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			} else {
-			await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
-			return new Response(HttpCodesEnum.OK, "");
+				await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
+				return new Response(HttpCodesEnum.OK, "");
 			}
-			
+
 		} else {
 			this.logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
