@@ -85,9 +85,6 @@ export class ClaimedIdRequestProcessor {
 			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
 					this.logger.info(`Duplicate request for session with id: ${sessionId}, returning status 200`);
 					return new Response(HttpCodesEnum.OK, "");
-			  case AuthSessionState.CIC_SESSION_ABORTED:
-					this.logger.info("Session aborted");
-					return new Response(HttpCodesEnum.OK, "");
 			}
 
 		} else {
