@@ -80,7 +80,9 @@ export class ClaimedIdRequestProcessor {
 			  case AuthSessionState.CIC_SESSION_CREATED:
 					await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
 					return new Response(HttpCodesEnum.OK, "");
-			  case AuthSessionState.CIC_DATA_RECEIVED || AuthSessionState.CIC_AUTH_CODE_ISSUED || AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
+			  case AuthSessionState.CIC_DATA_RECEIVED:
+			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
+			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
 					this.logger.info(`Duplicate request for session with id: ${sessionId}, returning status 200`);
 					return new Response(HttpCodesEnum.OK, "");
 			  case AuthSessionState.CIC_SESSION_ABORTED:
