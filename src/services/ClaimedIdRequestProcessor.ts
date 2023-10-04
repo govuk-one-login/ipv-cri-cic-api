@@ -75,17 +75,16 @@ export class ClaimedIdRequestProcessor {
 			}
 
 			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
-			
-			if (session.authSessionState === AuthSessionState.CIC_AUTH_CODE_ISSUED) {
+
+			switch (session.authSessionState) {
+			  case AuthSessionState.CIC_SESSION_CREATED:
+				await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
+				return new Response(HttpCodesEnum.OK, "");
+			  case AuthSessionState.CIC_DATA_RECEIVED || AuthSessionState.CIC_AUTH_CODE_ISSUED || AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
 				this.logger.info(`Duplicate request for session with id: ${sessionId}, returning status 200`)
 				return new Response(HttpCodesEnum.OK, "");
-			} else if (session.authSessionState !== AuthSessionState.CIC_SESSION_CREATED) {
-				this.logger.error(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`, { 
-					messageCode: MessageCodes.INCORRECT_SESSION_STATE,
-				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
-			} else {
-				await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
+			  case AuthSessionState.CIC_SESSION_ABORTED:
+				this.logger.info(`Session aborted`)
 				return new Response(HttpCodesEnum.OK, "");
 			}
 
@@ -94,6 +93,6 @@ export class ClaimedIdRequestProcessor {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
-		}
+		} return new Response(HttpCodesEnum.OK, '...' ); //This return is required for error ts(2366), alternatively can remove the Promise<Response> from the function
 	}
 }
