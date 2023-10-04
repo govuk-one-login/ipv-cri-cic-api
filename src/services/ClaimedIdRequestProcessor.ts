@@ -76,7 +76,7 @@ export class ClaimedIdRequestProcessor {
 
 			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
 			
-			if (session.authSessionState === AuthSessionState.CIC_DATA_RECEIVED) {
+			if (session.authSessionState === AuthSessionState.CIC_AUTH_CODE_ISSUED) {
 				this.logger.info(`Duplicate request for session with id: ${sessionId}, returning status 200`)
 				return new Response(HttpCodesEnum.OK, "");
 			} else if (session.authSessionState !== AuthSessionState.CIC_SESSION_CREATED) {
