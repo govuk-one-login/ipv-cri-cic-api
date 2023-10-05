@@ -83,7 +83,7 @@ export class ClaimedIdRequestProcessor {
 			  case AuthSessionState.CIC_DATA_RECEIVED:
 			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
 			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
-					this.logger.info('Duplicate request, returning status 200, sessionId: ', sessionId);
+					this.logger.info("Duplicate request, returning status 200, sessionId: ", sessionId);
 					return new Response(HttpCodesEnum.OK, "");
 			}
 

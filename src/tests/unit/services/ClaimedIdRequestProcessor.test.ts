@@ -83,7 +83,7 @@ describe("ClaimedIdRequestProcessor", () => {
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		expect(logger.info).toHaveBeenCalledWith('Duplicate request, returning status 200, sessionId: ', '1234')
+		expect(logger.info).toHaveBeenCalledWith("Duplicate request, returning status 200, sessionId: ", "1234");
 	});
 
 	it("Return 401 when session with that session id not found in the DB", async () => {
