@@ -1,23 +1,35 @@
-import axios, { AxiosInstance } from "axios";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers"; 
 import Ajv from "ajv";
+import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
+import { ISessionItem } from "../../models/ISessionItem";
 import { constants } from "../utils/ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
-import { ISessionItem } from "../../models/ISessionItem";
 
-const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
+const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_CIC_API_URL });
 const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
+
+console.log("constants.DEV_CRI_CIC_API_URL", constants.DEV_CRI_CIC_API_URL);
+
+const customCredentialsProvider = {
+	getCredentials: fromNodeProviderChain({
+		timeout: 1000,
+		maxRetries: 0,
+	}),
+};
 const awsSigv4Interceptor = aws4Interceptor({
 	options: {
 		region: "eu-west-2",
 		service: "execute-api",
 	},
+	credentials: customCredentialsProvider,
 });
+
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
+
 const xmlParser = new XMLParser();
 const ajv = new Ajv({ strictTuples: false });
-
 
 export async function startStubServiceAndReturnSessionId(): Promise<any> {
 	const stubResponse = await stubStartPost();
