@@ -10,8 +10,6 @@ import { jwtUtils } from "../../utils/JwtUtils";
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_CIC_API_URL });
 const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
 
-console.log("constants.DEV_CRI_CIC_API_URL", constants.DEV_CRI_CIC_API_URL);
-
 const customCredentialsProvider = {
 	getCredentials: fromNodeProviderChain({
 		timeout: 1000,
@@ -217,27 +215,30 @@ export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
 	return getObjectResponse.data;
 }
 
-export async function getSqsEventList(folder: string, prefix: string, txmaEventSize:number): Promise<any> {
-	let keys: any[];
-	let keyList: any[];
-	let i:any;
+export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
+	let contents: any[];
+	let keyList: string[];
+
 	do {
+		await new Promise(res => setTimeout(res, 3000));
+
 		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
 			params: {
 				prefix: folder + prefix,
 			},
 		});
 		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
+		contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
+
+		if (!contents || !contents.length) {
 			return undefined;
 		}
-		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
-		console.log(listObjectsParsedResponse?.ListBucketResult?.Contents);
-		keyList = [];
-		for (i = 0; i < keys.length; i++) {
-			keyList.push(listObjectsParsedResponse?.ListBucketResult?.Contents.at(i).Key);
-		} 
-	} while (keys.length < txmaEventSize );
+		
+		console.log(`contents of folder ${folder} with prefix ${prefix}: `, contents);
+		keyList = contents.map(({ Key }) => Key);
+
+	} while (contents.length < txmaEventSize);
+
 	return keyList;
 }
 

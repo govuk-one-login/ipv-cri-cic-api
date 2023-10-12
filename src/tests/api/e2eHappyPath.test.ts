@@ -17,6 +17,8 @@ import {
 
 
 describe("E2E Happy Path Tests", () => {
+	jest.setTimeout(60000);
+
 	it.each([
 		[dataSlim],
 		[dataBjorn],
