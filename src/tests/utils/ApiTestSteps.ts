@@ -234,7 +234,6 @@ export async function getSqsEventList(folder: string, prefix: string, txmaEventS
 			return undefined;
 		}
 		
-		console.log(`contents of folder ${folder} with prefix ${prefix}: `, contents);
 		keyList = contents.map(({ Key }) => Key);
 
 	} while (contents.length < txmaEventSize);
