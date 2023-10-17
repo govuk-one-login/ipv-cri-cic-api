@@ -62,11 +62,21 @@ export class AuthorizationRequestProcessor {
 
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
-			if (session.authSessionState !== AuthSessionState.CIC_DATA_RECEIVED) {
-				this.logger.error(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}`, { 
-					messageCode: MessageCodes.INCORRECT_SESSION_STATE,
-				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+			switch (session.authSessionState) {
+			  case AuthSessionState.CIC_SESSION_CREATED:
+					this.logger.error(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
+						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+					});
+					return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+			  case AuthSessionState.CIC_DATA_RECEIVED:
+			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
+			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
+					break;
+				default:
+					this.logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
+						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+					});
+					return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
 			// add govuk_signin_journey_id to all subsequent log messages

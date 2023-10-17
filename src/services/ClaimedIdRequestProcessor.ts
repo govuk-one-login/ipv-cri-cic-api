@@ -85,6 +85,11 @@ export class ClaimedIdRequestProcessor {
 			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
 					this.logger.info("Duplicate request, returning status 200, sessionId: ", sessionId);
 					return new Response(HttpCodesEnum.OK, "Request already processed");
+				default:
+					this.logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}, ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
+						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+					});
+					return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
 		} else {

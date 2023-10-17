@@ -79,6 +79,22 @@ describe("AuthorizationRequestProcessor", () => {
 
 	it("Return 401 when session is in incorrect state", async () => {
 		const session = getMockSessionItem();
+		session.authSessionState = "CIC_SESSION_CREATED";
+		mockCicService.getSessionById.mockResolvedValue(session);
+
+		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(out.body).toBe(`Session is in the wrong state: ${session.authSessionState}`);
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith(
+			`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`,
+			{ messageCode: MessageCodes.INCORRECT_SESSION_STATE },
+		);
+	});
+
+	it("Return 401 when session is in an unknown state", async () => {
+		const session = getMockSessionItem();
 		session.authSessionState = "UNKNOWN";
 		mockCicService.getSessionById.mockResolvedValue(session);
 
@@ -88,7 +104,7 @@ describe("AuthorizationRequestProcessor", () => {
 		expect(out.body).toBe(`Session is in the wrong state: ${session.authSessionState}`);
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledWith(
-			`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}`,
+			`Session is in an unexpected state: UNKNOWN, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`,
 			{ messageCode: MessageCodes.INCORRECT_SESSION_STATE },
 		);
 	});
