@@ -123,7 +123,7 @@ describe("AuthorizationRequestProcessor", () => {
 		expect(out.body).toBe(`Session is in the wrong state: ${session.authSessionState}`);
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledWith(
-			`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`,
+			`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`,
 			{ messageCode: MessageCodes.INCORRECT_SESSION_STATE },
 		);
 	});
