@@ -24,7 +24,7 @@ function getMockSessionItem(): ISessionItem {
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
 		clientSessionId: "sdfssg",
-		authorizationCode: "",
+		authorizationCode: "DEFAULTAUTHCODE",
 		authorizationCodeExpiryDate: 0,
 		redirectUri: "http://localhost:8085/callback",
 		accessTokenExpiryDate: 0,
@@ -76,6 +76,41 @@ describe("AuthorizationRequestProcessor", () => {
 			govuk_signin_journey_id: "sdfssg",
 		});
 	});
+
+	it.each(["CIC_AUTH_CODE_ISSUED", "CIC_ACCESS_TOKEN_ISSUED"])(
+		"Returns authCode from DB if state is %s",
+		async (authSessionState) => {
+			const session = getMockSessionItem();
+			session.authSessionState = authSessionState;
+			mockCicService.getSessionById.mockResolvedValue(session);
+	
+			const out: Response = await authorizationRequestProcessorTest.processRequest(
+				VALID_AUTHCODE,
+				"1234",
+			);
+	
+			const cicResp = new CicResponse(JSON.parse(out.body));
+	
+			expect(out.body).toEqual(
+				JSON.stringify({
+					authorizationCode: {
+						value: "DEFAULTAUTHCODE",
+					},
+					redirect_uri: "http://localhost:8085/callback",
+					state: "Y@atr",
+				}),
+			);
+	
+			expect(mockCicService.setAuthorizationCode).not.toHaveBeenCalled();
+			expect(mockCicService.sendToTXMA).not.toHaveBeenCalled();
+			expect(logger.info).toHaveBeenCalledWith(
+				`Duplicate request for session in state: ${authSessionState}, returning authCode from DB`,
+				"1234",
+			);
+			expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		},
+	);
+	
 
 	it("Return 401 when session is in incorrect state", async () => {
 		const session = getMockSessionItem();
