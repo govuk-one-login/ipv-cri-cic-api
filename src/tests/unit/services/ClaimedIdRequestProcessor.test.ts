@@ -83,7 +83,21 @@ describe("ClaimedIdRequestProcessor", () => {
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		expect(logger.info).toHaveBeenCalledWith("Duplicate request, returning status 200, sessionId: ", "1234");
+		expect(logger.info).toHaveBeenCalledWith(`Duplicate request for session in state: ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, "1234");
+	});
+
+	it("Return an error when session is an unknown state", async () => {
+		const session = getMockSessionItem();
+		mockCicService.getSessionById.mockResolvedValue({ ...session, authSessionState: "UNKNOWN" });
+
+		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+
+		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
+		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+		expect(logger.error).toHaveBeenCalledWith(
+			`Session is in an unexpected state: UNKNOWN, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}, ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`,
+			{ messageCode: MessageCodes.INCORRECT_SESSION_STATE },
+		);
 	});
 
 	it("Return 401 when session with that session id not found in the DB", async () => {
