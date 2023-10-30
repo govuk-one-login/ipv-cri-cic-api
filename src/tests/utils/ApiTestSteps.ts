@@ -56,7 +56,7 @@ export async function sessionPost(clientId?: string, request?: string):Promise<a
 export async function claimedIdentityPost(givenName: any, familyName: any, dob: any, sessionId?: any):Promise<any> {
 	const path = "/claimedIdentity";
 	try {
-		const postRequest = await API_INSTANCE.post("/claimedIdentity", { 
+		const postRequest = await API_INSTANCE.post(path, { 
 			"given_names" : givenName, 
 			"family_names" : familyName, 
 			"date_of_birth": dob, 
@@ -71,7 +71,7 @@ export async function claimedIdentityPost(givenName: any, familyName: any, dob: 
 export async function authorizationGet(sessionId: any):Promise<any> {
 	const path = "/authorization";
 	try {
-		const getRequest = await API_INSTANCE.get( "/authorization", { headers:{ "session-id": sessionId } });
+		const getRequest = await API_INSTANCE.get( path, { headers:{ "session-id": sessionId } });
 		return getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -82,7 +82,7 @@ export async function authorizationGet(sessionId: any):Promise<any> {
 export async function tokenPost(authCode?: any, redirectUri?: any ):Promise<any> {
 	const path = "/token";
 	try {
-		const postRequest = await API_INSTANCE.post( "/token", `code=${authCode}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(redirectUri)}`, { headers:{ "Content-Type" : "text/plain" } });
+		const postRequest = await API_INSTANCE.post( path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(redirectUri)}`, { headers:{ "Content-Type" : "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -93,7 +93,7 @@ export async function tokenPost(authCode?: any, redirectUri?: any ):Promise<any>
 export async function userInfoPost(accessToken?: any):Promise<any> {
 	const path = "/userinfo";
 	try {
-		const postRequest = await API_INSTANCE.post( "/userinfo", null, { headers: { "Authorization": `Bearer ${accessToken}` } });
+		const postRequest = await API_INSTANCE.post( path, null, { headers: { "Authorization": `Bearer ${accessToken}` } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -105,7 +105,7 @@ export async function wellKnownGet():Promise<any> {
 	console.log(constants.DEV_CRI_CIC_API_URL);
 	const path = "/.well-known/jwks.json";
 	try {
-		const getRequest = await API_INSTANCE.get( "/.well-known/jwks.json");	
+		const getRequest = await API_INSTANCE.get( path);	
 		return getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
