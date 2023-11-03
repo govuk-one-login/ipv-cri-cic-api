@@ -29,7 +29,7 @@
         "test:unit": "npm run compile && npm run unit",
         "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c .eslintrc.js --ext .ts .",
         "compile": "./node_modules/.bin/tsc",
-        "lint": "eslint --output-file ./reports/eslint/reportFile.html --format html -c .eslintrc.js --ext .ts ./",
+        "lint": "eslint **/**.ts **/**.test.ts",
         "test:e2e": "JEST_JUNIT_OUTPUT_NAME=e2e-report.xml ./node_modules/.bin/jest --test-match '**/tests/api/e2e*.test.ts'",
         "test:infra": "./node_modules/.bin/jest --testMatch '**/infra/?(*.)test.ts' ",
         "api": "./node_modules/.bin/jest --runInBand --testPathPattern=tests/api/",

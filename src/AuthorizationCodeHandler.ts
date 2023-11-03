@@ -53,10 +53,10 @@ class AuthorizationCodeHandler implements LambdaInterface {
 							}
 						} else {
 							logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-							return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
-						}
-						return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
-					} catch (error: any) {
+						return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+					}
+					return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+  } catch (error: any) {
 						logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 						if (error instanceof  AppError) {
 							return new Response(error.statusCode, error.message);
@@ -64,14 +64,14 @@ class AuthorizationCodeHandler implements LambdaInterface {
 						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 					}
 				}
-				return new Response(HttpCodesEnum.NOT_FOUND, "");
+				return new Response(HttpCodesEnum.NOT_FOUND, "")
 
 			default:
-				logger.error("Requested resource does not exist", {
-					resource: event.resource,
-					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
+			logger.error("Requested resource does not exist", {
+				resource: event.resource,
+				messageCode: MessageCodes.RESOURCE_NOT_FOUND,
 				});
-				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
+throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
 		}
 	}
 

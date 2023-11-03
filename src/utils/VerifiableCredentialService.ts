@@ -7,6 +7,7 @@ import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
 import { randomUUID } from "crypto";
+import { MessageCodes } from "../models/enums/MessageCodes";
 
 export class VerifiableCredentialService {
 	readonly tableName: string;
