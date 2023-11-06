@@ -16,7 +16,7 @@ const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.en
 const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
-});
+})
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
 
