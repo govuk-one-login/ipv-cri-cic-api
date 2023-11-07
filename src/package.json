@@ -2,7 +2,7 @@
     "name": "CIC",
     "version": "1.0.0",
     "description": "OneLogin CIC CRI",
-    "repository": "https://github.com/alphagov/di-ipv-cri-cic-api",
+    "repository": "https://github.com/govuk-one-login/ipv-cri-cic-api",
     "author": "GDS",
     "license": "MIT",
     "dependencies": {
