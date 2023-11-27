@@ -18,9 +18,9 @@ let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
-const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(true);
-const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(false);
-const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
+const passingKmsJwtAdapterFactory = () => new MockKmsJwtAdapter(true);
+const failingKmsJwtAdapterFactory = () => new MockKmsJwtAdapter(false);
+const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAdapter();
 
 
 const logger = mock<Logger>();
