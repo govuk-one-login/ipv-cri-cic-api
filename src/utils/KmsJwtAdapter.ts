@@ -11,7 +11,7 @@ import axios from "axios";
 export class KmsJwtAdapter {
     readonly kid: string;
 
-    private kms = new AWS.KMS({
+    readonly kms = new AWS.KMS({
     	region: process.env.REGION,
     });
 
@@ -142,7 +142,10 @@ export class KmsJwtAdapter {
     				tagLength: 128,
     			},
     			cek1,
-    			Buffer.concat([new Uint8Array(jwtUtils.base64DecodeToUint8Array(ciphertext)), new Uint8Array(jwtUtils.base64DecodeToUint8Array(tag))]),
+    			Buffer.concat([
+    				new Uint8Array(jwtUtils.base64DecodeToUint8Array(ciphertext)),
+    				new Uint8Array(jwtUtils.base64DecodeToUint8Array(tag)),
+    			]),
     		);
 
     		payload = new Uint8Array(decryptedBuffer);

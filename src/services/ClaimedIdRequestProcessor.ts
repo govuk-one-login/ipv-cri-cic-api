@@ -66,6 +66,7 @@ export class ClaimedIdRequestProcessor {
 
 		const session = await this.cicService.getSessionById(sessionId);
 		if (session != null) {
+
 			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 			if (session.expiryDate < absoluteTimeNow()) {
@@ -75,19 +76,27 @@ export class ClaimedIdRequestProcessor {
 
 			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
 
-			if (session.authSessionState !== AuthSessionState.CIC_SESSION_CREATED) {
-				this.logger.error(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}`, { 
-					messageCode: MessageCodes.INCORRECT_SESSION_STATE,
-				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+			switch (session.authSessionState) {
+			  case AuthSessionState.CIC_SESSION_CREATED:
+					await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
+					return new Response(HttpCodesEnum.OK, "");
+			  case AuthSessionState.CIC_DATA_RECEIVED:
+			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
+			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
+					this.logger.info(`Duplicate request for session in state: ${session.authSessionState}`, sessionId);
+					return new Response(HttpCodesEnum.OK, "Request already processed");
+				default:
+					this.logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}, ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
+						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+					});
+					return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
-			await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
-			return new Response(HttpCodesEnum.OK, "");
+
 		} else {
 			this.logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
-		}
+		} return new Response(HttpCodesEnum.OK, "" );
 	}
 }

@@ -14,7 +14,6 @@ const logger = new Logger({
 let cicService: CicService;
 const tableName = "MYTABLE";
 const sessionId = "SESSID";
-const authCode = "AUTHCODE";
 const expiryDate = 9999999999999;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const SESSION_RECORD = require("../data/db_record.json");
@@ -66,6 +65,7 @@ describe("Cic Service", () => {
 			statusCode: HttpCodesEnum.SERVER_ERROR,
 		}));
 	});
+
 
 	it("should resolve if given_names and family_names correctly provided in CicSession", async () => {
 		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
