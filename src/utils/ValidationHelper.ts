@@ -2,7 +2,6 @@ import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
-import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
@@ -16,9 +15,7 @@ export class ValidationHelper {
 			await validateOrReject(model, { forbidUnknownValues: true });
 		} catch (errors) {
 			const errorDetails = this.getErrors(errors);
-			console.log(`${model.constructor.name}`);
-			console.log("**** Error validating " + `${model.constructor.name}` + "   " + JSON.stringify(errorDetails));
-			console.log(`Failed to validate data - ${model.constructor.name}`, "ValidationHelper", HttpCodesEnum.UNPROCESSABLE_ENTITY, errorDetails);
+			logger.error({ message: `Error validating ${model.constructor.name}`, errorDetails });
 			throw new AppError(`Failed to Validate - ${model.constructor.name}` + errorDetails, HttpCodesEnum.UNPROCESSABLE_ENTITY);
 		}
 	}

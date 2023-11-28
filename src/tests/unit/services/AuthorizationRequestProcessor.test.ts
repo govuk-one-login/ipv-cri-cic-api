@@ -89,8 +89,6 @@ describe("AuthorizationRequestProcessor", () => {
 				"1234",
 			);
 	
-			const cicResp = new CicResponse(JSON.parse(out.body));
-	
 			expect(out.body).toEqual(
 				JSON.stringify({
 					authorizationCode: {
