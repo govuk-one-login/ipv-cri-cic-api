@@ -22,8 +22,8 @@ let accessTokenRequestProcessorTest: AccessTokenRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
 jest.mock("../../../utils/KmsJwtAdapter");
-const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsSigningTokenJwtAdapter();
-const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
+const passingKmsJwtAdapterFactory = () => new MockKmsSigningTokenJwtAdapter();
+const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAdapter();
 
 
 const logger = mock<Logger>();

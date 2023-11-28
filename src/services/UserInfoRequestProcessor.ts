@@ -162,7 +162,12 @@ export class UserInfoRequestProcessor {
 			//Generate VC and create a signedVC as response back to IPV Core.
 			let signedJWT;
 			try {
-				signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, birthDate, absoluteTimeNow);
+				signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
+					session,
+					names,
+					birthDate,
+					absoluteTimeNow,
+				);
 			} catch (error) {
 				if (error instanceof AppError) {
 					this.logger.error("Error generating signed verifiable credential jwt", {
