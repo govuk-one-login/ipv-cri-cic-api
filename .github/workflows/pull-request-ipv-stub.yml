@@ -32,7 +32,7 @@ jobs:
         working-directory: cic-ipv-stub
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -42,7 +42,7 @@ jobs:
           extra_args: "detect-secrets --all-files"
 
       - name: Setup nodeJS v18
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
@@ -73,7 +73,7 @@ jobs:
         working-directory: cic-ipv-stub
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 

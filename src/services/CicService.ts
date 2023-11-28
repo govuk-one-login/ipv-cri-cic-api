@@ -218,6 +218,9 @@ export class CicService {
 			this.logger.info("Sent message to TxMA", {
 				event_name: event.event_name,
 			});
+
+			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
+			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
 		} catch (error) {
 			this.logger.error("Error sending message to TxMA ", {
 				error,
@@ -340,6 +343,7 @@ export class CicService {
 		return [
 			{
 				value: birthDay,
+			// eslint-disable-next-line max-lines
 			},
 		];
 	}
@@ -375,5 +379,27 @@ export class CicService {
 		});
 		await this.dynamo.send(putSessionCommand);
 		return putSessionCommand?.input?.Item?.sessionId;
+	}
+
+	async obfuscateJSONValues(input: any, txmaFieldsToShow: string[] = []): Promise<any> {
+		if (typeof input === "object" && input !== null) {
+			if (Array.isArray(input)) {
+				return Promise.all(input.map((element) => this.obfuscateJSONValues(element, txmaFieldsToShow)));
+			} else {
+				const obfuscatedObject: any = {};
+				for (const key in input) {
+					if (Object.prototype.hasOwnProperty.call(input, key)) {
+						if (txmaFieldsToShow.includes(key)) {
+							obfuscatedObject[key] = input[key];
+						} else {
+							obfuscatedObject[key] = await this.obfuscateJSONValues(input[key], txmaFieldsToShow);
+						}
+					}
+				}
+				return obfuscatedObject;
+			}
+		} else {
+			return input === null || input === undefined ? input : "***";
+		}
 	}
 }
