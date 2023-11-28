@@ -142,7 +142,10 @@ export class KmsJwtAdapter {
     				tagLength: 128,
     			},
     			cek1,
-    			Buffer.concat([new Uint8Array(jwtUtils.base64DecodeToUint8Array(ciphertext)), new Uint8Array(jwtUtils.base64DecodeToUint8Array(tag))]),
+    			Buffer.concat([
+    				new Uint8Array(jwtUtils.base64DecodeToUint8Array(ciphertext)),
+    				new Uint8Array(jwtUtils.base64DecodeToUint8Array(tag)),
+    			]),
     		);
 
     		payload = new Uint8Array(decryptedBuffer);

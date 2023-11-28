@@ -12,16 +12,14 @@ import {
 	MockKmsJwtAdapterForVc,
 } from "../utils/MockJwtVerifierSigner";
 import { VALID_VC } from "../data/verified_credential";
-import { Constants } from "../../../utils/Constants";
 import { VALID_USERINFO } from "../data/userInfo-events";
-import { randomUUID } from "crypto";
 import { ValidationHelper } from "../../../utils/ValidationHelper";
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
-const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapterForVc(true);
+const passingKmsJwtAdapterFactory = () => new MockKmsJwtAdapterForVc(true);
 
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
