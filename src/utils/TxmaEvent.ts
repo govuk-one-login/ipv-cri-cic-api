@@ -29,7 +29,12 @@ export interface TxmaEvent extends BaseTxmaEvent {
 	"restricted"?: VerifiedCredential["credentialSubject"];
 }
 
-export const buildCoreEventFields = (session: ISessionItem, issuer: string, sourceIp?: string | undefined, getNow: () => number = absoluteTimeNow): BaseTxmaEvent => {
+export const buildCoreEventFields = (
+	session: ISessionItem,
+	issuer: string,
+	sourceIp?: string | undefined,
+	getNow: () => number = absoluteTimeNow,
+): BaseTxmaEvent => {
 	return {
 		user: {
 			user_id: session.subject,

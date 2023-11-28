@@ -1,6 +1,8 @@
+/* eslint-disable max-lines-per-function */
 import { CicService } from "../../../services/CicService";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicSession } from "../../../models/CicSession";
+import { ISessionItem } from "../../../models/ISessionItem";
 import { randomUUID } from "crypto";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -14,10 +16,9 @@ const logger = new Logger({
 let cicService: CicService;
 const tableName = "MYTABLE";
 const sessionId = "SESSID";
-const authCode = "AUTHCODE";
 const expiryDate = 9999999999999;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
-const SESSION_RECORD = require("../data/db_record.json");
+const SESSION_RECORD = require("../data/db_record.json") as ISessionItem;
 
 const FAILURE_VALUE = "throw_me";
 
@@ -67,6 +68,7 @@ describe("Cic Service", () => {
 		}));
 	});
 
+
 	it("should resolve if given_names and family_names correctly provided in CicSession", async () => {
 		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 		const cicSess = new CicSession({ given_names: ["Geralt", "Rivia"], family_names: "Maximus Dec'mus", date_of_birth: "1970-01-01" });
@@ -109,5 +111,87 @@ describe("Cic Service", () => {
 		return expect(cicService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,
 		}));
+	});
+
+	describe("obfuscateJSONValues", () => {
+		it("should obfuscate all fields except those in txmaFieldsToShow", async () => {
+			const inputObject = {
+				field1: "sensitive1",
+				field2: "sensitive2",
+				field3: "non-sensitive",
+				nested: {
+					field4: "sensitive3",
+					field5: "non-sensitive",
+					field6: null,
+					field7: undefined,
+				},
+			};
+	
+			const txmaFieldsToShow = ["field3", "field5"];
+	
+			const obfuscatedObject = await cicService.obfuscateJSONValues(inputObject, txmaFieldsToShow);
+	
+			// Check that sensitive fields are obfuscated and non-sensitive fields are not
+			expect(obfuscatedObject.field1).toBe("***");
+			expect(obfuscatedObject.field2).toBe("***");
+			expect(obfuscatedObject.field3).toBe("non-sensitive");
+			expect(obfuscatedObject.nested.field4).toBe("***");
+			expect(obfuscatedObject.nested.field5).toBe("non-sensitive");
+			expect(obfuscatedObject.nested.field6).toBeNull();
+			expect(obfuscatedObject.nested.field7).toBeUndefined();
+		});
+	
+		it("should handle arrays correctly", async () => {
+			const inputObject = {
+				field1: "sensitive1",
+				arrayField: [
+					{
+						field2: "sensitive2",
+						field3: "non-sensitive",
+					},
+					{
+						field2: "sensitive3",
+						field3: "non-sensitive",
+					},
+				],
+			};
+	
+			const txmaFieldsToShow = ["field3"];
+	
+			const obfuscatedObject = await cicService.obfuscateJSONValues(inputObject, txmaFieldsToShow);
+	
+			// Check that sensitive fields are obfuscated and non-sensitive fields are not
+			expect(obfuscatedObject.field1).toBe("***");
+			expect(obfuscatedObject.arrayField[0].field2).toBe("***");
+			expect(obfuscatedObject.arrayField[0].field3).toBe("non-sensitive");
+			expect(obfuscatedObject.arrayField[1].field2).toBe("***");
+			expect(obfuscatedObject.arrayField[1].field3).toBe("non-sensitive");
+		});
+	
+		it("should obfuscate values of different types", async () => {
+			const inputObject = {
+				stringField: "sensitive-string",
+				numberField: 42,
+				booleanField: true,
+			};
+	
+			const txmaFieldsToShow: string[] | undefined = [];
+	
+			const obfuscatedObject = await cicService.obfuscateJSONValues(inputObject, txmaFieldsToShow);
+	
+			// Check that all fields are obfuscated
+			expect(obfuscatedObject.stringField).toBe("***");
+			expect(obfuscatedObject.numberField).toBe("***");
+			expect(obfuscatedObject.booleanField).toBe("***");
+		});
+	
+		it('should return "***" for non-object input', async () => {
+			const input = "string-input";
+	
+			const obfuscatedValue = await cicService.obfuscateJSONValues(input);
+	
+			// Check that non-object input is obfuscated as '***'
+			expect(obfuscatedValue).toBe("***");
+		});
 	});
 });

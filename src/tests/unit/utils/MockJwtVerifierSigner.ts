@@ -27,21 +27,21 @@ export class MockKmsJwtAdapter {
     	this.mockJwt = mockJwT;
     }
 
-    verify(_urlEncodedJwt: string): boolean { return this.result; }
+    verify(): boolean { return this.result; }
 
-    decode(_urlEncodedJwt: string): Jwt { return this.mockJwt; }
+    decode(): Jwt { return this.mockJwt; }
 
-    sign(_jwtPayload: JwtPayload): string { return "signedJwt-test"; }
+    sign(): string { return "signedJwt-test"; }
 }
 
 export class MockFailingKmsSigningJwtAdapter {
 
-	sign(_jwtPayload: JwtPayload): string { throw new Error("Failed to sign Jwt"); }
+	sign(): string { throw new Error("Failed to sign Jwt"); }
 }
 
 export class MockKmsSigningTokenJwtAdapter {
 
-	sign(_jwtPayload: JwtPayload): string { return ACCESS_TOKEN; }
+	sign(): string { return ACCESS_TOKEN; }
 }
 
 export class MockKmsJwtAdapterForVc {
@@ -51,13 +51,13 @@ export class MockKmsJwtAdapterForVc {
     	this.result = result;
     }
 
-    verify(_urlEncodedJwt: string): boolean { return this.result; }
+    verify(): boolean { return this.result; }
 
     sign(jwtPayload: JwtPayload): string {
     	return JSON.stringify(jwtPayload);
     }
 
-    decode(_token: string): Jwt {
+    decode(): Jwt {
     	return {
     		header: {
     			alg: "MOCK",

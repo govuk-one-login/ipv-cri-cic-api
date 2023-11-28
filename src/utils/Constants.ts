@@ -44,11 +44,13 @@ export class Constants {
 
     static readonly AUTHORIZATION_CODE = "authorization_code";
 
-    static readonly AUTHORIZATION_CODE_INDEX_NAME = "authCode-index";
+    static readonly AUTHORIZATION_CODE_INDEX_NAME = "authCode-updated-index";
 
     static readonly TOKEN_EXPIRY_SECONDS = 3600;
 
     static readonly REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
     static readonly GIVEN_NAME_REGEX = /^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$/;
+
+	static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id"];
 }
