@@ -37,7 +37,7 @@
         "test:api": "npm run compile && npm run api"
     },
     "devDependencies": {
-        "@aws-cdk/assertions": "^1.172.0",
+        "@aws-cdk/assertions": "^1.204.0",
         "@aws-cdk/yaml-cfn": "^1.172.0",
         "@types/aws-lambda": "^8.10.109",
         "@types/jest": "^29.4.0",
