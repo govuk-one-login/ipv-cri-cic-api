@@ -53,4 +53,10 @@ export class Constants {
     static readonly GIVEN_NAME_REGEX = /^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$/;
 
 	static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id"];
+
+    static readonly FACE_TO_FACE_JOURNEY = "Face-to-Face";
+
+    static readonly NO_PHOTO_ID_JOURNEY = "no-photo-id";
+
+    static readonly EXPECTED_CONTEXT = "bank_account";
 }
