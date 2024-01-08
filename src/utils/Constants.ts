@@ -16,6 +16,8 @@ export class Constants {
 
     static readonly AUTHORIZATION_LOGGER_SVC_NAME = "AuthorizationCodeHandler";
 
+    static readonly SESSION_CONFIG_LOGGER_SVC_NAME = "SessionConfigHandler";
+
     static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
 
     static readonly DEBUG = "DEBUG";

@@ -137,8 +137,6 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse();
 		}
 
-		console.log("---jwtpayload:" + JSON.stringify(jwtPayload));
-
 		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.EXPECTED_CONTEXT);
 		if (JwtErrors.length > 0) {
 			this.logger.error(JwtErrors, {
