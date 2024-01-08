@@ -71,7 +71,8 @@ export const handler = async (
     exp: iat + 3 * 60,
   };
 
-  if (overrides?.context !== null){
+  if (overrides?.context != null){
+    console.log("context exists....");
     payload = {
       ...payload,
       context: overrides.context,
