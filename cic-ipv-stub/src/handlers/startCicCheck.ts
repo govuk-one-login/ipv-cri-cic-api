@@ -55,6 +55,15 @@ export const handler = async (
     ],
     email: "example@testemail.com",
   };
+
+  let sharedClaims;
+
+  if (overrides?.context != null) {
+    sharedClaims = {
+      ...defaultClaims,
+      context: overrides.context,
+    }
+  }
   const iat = Math.floor(Date.now() / 1000);
   const payload: JarPayload = {
     sub: crypto.randomUUID(),
@@ -74,8 +83,9 @@ export const handler = async (
     payload.shared_claims =
       overrides?.shared_claims != null
         ? overrides.shared_claims
-        : defaultClaims;
-  }
+        : overrides?.context != null
+        ? sharedClaims : defaultClaims;
+  }  
 
   const signedJwt = await sign(payload, config.signingKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
