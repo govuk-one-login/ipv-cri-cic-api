@@ -14,7 +14,7 @@ import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { Constants } from "./Constants";
+import { Constants } from "../utils/Constants";
 
 
 interface ClientConfig {
@@ -136,6 +136,8 @@ export class SessionRequestProcessor {
 			});
 			return unauthorizedResponse();
 		}
+
+		console.log("---jwtpayload:" + JSON.stringify(jwtPayload));
 
 		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.EXPECTED_CONTEXT);
 		if (JwtErrors.length > 0) {

@@ -94,7 +94,7 @@ export class ValidationHelper {
 			return `JWT validation/verification failed: Unable to retrieve redirect URI for client_id: ${requestBodyClientId}`;
 		} else if (expectedRedirectUri !== jwtPayload.redirect_uri) {
 			return `JWT validation/verification failed: Redirect uri ${jwtPayload.redirect_uri} does not match configuration uri ${expectedRedirectUri}`;
-		} else if (jwtPayload.context !== null && expectedContext !== jwtPayload.context) {
+		} else if (jwtPayload.context != null && expectedContext !== jwtPayload.context) {
 			return `JWT validation/verification failed: Context ${jwtPayload.context} does not match configuration context ${expectedContext}`;
 		}
 
