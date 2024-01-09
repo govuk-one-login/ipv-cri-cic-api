@@ -32,14 +32,14 @@ describe("SessionConfigHandler", () => {
 		await lambdaHandler(VALID_SESSIONCONFIG, "SESSION_CONFIG");
 
 		expect(mockedSessionConfigRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
-		expect(logger.appendKeys).toHaveBeenCalledWith({ sessionId: VALID_SESSIONCONFIG.headers["session-id"] });
+		expect(logger.appendKeys).toHaveBeenCalledWith({ sessionId: VALID_SESSIONCONFIG.headers["x-govuk-signin-session-id"] });
 	});
 
 	it("returns bad request when sessionId is missing", async () => {
 		SessionConfigRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionConfigRequestProcessor);
 
-		await expect(lambdaHandler(MISSING_SESSION_ID, "SESSION_CONFIG")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required"));
-		expect(logger.error).toHaveBeenCalledWith("Missing header: session-id is required", expect.objectContaining({
+		await expect(lambdaHandler(MISSING_SESSION_ID, "SESSION_CONFIG")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required"));
+		expect(logger.error).toHaveBeenCalledWith("Missing header: x-govuk-signin-session-id is required", expect.objectContaining({
 			messageCode: MessageCodes.MISSING_HEADER,
 		}));
 	});

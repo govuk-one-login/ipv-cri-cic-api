@@ -1,7 +1,7 @@
 export const VALID_SESSIONCONFIG = {
 	httpMethod: "GET",
 	body: "",
-	headers: { "session-id": "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
+	headers: { "x-govuk-signin-session-id": "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},
 	multiValueQueryStringParameters: {},
@@ -50,7 +50,7 @@ export const VALID_SESSIONCONFIG = {
 
 export const INVALID_SESSION_ID = {
 	...VALID_SESSIONCONFIG,
-	headers: { "session-id": "invalid" },
+	headers: { "x-govuk-signin-session-id": "invalid" },
 };
 
 export const MISSING_SESSION_ID = {

@@ -29,7 +29,7 @@ class SessionConfigHandler implements LambdaInterface {
 			logger.info("Received session-config request", { requestId: event.requestContext.requestId });
 
 			if (event.headers) {
-				const sessionId = event.headers[Constants.SESSION_ID];
+				const sessionId = event.headers[Constants.X_SESSION_ID];
 				if (sessionId) {
 					logger.appendKeys({ sessionId });
 
@@ -40,8 +40,8 @@ class SessionConfigHandler implements LambdaInterface {
 
 					return await SessionConfigRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 				} else {
-					logger.error("Missing header: session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
-					return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required");
+					logger.error(`Missing header: ${Constants.X_SESSION_ID} is required`, { messageCode: MessageCodes.MISSING_HEADER });
+					return new Response(HttpCodesEnum.BAD_REQUEST, `Missing header: ${Constants.X_SESSION_ID} is required`);
 				}
 			} else {
 				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
