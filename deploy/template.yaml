@@ -1575,8 +1575,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Count
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1590,8 +1590,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: 5XXError
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
             Period: 60
             Stat: Sum
 
@@ -1625,8 +1625,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Count
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
             Period: 60
             Stat: Sum
         - Id: errorPercentage
@@ -1640,8 +1640,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: 5XXError
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
             Period: 60
             Stat: Sum
 
@@ -1677,8 +1677,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -1698,8 +1698,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -1739,8 +1739,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -1760,8 +1760,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -1799,8 +1799,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Count
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1820,8 +1820,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: 5XXError
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1861,8 +1861,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Count
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1882,8 +1882,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: 5XXError
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -1925,8 +1925,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -1946,8 +1946,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -1987,8 +1987,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2008,8 +2008,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2173,8 +2173,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2194,8 +2194,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2235,8 +2235,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2256,8 +2256,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2297,8 +2297,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2318,8 +2318,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2359,8 +2359,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2380,8 +2380,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2421,8 +2421,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2442,8 +2442,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2483,8 +2483,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2504,8 +2504,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2547,8 +2547,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2568,8 +2568,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2607,8 +2607,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Count
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -2628,8 +2628,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: 4XXError
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Resource
                   Value: /token
                 - Name: Stage
@@ -2671,8 +2671,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2692,8 +2692,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2795,8 +2795,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2816,8 +2816,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2857,8 +2857,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2878,8 +2878,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: POST
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2919,8 +2919,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2940,8 +2940,8 @@ Resources:
               Dimensions:
                 - Name: Method
                   Value: GET
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
                 - Name: Stage
                   Value: !Ref Environment
                 - Name: Resource
@@ -2981,8 +2981,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Count
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
             Period: 60
             Stat: Sum
         - Id: maxLatency
@@ -2992,8 +2992,8 @@ Resources:
               Namespace: AWS/ApiGateway
               MetricName: Latency
               Dimensions:
-                - Name: ApiName
-                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: ApiId
+                  Value: !Sub "${CICRestApi}"
             Period: 60
             Stat: Maximum
 
