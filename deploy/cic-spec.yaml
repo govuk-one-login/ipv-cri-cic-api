@@ -588,7 +588,7 @@ paths:
       tags:
         - Backend - Common CRI Lambda
       parameters:
-        - $ref: "#/components/parameters/SessionHeader"
+        - $ref: "#/components/parameters/SessionId"
       responses:
         "200":
           description: "Return journey type"

@@ -42,13 +42,13 @@ export class SessionConfigRequestProcessor {
 
 		const session = await this.cicService.getSessionById(sessionId);
 
-		if (session != null) {
+		if (session) {
 			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
-				journey_type: session?.journey != null ? session.journey : Constants.FACE_TO_FACE_JOURNEY,
+				journey_type: session?.journey ? session.journey : Constants.FACE_TO_FACE_JOURNEY,
 			}));
 		} else {
 			this.logger.error("No session found for session id", {
