@@ -37,10 +37,10 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 });
 
 describe("/session Unhappy Path", () => {
-    it("Invalid 'context' test", async () => {
-        const sessionResponse = await startStubServiceAndReturnSessionIdByType("INVALID");
-        expect(sessionResponse.status).toBe(401);
-    });
+	it("Invalid 'context' test", async () => {
+		const sessionResponse = await startStubServiceAndReturnSessionIdByType("INVALID");
+		expect(sessionResponse.status).toBe(401);
+	});
 });
 
 describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
