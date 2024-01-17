@@ -6,13 +6,14 @@ import {
 	authorizationGet,
 	claimedIdentityPost,
 	tokenPost,
-	startStubServiceAndReturnSessionId,
 	userInfoPost,
 	validateJwtToken,
 	wellKnownGet,
 	validateWellKnownResponse,
 	getSqsEventList,
 	validateTxMAEventData,
+	sessionConfigGet,
+	startStubServiceAndReturnSessionIdByType,
 } from "../utils/ApiTestSteps";
 
 
@@ -23,11 +24,15 @@ describe("E2E Happy Path Tests", () => {
 		[dataManuel],
 		[dataBillyJoe],
 	])("E2E Happy Path Journey - User Info", async (userData: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId();
+		const sessionResponse = await startStubServiceAndReturnSessionIdByType(userData.journeyType);
 		console.log(sessionResponse.data);
 		const sessionId = sessionResponse.data.session_id;
 		console.log(sessionId);
 		expect(sessionId).toBeTruthy();
+		// Session Config
+		const sessionConfigResponse = await sessionConfigGet(sessionId);
+		expect(sessionConfigResponse.status).toBe(200);
+		expect(sessionConfigResponse.data.journey_type).toBe(userData.journeyType);
 		// Claimed Identity
 		const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
 		expect(claimedIdentityResponse.status).toBe(200);
