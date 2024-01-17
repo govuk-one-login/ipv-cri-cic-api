@@ -1,4 +1,4 @@
-import { stubStartPost, sessionPost, startStubServiceAndReturnSessionId, claimedIdentityPost } from "../utils/ApiTestSteps";
+import { stubStartPost, sessionPost, startStubServiceAndReturnSessionId, claimedIdentityPost, startStubServiceAndReturnSessionIdByType } from "../utils/ApiTestSteps";
 import dataSlim from "../data/happyPathSlim.json";
 import dataNumeric from "../data/dataNumeric.json";
 import dataInvalidChar from "../data/dataInvalidChar.json";
@@ -36,10 +36,18 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 
 });
 
+describe("/session Unhappy Path", () => {
+    it("Invalid 'context' test", async () => {
+        const sessionResponse = await startStubServiceAndReturnSessionIdByType("INVALID");
+        expect(sessionResponse.status).toBe(401);
+    });
+});
+
 describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
+		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
 
@@ -67,6 +75,7 @@ describe("Claimed Identity Negative Path Tests", () => {
 		[dataSpaceEnd],
 	])("E2E Happy Path Journey - User Info", async (userData: any) => {
 		const sessionResponse = await startStubServiceAndReturnSessionId();
+		expect(sessionResponse.status).toBe(200);
 		console.log(sessionResponse.data);
 		const sessionId = sessionResponse.data.session_id;
 		console.log(sessionId);

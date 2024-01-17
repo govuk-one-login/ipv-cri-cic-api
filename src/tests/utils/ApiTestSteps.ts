@@ -52,6 +52,9 @@ export async function stubStartPostByType(journeyType: string): Promise<any> {
 		case "NO_PHOTO_ID":
 			postRequest = await axios.post(`${path}`, { context: "bank_account" });
 			break;
+		case "INVALID":
+			postRequest = await axios.post(`${path}`, { context: "INVALID" });
+			break;
 		default:
 			postRequest = await axios.post(`${path}`);
 			break;
@@ -65,7 +68,6 @@ export async function sessionPost(clientId?: string, request?: string): Promise<
 	const path = "/session";
 	try {
 		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
-		expect(postRequest.status).toBe(200);
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
