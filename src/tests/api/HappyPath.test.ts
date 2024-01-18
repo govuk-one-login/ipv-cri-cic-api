@@ -3,21 +3,14 @@ import { getKeyFromSession, startStubServiceAndReturnSessionIdByType } from "../
 
 
 describe("/session Happy Path", () => {
-	it("BAV | NO_PHOTO_ID test", async () => {
-		const sessionResponse = await startStubServiceAndReturnSessionIdByType("FACE_TO_FACE");
+	it.each([
+		["FACE_TO_FACE"],
+		["NO_PHOTO_ID"],
+	])("BAV and F2F test", async (journeyType: any) => {
+		const sessionResponse = await startStubServiceAndReturnSessionIdByType(journeyType);
 		expect(sessionResponse.status).toBe(200);
-		console.log(sessionResponse.data);
 		const sessionId = sessionResponse.data.session_id;
 		console.log(sessionId);
-		await expect(getKeyFromSession(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey")).resolves.toBe("FACE_TO_FACE");
-	});
-
-	it("F2F | FACE_TO_FACE test", async () => {
-		const sessionResponse = await startStubServiceAndReturnSessionIdByType("NO_PHOTO_ID");
-		expect(sessionResponse.status).toBe(200);
-		console.log(sessionResponse.data);
-		const sessionId = sessionResponse.data.session_id;
-		console.log(sessionId);
-		await expect(getKeyFromSession(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey")).resolves.toBe("NO_PHOTO_ID");
+		await expect(getKeyFromSession(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey")).resolves.toBe(journeyType);
 	});
 });

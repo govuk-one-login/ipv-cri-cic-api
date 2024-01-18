@@ -45,7 +45,6 @@ export async function stubStartPost(): Promise<any> {
 
 export async function stubStartPostByType(journeyType: string): Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
-	console.log(path);
 
 	let postRequest: AxiosResponse;
 	switch (journeyType) {
@@ -135,7 +134,6 @@ export async function userInfoPost(accessToken?: any): Promise<any> {
 }
 
 export async function wellKnownGet(): Promise<any> {
-	console.log(constants.DEV_CRI_CIC_API_URL);
 	const path = "/.well-known/jwks.json";
 	try {
 		const getRequest = await API_INSTANCE.get(path);
@@ -192,12 +190,11 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 		session = Object.fromEntries(
 			Object.entries(originalSession).map(([key, value]) => [key, value.N ?? value.S]),
 		) as unknown as ISessionItem;
-		console.log("transformedData", session);
+		console.log("getSessionById Response", session);
 	} catch (error: any) {
 		console.error({ message: "getSessionById - failed getting session from Dynamo", error });
 	}
 
-	console.log("getSessionById Response", session);
 	return session;
 }
 
