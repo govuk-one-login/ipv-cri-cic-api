@@ -1,5 +1,5 @@
 import { constants } from "../utils/ApiConstants";
-import { getKeyFromSession, startStubServiceAndReturnSessionIdByType } from "../utils/ApiTestSteps";
+import { getKeyFromSession, startStubServiceAndReturnSessionId } from "../utils/ApiTestSteps";
 
 
 describe("/session Happy Path", () => {
@@ -7,7 +7,7 @@ describe("/session Happy Path", () => {
 		["FACE_TO_FACE"],
 		["NO_PHOTO_ID"],
 	])("BAV and F2F test", async (journeyType: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionIdByType(journeyType);
+		const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 		expect(sessionResponse.status).toBe(200);
 		const sessionId = sessionResponse.data.session_id;
 		console.log(sessionId);

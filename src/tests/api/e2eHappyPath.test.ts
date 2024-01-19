@@ -13,7 +13,7 @@ import {
 	getSqsEventList,
 	validateTxMAEventData,
 	sessionConfigGet,
-	startStubServiceAndReturnSessionIdByType,
+	startStubServiceAndReturnSessionId,
 } from "../utils/ApiTestSteps";
 
 
@@ -24,7 +24,7 @@ describe("E2E Happy Path Tests", () => {
 		[dataManuel],
 		[dataBillyJoe],
 	])("E2E Happy Path Journey - User Info", async (userData: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionIdByType(userData.journeyType);
+		const sessionResponse = await startStubServiceAndReturnSessionId(userData.journeyType);
 		expect(sessionResponse.status).toBe(200);
 		console.log(sessionResponse.data);
 		const sessionId = sessionResponse.data.session_id;

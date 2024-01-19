@@ -1,4 +1,4 @@
-import { stubStartPost, sessionPost, startStubServiceAndReturnSessionId, claimedIdentityPost, startStubServiceAndReturnSessionIdByType } from "../utils/ApiTestSteps";
+import { stubStartPost, sessionPost, claimedIdentityPost, startStubServiceAndReturnSessionId } from "../utils/ApiTestSteps";
 import dataSlim from "../data/happyPathSlim.json";
 import dataNumeric from "../data/dataNumeric.json";
 import dataInvalidChar from "../data/dataInvalidChar.json";
@@ -10,7 +10,7 @@ import dataSpaceEnd from "../data/dataSpaceEnd.json";
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	let stubResponse: any;
 	beforeAll(async () => {
-		stubResponse = await stubStartPost();
+		stubResponse = await stubStartPost("FACE_TO_FACE");
 	});
 
 	it("E2E Negative Path Journey - Sessions: Empty Request Body", async () => {
@@ -38,7 +38,7 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 
 describe("/session Unhappy Path", () => {
 	it("Invalid 'context' test", async () => {
-		const sessionResponse = await startStubServiceAndReturnSessionIdByType("INVALID");
+		const sessionResponse = await startStubServiceAndReturnSessionId("INVALID");
 		expect(sessionResponse.status).toBe(401);
 	});
 });
@@ -46,7 +46,7 @@ describe("/session Unhappy Path", () => {
 describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 	let sessionId: any;
 	beforeAll(async () => {
-		const sessionResponse = await startStubServiceAndReturnSessionId();
+		const sessionResponse = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
 		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
@@ -74,7 +74,7 @@ describe("Claimed Identity Negative Path Tests", () => {
 		[dataSpaceStart],
 		[dataSpaceEnd],
 	])("E2E Happy Path Journey - User Info", async (userData: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId();
+		const sessionResponse = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
 		expect(sessionResponse.status).toBe(200);
 		console.log(sessionResponse.data);
 		const sessionId = sessionResponse.data.session_id;

@@ -29,21 +29,12 @@ HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 const xmlParser = new XMLParser();
 const ajv = new Ajv({ strictTuples: false });
 
-export async function startStubServiceAndReturnSessionId(): Promise<any> {
-	const stubResponse = await stubStartPostByType("FACE_TO_FACE");
+export async function startStubServiceAndReturnSessionId(journeyType: string): Promise<any> {
+	const stubResponse = await stubStartPost(journeyType);
 	return sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 }
 
-export async function startStubServiceAndReturnSessionIdByType(journeyType: string): Promise<any> {
-	const stubResponse = await stubStartPostByType(journeyType);
-	return sessionPost(stubResponse.data.clientId, stubResponse.data.request);
-}
-
-export async function stubStartPost(): Promise<any> {
-	return stubStartPostByType("FACE_TO_FACE");
-}
-
-export async function stubStartPostByType(journeyType: string): Promise<any> {
+export async function stubStartPost(journeyType: string): Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
 
 	let postRequest: AxiosResponse;
@@ -74,7 +65,7 @@ export async function sessionPost(clientId?: string, request?: string): Promise<
 	}
 }
 
-export async function sessionConfigGet(sessionId: string) {
+export async function sessionConfigGet(sessionId: string): Promise<any> {
 	const path = "/session-config";
 	try {
 		const getRequest = await API_INSTANCE.get(path, { headers: { "x-govuk-signin-session-id": sessionId } });
