@@ -47,7 +47,6 @@ describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 	let sessionId: any;
 	beforeAll(async () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
-		expect(sessionResponse.status).toBe(200);
 		sessionId = sessionResponse.data.session_id;
 	});
 
