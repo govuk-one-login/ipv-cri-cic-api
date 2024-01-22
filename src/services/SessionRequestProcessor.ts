@@ -14,6 +14,7 @@ import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { Constants } from "../utils/Constants";
 
 
 interface ClientConfig {
@@ -136,7 +137,7 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse();
 		}
 
-		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
+		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.EXPECTED_CONTEXT);
 		if (JwtErrors.length > 0) {
 			this.logger.error(JwtErrors, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
@@ -177,6 +178,7 @@ export class SessionRequestProcessor {
 			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
+			journey: jwtPayload.context ? Constants.NO_PHOTO_ID_JOURNEY : Constants.FACE_TO_FACE_JOURNEY,
 		};
 
 		try {
