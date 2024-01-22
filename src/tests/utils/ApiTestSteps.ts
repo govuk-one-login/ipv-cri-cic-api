@@ -76,7 +76,7 @@ export async function sessionConfigGet(sessionId: string): Promise<any> {
 	}
 }
 
-export async function claimedIdentityPost(givenName: string, familyName: string, dob: string, sessionId?: any): Promise<any> {
+export async function claimedIdentityPost(givenName: string, familyName: string, dob: string, sessionId?: string | null): Promise<any> {
 	const path = "/claimedIdentity";
 	try {
 		const postRequest = await API_INSTANCE.post(path, {
