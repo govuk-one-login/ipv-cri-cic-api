@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 
-LOG_GROUP="/aws/lambda/CIC-Session-cic-cri-api"
-QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Received session request" | limit 20'
+LOG_GROUPS=(
+    "/aws/ecs/cic-cri-front-CICFront-ECS"
+    "/aws/lambda/CIC-Authorization-cic-cri-api"
+    "/aws/lambda/CIC-ClaimedIdentity-cic-cri-api"
+    "/aws/lambda/CIC-SessionConfig-cic-cri-api"
+    "/aws/lambda/CIC-Session-cic-cri-api"
+    "/aws/lambda/Access-Token-cic-cri-api"
+    "/aws/lambda/User-Info-cic-cri-api"
+)
+QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Received session request"'
 
 current_epoch=$(date +%s)
 one_hour_ago_epoch=$((current_epoch - (60 * 60)))
@@ -10,7 +18,7 @@ START_TIME=$one_hour_ago_epoch
 END_TIME=$current_epoch
 
 QUERY_ID=$(aws logs start-query \
-    --log-group-name "$LOG_GROUP" \
+    --log-group-names "$LOG_GROUPS" \
     --start-time "$START_TIME" \
     --end-time "$END_TIME" \
     --query-string "$QUERY" \
