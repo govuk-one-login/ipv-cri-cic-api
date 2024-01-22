@@ -21,5 +21,4 @@ export interface ISessionItem {
 	clientIpAddress: string;
 	attemptCount: number;
 	authSessionState: string;
-	journey?: string;
 }
