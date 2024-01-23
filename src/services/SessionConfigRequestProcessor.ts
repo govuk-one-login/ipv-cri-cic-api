@@ -47,6 +47,8 @@ export class SessionConfigRequestProcessor {
 
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
+			console.log("returing journey type", session?.journey ? session.journey : Constants.FACE_TO_FACE_JOURNEY);
+
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				journey_type: session?.journey ? session.journey : Constants.FACE_TO_FACE_JOURNEY,
 			}));
