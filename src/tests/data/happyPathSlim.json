@@ -1,5 +1,6 @@
 {
     "firstName": "Slim",
     "lastName": "Test User",
-    "dateOfBirth": "1970-03-26"
+    "dateOfBirth": "1970-03-26",
+    "journeyType": "FACE_TO_FACE"
 }

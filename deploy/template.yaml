@@ -1446,6 +1446,114 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
+  
+  SessionConfigFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SessionConfigFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "CIC-SessionConfig-${AWS::StackName}"
+      Handler: SessionConfigHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: SessionConfigHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+      Events:
+        sessionconfig:
+          Type: Api
+          Properties:
+            Path: /session-config
+            Method: get
+            RestApiId: !Ref CICRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - SessionConfigHandler.ts
+
+  SessionConfigFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/CIC-SessionConfig-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  SessionConfigFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    # Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn:
+        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
+      FilterPattern: ""
+      LogGroupName: !Ref SessionConfigFunctionLogGroup
+
+  SessionConfigFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SessionConfigFunction
+      Principal: apigateway.amazonaws.com
+
+  SessionConfigFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref SessionConfigFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "SessionConfigFunction-Fatalerror"
+
+  SessionConfigFunctionFatalErrorAlarm:
+    DependsOn:
+      - "SessionConfigFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SessionConfigFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: SessionConfigFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
 # Alarms
 # BackEnd5xxAlarms
@@ -1919,6 +2027,130 @@ Resources:
                   Value: !Ref Environment
                 - Name: Resource
                   Value: /authorization
+            Period: 60
+            Stat: Sum
+  
+  SessionConfig5XXApiGwErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: DeployAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SessionConfig5XXApiGwErrorAlarm"
+      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the session-config endpoint. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: errorThreshold
+          Label: errorThreshold
+          ReturnData: true
+          Expression: IF(invocations<4 || error<2,0,errorPercentage)
+        - Id: invocations
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Count
+              Dimensions:
+                - Name: Method
+                  Value: GET
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: Stage
+                  Value: !Ref Environment
+                - Name: Resource
+                  Value: /session-config
+            Period: 60
+            Stat: Sum
+        - Id: errorPercentage
+          Label: errorPercentage
+          ReturnData: false
+          Expression: (error/invocations)*100
+        - Id: error
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: Method
+                  Value: GET
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: Stage
+                  Value: !Ref Environment
+                - Name: Resource
+                  Value: /session-config
+            Period: 60
+            Stat: Sum
+
+  SessionConfig5XXApiGwErrorCriticalAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: DeployAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SessionConfig5XXApiGwErrorCriticalAlarm"
+      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the session-config endpoint. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: errorThreshold
+          Label: errorThreshold
+          ReturnData: true
+          Expression: IF(invocations<10,0,errorPercentage)
+        - Id: invocations
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Count
+              Dimensions:
+                - Name: Method
+                  Value: GET
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: Stage
+                  Value: !Ref Environment
+                - Name: Resource
+                  Value: /session-config
+            Period: 60
+            Stat: Sum
+        - Id: errorPercentage
+          Label: errorPercentage
+          ReturnData: false
+          Expression: (error/invocations)*100
+        - Id: error
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: Method
+                  Value: GET
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: Stage
+                  Value: !Ref Environment
+                - Name: Resource
+                  Value: /session-config
             Period: 60
             Stat: Sum
 
@@ -2482,6 +2714,68 @@ Resources:
             Period: 60
             Stat: Sum
 
+  SessionConfig4XXApiGwErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: DeployAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SessionConfig4XXApiGwErrorAlarm"
+      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the session-config endpoint. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: errorThreshold
+          Label: errorThreshold
+          ReturnData: true
+          Expression: IF(invocations<4 || error<2,0,errorPercentage)
+        - Id: invocations
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Count
+              Dimensions:
+                - Name: Method
+                  Value: GET
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: Stage
+                  Value: !Ref Environment
+                - Name: Resource
+                  Value: /session-config
+            Period: 60
+            Stat: Sum
+        - Id: errorPercentage
+          Label: errorPercentage
+          ReturnData: false
+          Expression: (error/invocations)*100
+        - Id: error
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 4XXError
+              Dimensions:
+                - Name: Method
+                  Value: GET
+                - Name: ApiName
+                  Value: !Sub "cic-cri-${AWS::StackName}"
+                - Name: Stage
+                  Value: !Ref Environment
+                - Name: Resource
+                  Value: /session-config
+            Period: 60
+            Stat: Sum
+
   ClaimedIdentity4XXApiGwErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
@@ -2844,6 +3138,31 @@ Resources:
       Threshold: !Ref LambdaConcurrencyThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
+  
+  SessionConfigConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-SessionConfigFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SessionConfigFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
 
   ClaimedIdentityConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
@@ -3022,6 +3341,31 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
   
+  SessionConfigThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${SessionConfigFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-SessionConfigFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SessionConfigFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
   TokenThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployAlarms"
@@ -3116,7 +3460,7 @@ Resources:
               Namespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
               MetricName: AuthorizationLambdaTimeOut
             Period: 60
-            Stat: Sum
+            Stat: Sum        
         - Id: e1
           ReturnData: false
           MetricStat:
@@ -3139,6 +3483,14 @@ Resources:
             Metric:
               Namespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
               MetricName: JsonWebKeysLambdaTimeOut
+            Period: 60
+            Stat: Sum
+        - Id: h1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: !Sub "${AWS::StackName}/TimeOutLogMessages"
+              MetricName: SessionConfigLambdaTimeOut
             Period: 60
             Stat: Sum
 
@@ -3219,6 +3571,21 @@ Resources:
                     "title": "Authorization 80% Concurrency - ${AWS::StackName}",
                     "annotations": {
                       "alarms": ["${AuthorizationConcurrency80Alarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 6,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
+                    "title": "SessionConfig 80% Concurrency - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${SessionConfigConcurrency80Alarm.Arn}"]
                     },
                     "view": "timeSeries",
                     "stacked": false
@@ -3348,6 +3715,21 @@ Resources:
                   "x": 0,
                   "type": "metric",
                   "properties": {
+                    "title": "SessionConfig Throttles - ${AWS::StackName}",
+                    "annotations": {
+                      "alarms": ["${SessionConfigThrottleAlarm.Arn}"]
+                    },
+                    "view": "timeSeries",
+                    "stacked": false
+                  }
+                },
+                {
+                  "height": 6,
+                  "width": 12,
+                  "y": 12,
+                  "x": 0,
+                  "type": "metric",
+                  "properties": {
                     "title": "Claimed Identity Throttles - ${AWS::StackName}",
                     "annotations": {
                       "alarms": ["${ClaimedIdentityThrottleAlarm.Arn}"]
@@ -3453,6 +3835,21 @@ Resources:
                   "title": "Authorization 5XX critical - ${AWS::StackName}",
                   "annotations": {
                     "alarms": ["${Authorization5XXApiGwErrorCriticalAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 12,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "SessionConfig 5XX critical - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${SessionConfig5XXApiGwErrorCriticalAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false
@@ -3593,6 +3990,21 @@ Resources:
               {
                 "height": 6,
                 "width": 12,
+                "y": 24,
+                "x": 12,
+                "type": "metric",
+                "properties": {
+                  "title": "SessionConfig 5XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${SessionConfig5XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
                 "y": 30,
                 "x": 0,
                 "type": "metric",
@@ -3675,6 +4087,21 @@ Resources:
                   "title": "Authorization 4XX - ${AWS::StackName}",
                   "annotations": {
                     "alarms": ["${Authorization4XXApiGwErrorAlarm.Arn}"]
+                  },
+                  "view": "timeSeries",
+                  "stacked": false
+                }
+              },
+              {
+                "height": 6,
+                "width": 12,
+                "y": 48,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                  "title": "SessionConfig 4XX - ${AWS::StackName}",
+                  "annotations": {
+                    "alarms": ["${SessionConfig4XXApiGwErrorAlarm.Arn}"]
                   },
                   "view": "timeSeries",
                   "stacked": false

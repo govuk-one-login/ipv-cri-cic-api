@@ -1,5 +1,6 @@
 {
     "firstName": "Billy-Joe",
     "lastName": "Test.User",
-    "dateOfBirth": "1970-03-26"
+    "dateOfBirth": "1970-03-26",
+    "journeyType": "NO_PHOTO_ID"
 }
