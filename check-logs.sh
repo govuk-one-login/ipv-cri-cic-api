@@ -9,7 +9,8 @@ LOG_GROUPS=(
     "/aws/lambda/Access-Token-cic-cri-api"
     "/aws/lambda/User-Info-cic-cri-api"
 )
-QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Received session request"'
+QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Slim" or @message like "Test User" or @message like "1970"'
+# QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Kenneth" or @message like "Decerqueira" or @message like "1965"'
 
 current_epoch=$(date +%s)
 one_hour_ago_epoch=$((current_epoch - (60 * 60)))
