@@ -19,4 +19,6 @@ error_code=$?
 
 cp -rf results $TEST_REPORT_ABSOLUTE_DIR
 
+source check-logs.s
+
 exit $error_code

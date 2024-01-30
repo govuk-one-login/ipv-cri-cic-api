@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
 test_data="./src/tests/data/happyPathSlim.json"
-
 firstName=$(jq -r '.firstName' "$test_data")
 lastName=$(jq -r '.lastName' "$test_data")
 dateOfBirth=$(jq -r '.dateOfBirth' "$test_data")
 
 query="fields @timestamp, @message, @logStream, @log | filter @message like \"$firstName\" or @message like \"$lastName\" or @message like \"$dateOfBirth\""
 
+stack_name="cic-cri-api"
 log_groups=(
-    "/aws/lambda/CIC-Authorization-cic-cri-api"
-    "/aws/lambda/CIC-ClaimedIdentity-cic-cri-api"
-    "/aws/lambda/CIC-SessionConfig-cic-cri-api"
-    "/aws/lambda/CIC-Session-cic-cri-api"
-    "/aws/lambda/Access-Token-cic-cri-api"
-    "/aws/lambda/User-Info-cic-cri-api"
+    "/aws/lambda/CIC-Authorization-$stack_name"
+    "/aws/lambda/CIC-ClaimedIdentity-$stack_name"
+    "/aws/lambda/CIC-SessionConfig-$stack_name"
+    "/aws/lambda/CIC-Session-$stack_name"
+    "/aws/lambda/Access-Token-$stack_name"
+    "/aws/lambda/User-Info-$stack_name"
 )
 
 current_epoch=$(date +%s)
