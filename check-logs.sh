@@ -7,6 +7,7 @@ lastName=$(jq -r '.lastName' "$test_data")
 dateOfBirth=$(jq -r '.dateOfBirth' "$test_data")
 
 query="fields @timestamp, @message, @logStream, @log | filter @message like \"$firstName\" or @message like \"$lastName\" or @message like \"$dateOfBirth\""
+
 log_groups=(
     "/aws/lambda/CIC-Authorization-cic-cri-api"
     "/aws/lambda/CIC-ClaimedIdentity-cic-cri-api"
@@ -23,7 +24,7 @@ start_time=$fifteen_mins_ago_epoch
 end_time=$current_epoch
 
 query_id=$(aws logs start-query \
-    --log-group-names "$log_groups" \
+    --log-group-names "${log_groups[@]}" \
     --start-time "$start_time" \
     --end-time "$end_time" \
     --query-string "$query" \
@@ -38,8 +39,10 @@ while [ "$status" = "Running" ]; do
 done
 
 if echo "$query_status" | grep -q '"results": \[\]'; then
-    echo "Query returned no results."
+    echo "Query found no PII 🎉"
+    exit 0
 else
     echo "Query returned results:"
     echo "$query_status" | jq -r '.results[] | @json'
+    exit 1
 fi
