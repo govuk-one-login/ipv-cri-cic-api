@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-test_data="./src/tests/data/happyPathSlim.json"
+test_data="./tests/data/happyPathSlim.json"
 firstName=$(jq -r '.firstName' "$test_data")
 lastName=$(jq -r '.lastName' "$test_data")
 dateOfBirth=$(jq -r '.dateOfBirth' "$test_data")
 
 query="fields @timestamp, @message, @logStream, @log | filter @message like \"$firstName\" or @message like \"$lastName\" or @message like \"$dateOfBirth\""
+
+echo $query
 
 stack_name="cic-cri-api"
 log_groups=(
