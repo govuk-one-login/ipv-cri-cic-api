@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 LOG_GROUPS=(
-    "/aws/ecs/cic-cri-front-CICFront-ECS"
     "/aws/lambda/CIC-Authorization-cic-cri-api"
     "/aws/lambda/CIC-ClaimedIdentity-cic-cri-api"
     "/aws/lambda/CIC-SessionConfig-cic-cri-api"
@@ -9,13 +8,14 @@ LOG_GROUPS=(
     "/aws/lambda/Access-Token-cic-cri-api"
     "/aws/lambda/User-Info-cic-cri-api"
 )
+
+# Import these values from happyPathSlim.json
 QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Slim" or @message like "Test User" or @message like "1970"'
-# QUERY='fields @timestamp, @message, @logStream, @log | filter @message like "Kenneth" or @message like "Decerqueira" or @message like "1965"'
 
 current_epoch=$(date +%s)
-one_hour_ago_epoch=$((current_epoch - (60 * 60)))
+fifteen_mins_ago_epoch=$((current_epoch - (15 * 60)))
 
-START_TIME=$one_hour_ago_epoch
+START_TIME=$fifteen_mins_ago_epoch
 END_TIME=$current_epoch
 
 QUERY_ID=$(aws logs start-query \
