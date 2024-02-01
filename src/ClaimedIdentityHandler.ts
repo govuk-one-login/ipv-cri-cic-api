@@ -31,8 +31,6 @@ class ClaimedIdentity implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
-		logger.error("Hello Test User");
-
 		switch (event.resource) {
 			case ResourcesEnum.CLAIMEDIDENTITY:
 				if (event.httpMethod === HttpVerbsEnum.POST) {

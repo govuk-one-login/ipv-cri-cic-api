@@ -29,8 +29,6 @@ class UserInfo implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
-		logger.error("Hello 1970-03-26");
-
 		switch (event.resource) {
 			case ResourcesEnum.USERINFO:
 				if (event.httpMethod === "POST") {
