@@ -19,6 +19,8 @@ error_code=$?
 
 cp -rf results $TEST_REPORT_ABSOLUTE_DIR
 
+sleep 2m
+
 apt-get install jq -y
 cd /src; npm run test:pii
 error_code=$?
