@@ -30,6 +30,8 @@ class AuthorizationCodeHandler implements LambdaInterface {
 		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
+
+		logger.info("Hello Slim");
 				
 		switch (event.resource) {
 			case ResourcesEnum.AUTHORIZATION:
