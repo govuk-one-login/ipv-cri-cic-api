@@ -41,9 +41,13 @@ export class VerifiableCredentialService {
 	): Promise<string> {
 		const now = getNow();
 		const subject = sessionItem.subject;
+		const kid = this.kmsJwtAdapter.kid
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDay)
 			.build();
 		const result = {
+			typ: "JWT",
+			kid: kid,
+			alg: "ES256",
 			sub: subject,
 			nbf: now,
 			iss: this.issuer,
