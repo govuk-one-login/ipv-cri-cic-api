@@ -17,7 +17,7 @@ env: # Only adding the variables in that are required for
 
 jobs:
   deploy-to-build:
-    name: Validate & Deploy KMS Infra template to Build Envrionment
+    name: Validate & Deploy KMS Infra template to Build Environment
     runs-on: ubuntu-latest
     defaults:
       run:
