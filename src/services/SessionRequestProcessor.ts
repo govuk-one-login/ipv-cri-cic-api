@@ -7,7 +7,6 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { randomUUID } from "crypto";
 import { ISessionItem } from "../models/ISessionItem";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
@@ -206,7 +205,7 @@ export class SessionRequestProcessor {
 		try {
 			await this.cicService.sendToTXMA({
 				event_name: "CIC_CRI_START",
-				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress, absoluteTimeNow),
+				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress),
 			});
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
