@@ -18,19 +18,26 @@
                 },
                 "govuk_signin_journey_id": {
                     "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
                 }
             },
             "required": [
                 "user_id",
                 "transaction_id",
                 "session_id",
-                "govuk_signin_journey_id"
+                "govuk_signin_journey_id",
+                "ip_address"
             ]
         },
         "client_id": {
             "type": "string"
         },
         "timestamp": {
+            "type": "integer"
+        },
+        "event_timestamp_ms": {
             "type": "integer"
         },
         "component_id": {
@@ -42,6 +49,7 @@
         "user",
         "client_id",
         "timestamp",
+        "event_timestamp_ms",
         "component_id"
     ]
 }
