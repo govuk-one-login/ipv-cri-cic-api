@@ -4,7 +4,6 @@ import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { ValidationHelper } from "../utils/ValidationHelper";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
@@ -24,8 +23,6 @@ export class AuthorizationRequestProcessor {
 
 	private readonly metrics: Metrics;
 
-	private readonly validationHelper: ValidationHelper;
-
 	private readonly cicService: CicService;
 
 	constructor(logger: Logger, metrics: Metrics) {
@@ -36,7 +33,6 @@ export class AuthorizationRequestProcessor {
 			throw new AppError( "Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
 		}
 		this.logger = logger;
-		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
 		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
 	}

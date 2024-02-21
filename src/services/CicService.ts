@@ -15,7 +15,7 @@ import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch, absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
-import { sqsClient, SendMessageCommand } from "../utils/SqsClient";
+import { createSqsClient, SendMessageCommand } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import {
 	SharedClaimsItem,
@@ -214,7 +214,7 @@ export class CicService {
 			event_name: event.event_name,
 		});
 		try {
-			await sqsClient.send(new SendMessageCommand(params));
+			await createSqsClient().send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA", {
 				event_name: event.event_name,
 			});
