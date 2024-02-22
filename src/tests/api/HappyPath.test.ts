@@ -22,7 +22,7 @@ describe("Happy Path - CIC_CRI_START Event Check", () => {
 		const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 		expect(sessionResponse.status).toBe(200);
 		const sessionId = sessionResponse.data.session_id;
-		// Validate TxMA Queue
+		// Validate CIC_CRI_START TxMA Event
 		const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
 		await validateCriStartTxMAEvent(sqsMessage, context);
 	});
