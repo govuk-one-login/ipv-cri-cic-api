@@ -295,10 +295,10 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export async function validateCriStartTxMAEvent(key: any, context: string): Promise<any> {
-		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
-		if (getObjectResponse.data.event_name === "CIC_CRI_START") {
-			console.log(JSON.stringify(getObjectResponse.data, null, 2));
-			expect(getObjectResponse.data.extensions.evidence.context).toBe(context);
-		}
+export async function validateBankAccountCriStartTxMAEvent(key: any, context: string): Promise<any> {
+	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
+	if (getObjectResponse.data.event_name === "CIC_CRI_START") {
+		console.log(JSON.stringify(getObjectResponse.data, null, 2));
+		expect(getObjectResponse.data.extensions.evidence.context).toBe(context);
+	}
 }
