@@ -125,5 +125,6 @@
         "event_timestamp_ms",
         "component_id",
         "restricted"
-    ]
+    ],
+    "additionalProperties": false
 }

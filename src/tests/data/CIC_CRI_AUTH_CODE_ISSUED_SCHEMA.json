@@ -51,5 +51,6 @@
         "timestamp",
         "event_timestamp_ms",
         "component_id"
-    ]
+    ],
+    "additionalProperties": false
 }
