@@ -18,7 +18,7 @@ describe("/session Happy Path", () => {
 describe("Happy Path - CIC_CRI_START Event Check", () => {
 	it.each([
 		["NO_PHOTO_ID", "bank_account"],
-	])("BAV and F2F test", async (journeyType: any, context: string) => {
+	])("BAV and F2F test", async (journeyType: string, context: string) => {
 		const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 		expect(sessionResponse.status).toBe(200);
 		const sessionId = sessionResponse.data.session_id;
