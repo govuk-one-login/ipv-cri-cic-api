@@ -11,6 +11,8 @@ import axios from "axios";
 export class KmsJwtAdapter {
     readonly kid: string;
 
+	readonly dnsSuffix: string;	
+
     readonly kms = new AWS.KMS({
     	region: process.env.REGION,
     });
@@ -22,15 +24,16 @@ export class KmsJwtAdapter {
      */
     ALG = "ECDSA_SHA_256";
 
-    constructor(kid: string) {
+    constructor(kid: string, dnsSuffix: string) {
     	this.kid = kid;
+		this.dnsSuffix = dnsSuffix;
     }
 
     async sign(jwtPayload: JwtPayload): Promise<string> {
     	const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT" };
     	const kid = this.kid.split("/").pop();
     	if (kid != null) {
-    		jwtHeader.kid = kid;
+    		jwtHeader.kid = (`did:web:example.com#${jwtUtils.getHashedKid(kid)}`);
     	}
     	const tokenComponents = {
     		header: jwtUtils.base64Encode(JSON.stringify(jwtHeader)),

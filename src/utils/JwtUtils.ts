@@ -1,5 +1,7 @@
 import * as jose from "node-jose";
 
+import crypto from "crypto"
+
 export const jwtUtils = {
 
 	// convert non-base64 string or uint8array into base64 encoded string
@@ -27,5 +29,12 @@ export const jwtUtils = {
 	encode(value: string): Uint8Array {
 		const encoder = new TextEncoder();
 		return encoder.encode(value);
+	},
+
+	// hash string then present output as UTF-8 encoded hexadecimal string
+	getHashedKid(keyId: string): string {
+		const kidBytes = Buffer.from(keyId, "utf8");
+		const hash = crypto.createHash("sha256").update(kidBytes).digest();
+		return Buffer.from(hash).toString("hex");
 	},
 };

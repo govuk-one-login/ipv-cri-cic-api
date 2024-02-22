@@ -15,6 +15,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
+const DNS_SUFFIX = process.env.DNS_SUFFIX;
 const ISSUER = process.env.ISSUER;
 
 export class AccessTokenRequestProcessor {
@@ -38,7 +39,7 @@ export class AccessTokenRequestProcessor {
     		throw new AppError("Service incorrectly configured, missing some environment variables.", HttpCodesEnum.SERVER_ERROR);
     	}
     	this.logger = logger;
-    	this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN);
+    	this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN, DNS_SUFFIX);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
     	this.metrics = metrics;
     	this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());

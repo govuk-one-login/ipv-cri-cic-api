@@ -26,6 +26,7 @@ interface ClientConfig {
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const CLIENT_CONFIG = process.env.CLIENT_CONFIG;
 const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
+const DNS_SUFFIX = process.env.DNS_SUFFIX;
 const AUTH_SESSION_TTL_IN_SECS = process.env.AUTH_SESSION_TTL;
 const ISSUER = process.env.ISSUER;
 
@@ -57,7 +58,7 @@ export class SessionRequestProcessor {
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
 		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(ENCRYPTION_KEY_IDS);
+		this.kmsDecryptor = new KmsJwtAdapter(ENCRYPTION_KEY_IDS, DNS_SUFFIX);
 		this.validationHelper = new ValidationHelper();
 	}
 
