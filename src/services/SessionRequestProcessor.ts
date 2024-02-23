@@ -1,3 +1,5 @@
+/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function */
 import { Response, GenericServerError, unauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -14,7 +16,6 @@ import { ValidationHelper } from "../utils/ValidationHelper";
 import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { Constants } from "../utils/Constants";
-
 
 interface ClientConfig {
 	jwksEndpoint: string;
@@ -173,7 +174,7 @@ export class SessionRequestProcessor {
 			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
-			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used
+			persistentSessionId: jwtPayload.persistent_session_id, // Might not be used
 			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
@@ -206,6 +207,11 @@ export class SessionRequestProcessor {
 			await this.cicService.sendToTXMA({
 				event_name: "CIC_CRI_START",
 				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress),
+				...(jwtPayload.context && { extensions: {
+					evidence: {
+						context: jwtPayload.context,
+					},
+				} }),
 			});
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {

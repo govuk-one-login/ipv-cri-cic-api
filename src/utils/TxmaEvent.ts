@@ -16,6 +16,14 @@ export interface TxmaUser {
 	"ip_address"?: string | undefined;
 }
 
+export interface Evidence {
+	"context": string;
+}
+
+export interface Extensions {
+	"evidence": Evidence;
+}
+
 export interface BaseTxmaEvent {
 	"user": TxmaUser;
 	"client_id": string;
@@ -27,6 +35,7 @@ export interface BaseTxmaEvent {
 export interface TxmaEvent extends BaseTxmaEvent {
 	"event_name": TxmaEventName;
 	"restricted"?: VerifiedCredential["credentialSubject"];
+	"extensions"?: Extensions;
 }
 
 export const buildCoreEventFields = (
