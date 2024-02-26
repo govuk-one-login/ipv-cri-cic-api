@@ -280,34 +280,34 @@ export async function validateTxMAEventData(keyList: any, journeyType: string): 
 		let valid = true;
 		if (getObjectResponse.data.event_name === "CIC_CRI_START" && journeyType === "NO_PHOTO_ID") {
 			import("../data/" + getObjectResponse.data.event_name + "BANK_ACCOUNT_SCHEMA.json")
-			.then((jsonSchema) => {
-				const validate = ajv.compile(jsonSchema);
-				valid = validate(getObjectResponse.data);
-				if (!valid) {
-					console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-				}
-			})
-			.catch((err) => {
-				console.log(err.message);
-			})
-			.finally(() => {
-				expect(valid).toBe(true);
-			});
+				.then((jsonSchema) => {
+					const validate = ajv.compile(jsonSchema);
+					valid = validate(getObjectResponse.data);
+					if (!valid) {
+						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+					}
+				})
+				.catch((err) => {
+					console.log(err.message);
+				})
+				.finally(() => {
+					expect(valid).toBe(true);
+				});
 		} else {
 			import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
-			.then((jsonSchema) => {
-				const validate = ajv.compile(jsonSchema);
-				valid = validate(getObjectResponse.data);
-				if (!valid) {
-					console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-				}
-			})
-			.catch((err) => {
-				console.log(err.message);
-			})
-			.finally(() => {
-				expect(valid).toBe(true);
-			});
+				.then((jsonSchema) => {
+					const validate = ajv.compile(jsonSchema);
+					valid = validate(getObjectResponse.data);
+					if (!valid) {
+						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+					}
+				})
+				.catch((err) => {
+					console.log(err.message);
+				})
+				.finally(() => {
+					expect(valid).toBe(true);
+				});
 		}
 	}
 }
