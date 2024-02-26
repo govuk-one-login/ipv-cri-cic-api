@@ -277,7 +277,7 @@ describe("SessionRequestProcessor", () => {
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_START",
 			client_id: undefined,
 			component_id: "https://XXX-c.env.account.gov.uk",
@@ -307,7 +307,7 @@ describe("SessionRequestProcessor", () => {
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_START",
 			client_id: undefined,
 			component_id: "https://XXX-c.env.account.gov.uk",
