@@ -282,6 +282,7 @@ describe("SessionRequestProcessor", () => {
 			client_id: undefined,
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1684933200,
+			event_timestamp_ms: 1684933200000,
 			user: {
 				govuk_signin_journey_id: "abcdef",
 				ip_address: "",
@@ -311,6 +312,7 @@ describe("SessionRequestProcessor", () => {
 			client_id: undefined,
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1684933200,
+			event_timestamp_ms: 1684933200000,
 			user: {
 				govuk_signin_journey_id: "abcdef",
 				ip_address: "",
