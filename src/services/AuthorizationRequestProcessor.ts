@@ -92,7 +92,7 @@ export class AuthorizationRequestProcessor {
 			try {
 				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 					event_name: "CIC_CRI_AUTH_CODE_ISSUED",
-					...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
+					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 
 				});
 			} catch (error) {

@@ -1,3 +1,5 @@
+/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function */
 import { Response, GenericServerError, unauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -7,7 +9,6 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { randomUUID } from "crypto";
 import { ISessionItem } from "../models/ISessionItem";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
@@ -177,7 +178,7 @@ export class SessionRequestProcessor {
 			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
-			persistentSessionId: jwtPayload.persistent_session_id, //Might not be used
+			persistentSessionId: jwtPayload.persistent_session_id, // Might not be used
 			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
@@ -209,7 +210,12 @@ export class SessionRequestProcessor {
 		try {
 			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 				event_name: "CIC_CRI_START",
-				...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
+				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
+				...(jwtPayload.context && { extensions: {
+					evidence: {
+						context: jwtPayload.context,
+					},
+				} }),
 			});
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
