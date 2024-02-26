@@ -1,0 +1,103 @@
+{
+    "session-table": [        
+        {
+            "PutRequest": {
+                "Item": {
+                  "sessionId": {
+                    "S": "35eabba5-1986-4bdd-b79b-3f16b5b1a808"
+                  },
+                  "accessTokenExpiryDate": {
+                    "N": "1708539807"
+                  },
+                  "attemptCount": {
+                    "N": "0"
+                  },
+                  "authorizationCode": {
+                    "S": "b7359129-2106-412b-b3d3-7dd7d8253c39"
+                  },
+                  "authorizationCodeExpiryDate": {
+                    "N": "1708618973486"
+                  },
+                  "authSessionState": {
+                    "S": "CIC_AUTH_CODE_ISSUED"
+                  },
+                  "clientId": {
+                    "S": "5C584572"
+                  },
+                  "clientIpAddress": {
+                    "S": "18.170.101.176"
+                  },
+                  "clientSessionId": {
+                    "S": "d988272093b391a86a39300929088f6d"
+                  },
+                  "createdDate": {
+                    "N": "1708077025.631"
+                  },
+                  "expiryDate": {
+                    "N": "1709027425.631"
+                  },
+                  "journey": {
+                    "S": "FACE_TO_FACE"
+                  },
+                  "redirectUri": {
+                    "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"
+                  },
+                  "state": {
+                    "S": "00a2098e209a3cc200bca00b29b50d22"
+                  },
+                  "subject": {
+                    "S": "395ff631-f2a8-4f99-bf3d-4a5519519bfc"
+                  }
+                }
+            }
+        },
+        {
+          "PutRequest": {
+              "Item": {
+                "sessionId": {
+                  "S": "e5e38b62-36f3-40a0-84fe-b75d377587da"
+                },
+                "accessTokenExpiryDate": {
+                  "N": "1708536508"
+                },
+                "attemptCount": {
+                  "N": "0"
+                },
+                "authorizationCodeExpiryDate": {
+                  "N": "1708533506752"
+                },
+                "authSessionState": {
+                  "S": "CIC_ACCESS_TOKEN_ISSUED"
+                },
+                "clientId": {
+                  "S": "5C584572"
+                },
+                "clientIpAddress": {
+                  "S": "95.214.228.55"
+                },
+                "clientSessionId": {
+                  "S": "2c832c112cd4f0c019536755e21a4359"
+                },
+                "createdDate": {
+                  "N": "1708532903.595"
+                },
+                "expiryDate": {
+                  "N": "1709483303.595"
+                },
+                "journey": {
+                  "S": "FACE_TO_FACE"
+                },
+                "redirectUri": {
+                  "S": "https://ipvstub.review-c.dev.account.gov.uk/redirect"
+                },
+                "state": {
+                  "S": "22ff60f1c56553c323875f8e97b2ded3"
+                },
+                "subject": {
+                  "S": "test-subject"
+                }
+              }
+          }
+      }     
+    ]
+}
