@@ -210,7 +210,7 @@ export class SessionRequestProcessor {
 		try {
 			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 				event_name: "CIC_CRI_START",
-				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress),
+				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				...(jwtPayload.context && { extensions: {
 					evidence: {
 						context: jwtPayload.context,

@@ -188,7 +188,7 @@ export class UserInfoRequestProcessor {
 			try {
 				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 					event_name: "CIC_CRI_VC_ISSUED",
-					...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
+					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 					restricted: {
 						name: [{
 							nameParts: names,
@@ -207,7 +207,7 @@ export class UserInfoRequestProcessor {
 			try {
 				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 					event_name: "CIC_CRI_END",
-					...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
+					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				});
 			} catch (error) {
 				this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
