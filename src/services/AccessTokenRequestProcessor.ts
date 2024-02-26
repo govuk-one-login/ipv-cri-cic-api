@@ -15,6 +15,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
+const DNS_SUFFIX = process.env.DNSSUFFIX!;
 const ISSUER = process.env.ISSUER;
 
 export class AccessTokenRequestProcessor {
@@ -87,7 +88,7 @@ export class AccessTokenRequestProcessor {
     		};
     		let accessToken;
     		try {
-    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload, "test.gov.uk");
+    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload, DNS_SUFFIX);
     		} catch (error) {
     			this.logger.error("Failed to sign the accessToken Jwt", {
     				messageCode: MessageCodes.FAILED_SIGNING_JWT,

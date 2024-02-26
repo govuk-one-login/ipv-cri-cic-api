@@ -20,6 +20,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
+const DNS_SUFFIX = process.env.DNSSUFFIX!;
 const ISSUER = process.env.ISSUER!;
 
 export class UserInfoRequestProcessor {
@@ -50,7 +51,7 @@ export class UserInfoRequestProcessor {
 		this.metrics = metrics;
 		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
 		this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(SESSION_TABLE, this.kmsJwtAdapter, ISSUER, this.logger);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(SESSION_TABLE, this.kmsJwtAdapter, ISSUER, this.logger, DNS_SUFFIX);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {

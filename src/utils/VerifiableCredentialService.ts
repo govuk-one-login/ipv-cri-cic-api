@@ -17,18 +17,21 @@ export class VerifiableCredentialService {
 
 	private readonly kmsJwtAdapter: KmsJwtAdapter;
 
+	readonly dnsSuffix: string;
+
 	private static instance: VerifiableCredentialService;
 
-	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger) {
+	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger , dnsSuffix: string) {
 		this.issuer = issuer;
 		this.tableName = tableName;
 		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
+		this.dnsSuffix = dnsSuffix;
 	}
 
-	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger): VerifiableCredentialService {
+	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string): VerifiableCredentialService {
 		if (!VerifiableCredentialService.instance) {
-			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger);
+			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger, dnsSuffix);
 		}
 		return VerifiableCredentialService.instance;
 	}
@@ -57,7 +60,7 @@ export class VerifiableCredentialService {
     	});
 		try {
 			// Sign the VC
-			return await this.kmsJwtAdapter.sign(result, "test.gov.uk");
+			return await this.kmsJwtAdapter.sign(result, this.dnsSuffix);
 		} catch (error) {
 			this.logger.error("Failed to sign Jwt", {
     			error,
