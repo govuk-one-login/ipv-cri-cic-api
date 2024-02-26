@@ -57,7 +57,7 @@ export class VerifiableCredentialService {
     	});
 		try {
 			// Sign the VC
-			return await this.kmsJwtAdapter.sign(result);
+			return await this.kmsJwtAdapter.sign(result, "test.gov.uk");
 		} catch (error) {
 			this.logger.error("Failed to sign Jwt", {
     			error,
