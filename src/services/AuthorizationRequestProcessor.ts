@@ -11,10 +11,12 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { EnvironmentVariables } from "../utils/Constants";
 
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const TXMA_QUEUE_URL = process.env.TXMA_QUEUE_URL;
-const ISSUER = process.env.ISSUER!;
+// const SESSION_TABLE = process.env.SESSION_TABLE;
+// const TXMA_QUEUE_URL = process.env.TXMA_QUEUE_URL;
+// const ISSUER = process.env.ISSUER!;
 
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
@@ -25,16 +27,18 @@ export class AuthorizationRequestProcessor {
 
 	private readonly cicService: CicService;
 
+	private readonly issuer: string;
+
+	private readonly txmaQueueUrl: string;
+
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE || !TXMA_QUEUE_URL || !ISSUER) {
-			logger.error("Environment variable SESSION_TABLE or TXMA_QUEUE_URL or ISSUER is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError( "Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		}
 		this.logger = logger;
 		this.metrics = metrics;
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
+		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+  			
+		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): AuthorizationRequestProcessor {
@@ -47,7 +51,7 @@ export class AuthorizationRequestProcessor {
 	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<Response> {
 
 		const session = await this.cicService.getSessionById(sessionId);
-
+		
 		if (session != null) {
 			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
@@ -86,9 +90,9 @@ export class AuthorizationRequestProcessor {
 			this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
 
 			try {
-				await this.cicService.sendToTXMA({
+				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 					event_name: "CIC_CRI_AUTH_CODE_ISSUED",
-					...buildCoreEventFields(session, ISSUER, session.clientIpAddress, absoluteTimeNow),
+					...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
 
 				});
 			} catch (error) {
