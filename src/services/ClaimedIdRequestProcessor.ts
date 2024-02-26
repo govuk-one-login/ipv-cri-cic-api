@@ -11,9 +11,8 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { MessageCodes } from "../models/enums/MessageCodes";
-
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const PERSON_IDENTITY_TABLE_NAME = process.env.PERSON_IDENTITY_TABLE_NAME;
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { EnvironmentVariables } from "../utils/Constants";
 
 export class ClaimedIdRequestProcessor {
 	private static instance: ClaimedIdRequestProcessor;
@@ -26,17 +25,16 @@ export class ClaimedIdRequestProcessor {
 
 	private readonly cicService: CicService;
 
+	private readonly personIdentityTableName: string;
+
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE || !PERSON_IDENTITY_TABLE_NAME) {
-			logger.error("Environment variable SESSION_TABLE or PERSON_IDENTITY_TABLE_NAME is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError("Service incorrectly configured", 500);
-		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
+  			
+		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): ClaimedIdRequestProcessor {
@@ -78,7 +76,7 @@ export class ClaimedIdRequestProcessor {
 
 			switch (session.authSessionState) {
 			  case AuthSessionState.CIC_SESSION_CREATED:
-					await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate);
+					await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate, this.personIdentityTableName);
 					return new Response(HttpCodesEnum.OK, "");
 			  case AuthSessionState.CIC_DATA_RECEIVED:
 			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:

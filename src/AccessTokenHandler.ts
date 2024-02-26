@@ -28,28 +28,14 @@ export class AccessToken implements LambdaInterface {
 		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
-
-		switch (event.resource) {
-			case ResourcesEnum.TOKEN:
-				if (event.httpMethod === "POST") {
-					try {
-						logger.info("Received token request", { requestId: event.requestContext.requestId });
-						return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
-					} catch (error) {
-						logger.error({ message: "An error has occurred. ", error });
-						return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
-					}
-				}
-				return new Response(HttpCodesEnum.NOT_FOUND, "");
-
-			default:
-				logger.error("Requested resource does not exist", {
-					resource: event.resource,
-					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
-				});
-				throw new AppError("Requested resource does not exist" + { resource: event.resource }, HttpCodesEnum.NOT_FOUND);
-
-		}
+		
+		try {
+			logger.info("Received token request", { requestId: event.requestContext.requestId });
+			return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
+		} catch (error: any) {
+			logger.error({ message: "An error has occurred. ", error });
+			return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
+		}				
 	}
 }
 const handlerClass = new AccessToken();
