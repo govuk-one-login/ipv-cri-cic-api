@@ -40,7 +40,7 @@ describe("KmsJwtAdapter utils", () => {
 		it("returns a signed access token", async () => {
 			const jwtHeader = { alg: "ES256", typ: "JWT", kid: kmsJwtAdapter.kid };
 			const kid = kmsJwtAdapter.kid.split("/").pop();
-			const dnsSuffix = "test.gov.uk"
+			const dnsSuffix = "test.gov.uk";
 			if (kid != null) {
 				jwtHeader.kid = (`did:web:${dnsSuffix}#${jwtUtils.getHashedKid(kid)}`);
 			}
@@ -52,7 +52,7 @@ describe("KmsJwtAdapter utils", () => {
 			};
 
 			const accessToken = await kmsJwtAdapter.sign(jwtPayload, dnsSuffix);
-			console.log("----------------------------------------------",accessToken)
+			console.log("----------------------------------------------", accessToken);
 			expect(jwtUtils.base64Encode).toHaveBeenNthCalledWith(1, JSON.stringify(jwtHeader));
 			expect(jwtUtils.base64Encode).toHaveBeenNthCalledWith(2, JSON.stringify(jwtPayload));
 			expect(jwtUtils.getHashedKid).toHaveBeenNthCalledWith(2, kid);

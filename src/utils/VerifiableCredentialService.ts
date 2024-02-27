@@ -21,7 +21,7 @@ export class VerifiableCredentialService {
 
 	private static instance: VerifiableCredentialService;
 
-	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger , dnsSuffix: string) {
+	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger, dnsSuffix: string) {
 		this.issuer = issuer;
 		this.tableName = tableName;
 		this.logger = logger;
