@@ -279,7 +279,7 @@ export async function validateTxMAEventData(keyList: any, journeyType: string): 
 		console.log(JSON.stringify(getObjectResponse.data));
 		let valid = true;
 		if (getObjectResponse.data.event_name === "CIC_CRI_START" && journeyType === "NO_PHOTO_ID") {
-			import("../data/" + getObjectResponse.data.event_name + "BANK_ACCOUNT_SCHEMA.json")
+			import("../data/" + getObjectResponse.data.event_name + "_BANK_ACCOUNT_SCHEMA.json")
 				.then((jsonSchema) => {
 					const validate = ajv.compile(jsonSchema);
 					valid = validate(getObjectResponse.data);
