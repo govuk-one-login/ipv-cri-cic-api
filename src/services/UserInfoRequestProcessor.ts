@@ -20,7 +20,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 
 const SESSION_TABLE = process.env.SESSION_TABLE;
 const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
-const DNS_SUFFIX = process.env.DNSSUFFIX!;
+const DNS_SUFFIX = process.env.DNSSUFFIX;
 const ISSUER = process.env.ISSUER!;
 
 export class UserInfoRequestProcessor {
@@ -41,7 +41,7 @@ export class UserInfoRequestProcessor {
 
 	constructor(logger: Logger, metrics: Metrics) {
 		if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN || !DNS_SUFFIX) {
-			logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN is not configured", {
+			logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN or DNSSUFFIX is not configured", {
 				messageCode: MessageCodes.MISSING_CONFIGURATION,
 			});
 			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
