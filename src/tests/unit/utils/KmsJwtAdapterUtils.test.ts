@@ -52,7 +52,6 @@ describe("KmsJwtAdapter utils", () => {
 			};
 
 			const accessToken = await kmsJwtAdapter.sign(jwtPayload, dnsSuffix);
-			console.log("----------------------------------------------", accessToken);
 			expect(jwtUtils.base64Encode).toHaveBeenNthCalledWith(1, JSON.stringify(jwtHeader));
 			expect(jwtUtils.base64Encode).toHaveBeenNthCalledWith(2, JSON.stringify(jwtPayload));
 			expect(jwtUtils.getHashedKid).toHaveBeenNthCalledWith(2, kid);

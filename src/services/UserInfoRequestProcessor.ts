@@ -40,7 +40,7 @@ export class UserInfoRequestProcessor {
 	private readonly verifiableCredentialService: VerifiableCredentialService;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN) {
+		if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN || !DNS_SUFFIX) {
 			logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN is not configured", {
 				messageCode: MessageCodes.MISSING_CONFIGURATION,
 			});
