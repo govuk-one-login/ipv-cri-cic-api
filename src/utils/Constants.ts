@@ -48,7 +48,7 @@ export class Constants {
 
     static readonly AUTHORIZATION_CODE_INDEX_NAME = "authCode-updated-index";
 
-    static readonly TOKEN_EXPIRY_SECONDS = 3.154e+9;
+    static readonly TOKEN_EXPIRY_SECONDS = 3600;
 
     static readonly REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
