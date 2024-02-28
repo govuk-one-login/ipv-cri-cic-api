@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -13,10 +14,6 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { EnvironmentVariables } from "../utils/Constants";
-
-// const SESSION_TABLE = process.env.SESSION_TABLE;
-// const TXMA_QUEUE_URL = process.env.TXMA_QUEUE_URL;
-// const ISSUER = process.env.ISSUER!;
 
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
