@@ -1,11 +1,12 @@
-/* eslint-disable max-len */
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "./utils/Constants";
+import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { Response } from "./utils/Response";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
+import { AppError } from "./utils/AppError";
 import { AccessTokenRequestProcessor } from "./services/AccessTokenRequestProcessor";
 import { MessageCodes } from "./models/enums/MessageCodes";
 
@@ -31,11 +32,8 @@ export class AccessToken implements LambdaInterface {
 		try {
 			logger.info("Received token request", { requestId: event.requestContext.requestId });
 			return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
-		} catch (error) {
-			logger.error({ message: "AccessTokenRequestProcessor encountered an error.",
-				error,
-				messageCode: MessageCodes.SERVER_ERROR,
-			});
+		} catch (error: any) {
+			logger.error({ message: "An error has occurred. ", error });
 			return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 		}				
 	}
