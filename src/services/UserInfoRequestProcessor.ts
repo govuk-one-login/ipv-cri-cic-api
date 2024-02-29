@@ -17,10 +17,8 @@ import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { MessageCodes } from "../models/enums/MessageCodes";
-
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
-const ISSUER = process.env.ISSUER!;
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { EnvironmentVariables } from "../utils/Constants";
 
 export class UserInfoRequestProcessor {
   
@@ -38,19 +36,26 @@ export class UserInfoRequestProcessor {
 
 	private readonly verifiableCredentialService: VerifiableCredentialService;
 
+	private readonly issuer: string;
+
+	private readonly txmaQueueUrl: string;
+
+	private readonly personIdentityTableName: string;
+
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN) {
-			logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(SESSION_TABLE, this.kmsJwtAdapter, ISSUER, this.logger);
+
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
+		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
+		
+		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
@@ -120,7 +125,7 @@ export class UserInfoRequestProcessor {
 		this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
 		try {
-			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId);
+			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
 			if (!personInfo) {
 				this.logger.error("No person found with this session ID", {
 					messageCode: MessageCodes.PERSON_NOT_FOUND,
@@ -181,9 +186,9 @@ export class UserInfoRequestProcessor {
 			// Add metric and send TXMA event to the sqsqueue
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 			try {
-				await this.cicService.sendToTXMA({
+				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 					event_name: "CIC_CRI_VC_ISSUED",
-					...buildCoreEventFields(session, ISSUER, session.clientIpAddress),
+					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 					restricted: {
 						name: [{
 							nameParts: names,
@@ -200,9 +205,9 @@ export class UserInfoRequestProcessor {
 			}
 			
 			try {
-				await this.cicService.sendToTXMA({
+				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 					event_name: "CIC_CRI_END",
-					...buildCoreEventFields(session, ISSUER, session.clientIpAddress),
+					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				});
 			} catch (error) {
 				this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {

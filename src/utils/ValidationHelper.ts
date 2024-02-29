@@ -36,8 +36,7 @@ export class ValidationHelper {
 		if (headerValue === null || headerValue === undefined) {
 			throw new AppError("Missing header: Authorization header value is missing or invalid auth_scheme", HttpCodesEnum.UNAUTHORIZED);
 		}
-		const authHeader = event.headers.Authorization as string;
-		if (authHeader !== null && !authHeader.includes(Constants.BEARER)) {
+		if (!headerValue.includes(Constants.BEARER + " ")) {
 			throw new AppError("Missing header: Authorization header is not of Bearer type access_token", HttpCodesEnum.UNAUTHORIZED);
 
 		}
