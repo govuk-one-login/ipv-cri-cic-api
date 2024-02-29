@@ -6,6 +6,7 @@ import { XMLParser } from "fast-xml-parser";
 import { ISessionItem } from "../../models/ISessionItem";
 import { constants } from "../utils/ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
+import { TxmaEvent } from "../../utils/TxmaEvent";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_CIC_API_URL });
 const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
@@ -181,7 +182,6 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 		session = Object.fromEntries(
 			Object.entries(originalSession).map(([key, value]) => [key, value.N ?? value.S]),
 		) as unknown as ISessionItem;
-		console.log("getSessionById Response", session);
 	} catch (error: any) {
 		console.error({ message: "getSessionById - failed getting session from Dynamo", error });
 	}
@@ -245,77 +245,61 @@ export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
 	return getObjectResponse.data;
 }
 
-export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
-	let contents: any[];
-	let keyList: string[];
+interface TestHarnessReponse {
+	data: TxmaEvent;
+}
+
+export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize: number): Promise<any> {
+	const keyList: any = {};
 
 	do {
 		await new Promise(res => setTimeout(res, 3000));
 
 		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
 			params: {
-				prefix: folder + prefix,
+				prefix: "txma/" + prefix,
 			},
 		});
 		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
+		const contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
 
-		if (!contents || !contents.length) {
+		if (!contents || !contents.Key) {
 			return undefined;
 		}
 
-		keyList = contents.map(({ Key }) => Key);
+		const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + contents.Key, {});
+		keyList[eventContents?.data?.event_name] = eventContents.data;
 
-	} while (contents.length < txmaEventSize);
+	} while (Object.keys(keyList).length < txmaEventSize);
 
 	return keyList;
 }
 
 
-export async function validateTxMAEventData(keyList: any, journeyType: string): Promise<any> {
-	let i: any;
-	for (i = 0; i < keyList.length; i++) {
-		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
-		console.log(JSON.stringify(getObjectResponse.data));
-		let valid = true;
-		if (getObjectResponse.data.event_name === "CIC_CRI_START" && journeyType === "NO_PHOTO_ID") {
-			import("../data/" + getObjectResponse.data.event_name + "_BANK_ACCOUNT_SCHEMA.json")
-				.then((jsonSchema) => {
-					const validate = ajv.compile(jsonSchema);
-					valid = validate(getObjectResponse.data);
-					if (!valid) {
-						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-					}
-				})
-				.catch((err) => {
-					console.log(err.message);
-				})
-				.finally(() => {
-					expect(valid).toBe(true);
-				});
-		} else {
-			import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
-				.then((jsonSchema) => {
-					const validate = ajv.compile(jsonSchema);
-					valid = validate(getObjectResponse.data);
-					if (!valid) {
-						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-					}
-				})
-				.catch((err) => {
-					console.log(err.message);
-				})
-				.finally(() => {
-					expect(valid).toBe(true);
-				});
-		}
-	}
-}
+export function validateTxMAEventData(
+	{ eventName, schemaName }: { eventName: string; schemaName: string }, allTxmaEventBodies: any, 
+): void {
+	const currentEventBody: TxmaEvent = allTxmaEventBodies[eventName];
 
-export async function validateBankAccountCriStartTxMAEvent(key: any, context: string): Promise<any> {
-	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
-	if (getObjectResponse.data.event_name === "CIC_CRI_START") {
-		console.log(JSON.stringify(getObjectResponse.data, null, 2));
-		expect(getObjectResponse.data.extensions.evidence.context).toBe(context);
+	if (currentEventBody.event_name) {
+		let valid: boolean;
+
+		import("../data/" + schemaName)
+			.then((jsonSchema) => {
+				const validate = ajv.compile(jsonSchema);
+				valid = validate(currentEventBody);
+
+				if (!valid) {
+					console.error(currentEventBody.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+				}
+			})
+			.catch((error: any) => {
+				console.error("Error validating event", error);
+			})
+			.finally(() => {
+				expect(valid).toBe(true);
+			});
+	} else {
+		throw new Error(`No event found in the test harness for ${eventName} event`);
 	}
 }
