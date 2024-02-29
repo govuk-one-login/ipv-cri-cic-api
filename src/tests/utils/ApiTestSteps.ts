@@ -272,26 +272,43 @@ export async function getSqsEventList(folder: string, prefix: string, txmaEventS
 }
 
 
-export async function validateTxMAEventData(keyList: any): Promise<any> {
+export async function validateTxMAEventData(keyList: any, journeyType: string): Promise<any> {
 	let i: any;
 	for (i = 0; i < keyList.length; i++) {
 		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
 		console.log(JSON.stringify(getObjectResponse.data));
 		let valid = true;
-		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
-			.then((jsonSchema) => {
-				const validate = ajv.compile(jsonSchema);
-				valid = validate(getObjectResponse.data);
-				if (!valid) {
-					console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-				}
-			})
-			.catch((err) => {
-				console.log(err.message);
-			})
-			.finally(() => {
-				expect(valid).toBe(true);
-			});
+		if (getObjectResponse.data.event_name === "CIC_CRI_START" && journeyType === "NO_PHOTO_ID") {
+			import("../data/" + getObjectResponse.data.event_name + "_BANK_ACCOUNT_SCHEMA.json")
+				.then((jsonSchema) => {
+					const validate = ajv.compile(jsonSchema);
+					valid = validate(getObjectResponse.data);
+					if (!valid) {
+						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+					}
+				})
+				.catch((err) => {
+					console.log(err.message);
+				})
+				.finally(() => {
+					expect(valid).toBe(true);
+				});
+		} else {
+			import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
+				.then((jsonSchema) => {
+					const validate = ajv.compile(jsonSchema);
+					valid = validate(getObjectResponse.data);
+					if (!valid) {
+						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+					}
+				})
+				.catch((err) => {
+					console.log(err.message);
+				})
+				.finally(() => {
+					expect(valid).toBe(true);
+				});
+		}
 	}
 }
 

@@ -59,7 +59,7 @@ describe("E2E Happy Path Tests", () => {
 		do {
 			sqsMessage = await getSqsEventList("txma/", sessionId, 4);
 		} while (!sqsMessage);
-		await validateTxMAEventData(sqsMessage);
+		await validateTxMAEventData(sqsMessage, userData.journeyType);
 	}, 20000);
 });
 
