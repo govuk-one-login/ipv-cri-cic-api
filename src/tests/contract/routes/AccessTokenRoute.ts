@@ -6,7 +6,7 @@ import { convertUrlEncodedRequestBodyToString, eventRequest } from "../utils/Api
 import { Constants } from "../utils/Constants";
 
 process.env.SESSION_TABLE = "session-table";
-process.env.ISSUER = "issuer";
+process.env.ISSUER = "dummyClaimedIdentityComponentId";
 process.env.USE_MOCKED = "true";
 process.env.KMS_KEY_ARN = "kid";
 
