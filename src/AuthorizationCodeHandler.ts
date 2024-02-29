@@ -1,12 +1,11 @@
+/* eslint-disable max-len */
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
-import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
-import { HttpVerbsEnum } from "./utils/HttpVerbsEnum";
 import { Constants } from "./utils/Constants";
 import { AuthorizationRequestProcessor } from "./services/AuthorizationRequestProcessor";
 import { MessageCodes } from "./models/enums/MessageCodes";
