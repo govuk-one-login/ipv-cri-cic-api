@@ -7,7 +7,7 @@
         {
           "M": {
             "value": {
-              "S": "1970-03-26"
+              "S": "1932-02-25"
             }
           }
         }
@@ -28,7 +28,7 @@
                       "S": "GivenName"
                     },
                     "value": {
-                      "S": "Slim"
+                      "S": "Mary"
                     }
                   }
                 },
@@ -38,7 +38,7 @@
                       "S": "FamilyName"
                     },
                     "value": {
-                      "S": "Test User"
+                      "S": "Watson"
                     }
                   }
                 }
