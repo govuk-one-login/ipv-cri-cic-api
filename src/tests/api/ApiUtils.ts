@@ -53,20 +53,19 @@ const getAllTxMAS3FileContents = async (fileNames: any[]): Promise<AllTxmaEvents
 	return allContents;
 };
 
-export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize: number): Promise<any> {
+export async function getTxmaEventsFromTestHarness(sessionId: string, numberOfTxMAEvents: number): Promise<any> {
 	let objectList: AllTxmaEvents = {};
 	let fileNames: any = [];
 
 	do {
 		await new Promise(res => setTimeout(res, 3000));
-		fileNames = await getTxMAS3FileNames(prefix);
-	} while (fileNames.length < txmaEventSize);
-
+		fileNames = await getTxMAS3FileNames(sessionId);
+	} while (fileNames.length < numberOfTxMAEvents);
 
 	// AWS returns an array for multiple but an object for single
-	if (txmaEventSize === 1) {
+	if (numberOfTxMAEvents === 1) {
 		if (!fileNames || !fileNames.Key) {
-			console.log("No TxMA events found for this session ID");
+			console.log(`No TxMA events found for session ID ${sessionId}`);
 			return undefined;
 		}
 	
@@ -74,7 +73,7 @@ export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize
 		objectList[eventContents?.data?.event_name] = eventContents.data;
 	} else {
 		if (!fileNames || !fileNames.length) {
-			console.log("No TxMA events found for this session ID");
+			console.log(`No TxMA events found for session ID ${sessionId}`);
 			return undefined;
 		}
 
@@ -85,7 +84,7 @@ export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize
 }
 
 export function validateTxMAEventData(
-	{ eventName, schemaName }: { eventName: TxmaEventName; schemaName: string }, allTxmaEventBodies: AllTxmaEvents, 
+	{ eventName, schemaName }: { eventName: TxmaEventName; schemaName: string }, allTxmaEventBodies: AllTxmaEvents = {}, 
 ): void {
 	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
 
