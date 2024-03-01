@@ -9,18 +9,16 @@ import {
 	tokenPost,
 	userInfoPost,
 	validateJwtToken,
-	getTxmaEventsFromTestHarness,
-	validateTxMAEventData,
 	sessionConfigGet,
 	startStubServiceAndReturnSessionId,
-} from "../utils/ApiTestSteps";
-
+} from "./ApiTestSteps";
+import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("E2E Happy Path Tests", () => {
-	it.only.each([
+	it.each([
 		[dataSlim],
 		[dataBjorn],
-	])("photo ID", async (userData: any) => {
+	])("photo ID journey", async (userData: any) => {
 		const sessionResponse = await startStubServiceAndReturnSessionId(userData.journeyType);
 		expect(sessionResponse.status).toBe(200);
 
@@ -57,10 +55,10 @@ describe("E2E Happy Path Tests", () => {
 		validateTxMAEventData({ eventName: "CIC_CRI_VC_ISSUED", schemaName: "CIC_CRI_VC_ISSUED_SCHEMA" }, allTxmaEventBodies);
 	}, 20000);
 
-	it.only.each([
+	it.each([
 		[dataManuel],
 		[dataBillyJoe],
-	])("non photo ID", async (userData: any) => {
+	])("non photo ID journey", async (userData: any) => {
 		const sessionResponse = await startStubServiceAndReturnSessionId(userData.journeyType);
 		expect(sessionResponse.status).toBe(200);
 

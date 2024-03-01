@@ -1,20 +1,13 @@
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
-import Ajv from "ajv";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { aws4Interceptor } from "aws4-axios";
-import { XMLParser } from "fast-xml-parser";
 import { ISessionItem } from "../../models/ISessionItem";
-import { constants } from "../utils/ApiConstants";
+import { constants } from "./ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
-import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
-import * as CIC_CRI_START_SCHEMA from "../data/CIC_CRI_START_SCHEMA.json";
-import * as CIC_CRI_START_BANK_ACCOUNT_SCHEMA from "../data/CIC_CRI_START_BANK_ACCOUNT_SCHEMA.json";
-import * as CIC_CRI_AUTH_CODE_ISSUED_SCHEMA from "../data/CIC_CRI_AUTH_CODE_ISSUED_SCHEMA.json";
-import * as CIC_CRI_END_SCHEMA from "../data/CIC_CRI_END_SCHEMA.json";
-import * as CIC_CRI_VC_ISSUED_SCHEMA from "../data/CIC_CRI_VC_ISSUED_SCHEMA.json";
+
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_CIC_API_URL });
-const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
+export const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
 
 const customCredentialsProvider = {
 	getCredentials: fromNodeProviderChain({
@@ -31,15 +24,6 @@ const awsSigv4Interceptor = aws4Interceptor({
 });
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
-
-const xmlParser = new XMLParser();
-
-const ajv = new Ajv({ strictTuples: false });
-ajv.addSchema(CIC_CRI_START_SCHEMA, "CIC_CRI_START_SCHEMA");
-ajv.addSchema(CIC_CRI_START_BANK_ACCOUNT_SCHEMA, "CIC_CRI_START_BANK_ACCOUNT_SCHEMA");
-ajv.addSchema(CIC_CRI_AUTH_CODE_ISSUED_SCHEMA, "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA");
-ajv.addSchema(CIC_CRI_END_SCHEMA, "CIC_CRI_END_SCHEMA");
-ajv.addSchema(CIC_CRI_VC_ISSUED_SCHEMA, "CIC_CRI_VC_ISSUED_SCHEMA");
 
 export async function startStubServiceAndReturnSessionId(journeyType: string): Promise<any> {
 	const stubResponse = await stubStartPost(journeyType);
@@ -227,115 +211,4 @@ function validateRawBody(rawBody: any, data: any): void {
 	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[0].value).toBe(data.firstName);
 	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[1].value).toBe(data.lastName);
 	expect(decodedRawBody.vc.credentialSubject.birthDate[0].value).toBe(data.dateOfBirth);
-}
-
-export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
-	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-		params: {
-			prefix: "txma/" + prefix,
-		},
-	});
-	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-	if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
-		return undefined;
-	}
-	let key: string;
-	if (Array.isArray(listObjectsParsedResponse?.ListBucketResult?.Contents)) {
-		key = listObjectsParsedResponse.ListBucketResult.Contents.at(-1).Key;
-	} else {
-		key = listObjectsParsedResponse.ListBucketResult.Contents.Key;
-	}
-
-	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
-	return getObjectResponse.data;
-}
-
-interface TestHarnessReponse {
-	data: TxmaEvent;
-}
-
-interface AllTxmaEvents {
-	"CIC_CRI_START"?: TxmaEvent;
-	"CIC_CRI_AUTH_CODE_ISSUED"?: TxmaEvent;
-	"CIC_CRI_END"?: TxmaEvent;
-	"CIC_CRI_VC_ISSUED"?: TxmaEvent;
-}
-
-const getTxMAS3FileNames = async (prefix: string): Promise<any> => {
-	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-		params: {
-			prefix: "txma/" + prefix,
-		},
-	});
-	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-	return listObjectsParsedResponse?.ListBucketResult?.Contents;
-};
-
-const getAllTxMAS3FileContents = async (fileNames: any[]): Promise<AllTxmaEvents> => {
-	const allContents  = await fileNames.reduce(
-		async (accumulator: Promise<AllTxmaEvents>, fileName: any) => {
-			const resolvedAccumulator = await accumulator;
-
-			const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + fileName.Key, {});
-			resolvedAccumulator[eventContents?.data?.event_name] = eventContents.data;
-
-			return resolvedAccumulator;
-		}, Promise.resolve({}),
-	);
-
-	return allContents;
-};
-
-export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize: number): Promise<any> {
-	let objectList: AllTxmaEvents = {};
-	let fileNames: any = [];
-
-	do {
-		await new Promise(res => setTimeout(res, 3000));
-		fileNames = await getTxMAS3FileNames(prefix);
-	} while (fileNames.length < txmaEventSize);
-
-
-	// AWS returns an array for multiple but an object for single
-	if (txmaEventSize === 1) {
-		if (!fileNames || !fileNames.Key) {
-			console.log("No TxMA events found for this session ID");
-			return undefined;
-		}
-	
-		const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + fileNames.Key, {});
-		objectList[eventContents?.data?.event_name] = eventContents.data;
-	} else {
-		if (!fileNames || !fileNames.length) {
-			console.log("No TxMA events found for this session ID");
-			return undefined;
-		}
-
-		const additionalObjectList = await getAllTxMAS3FileContents(fileNames);
-		objectList = { ...objectList, ...additionalObjectList };
-	}
-	return objectList;
-}
-
-
-export function validateTxMAEventData(
-	{ eventName, schemaName }: { eventName: TxmaEventName; schemaName: string }, allTxmaEventBodies: AllTxmaEvents, 
-): void {
-	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
-
-	if (currentEventBody?.event_name) {
-		try {
-			const validate = ajv.getSchema(schemaName);
-			if (validate) {
-				expect(validate(currentEventBody)).toBe(true);
-			} else {
-				throw new Error(`Could not find schema ${schemaName}`);
-			}
-		} catch (error) {
-			console.error("Error validating event", error);
-			throw error;
-		}
-	} else {
-		throw new Error(`No event found in the test harness for ${eventName} event`);
-	}
 }
