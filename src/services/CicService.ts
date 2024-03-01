@@ -15,7 +15,7 @@ import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { getAuthorizationCodeExpirationEpoch, absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
-import { sqsClient, SendMessageCommand } from "../utils/SqsClient";
+import { createSqsClient, SendMessageCommand } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import {
 	SharedClaimsItem,
@@ -89,10 +89,10 @@ export class CicService {
 		}
 	}
 
-	async getPersonIdentityBySessionId(sessionId: string): Promise<PersonIdentityItem | undefined> {
-		this.logger.debug("Table name " + process.env.PERSON_IDENTITY_TABLE_NAME);
+	async getPersonIdentityBySessionId(sessionId: string, tableName: string = this.tableName): Promise<PersonIdentityItem | undefined> {
+		this.logger.debug("Table name " + tableName);
 		const getPersonIdentityCommand = new GetCommand({
-			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+			TableName: tableName,
 			Key: {
 				sessionId,
 			},
@@ -117,12 +117,12 @@ export class CicService {
 		}
 	}
 
-	async saveCICData(sessionId: string, cicData: CicSession, sessionExpiry: number): Promise<void> {
+	async saveCICData(sessionId: string, cicData: CicSession, sessionExpiry: number, tableName: string = this.tableName): Promise<void> {
 		const personNames = this.mapCICNames(cicData.given_names, cicData.family_names);
 		const personBirthDay = this.mapCICBirthDay(cicData.date_of_birth);
 
 		const saveCICPersonInfoCommand: any = new UpdateCommand({
-			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+			TableName: tableName,
 			Key: { sessionId },
 			UpdateExpression:
 				"SET personNames = :personNames, birthDates = :date_of_birth, expiryDate = :expiryDate",
@@ -203,18 +203,18 @@ export class CicService {
 		}
 	}
 
-	async sendToTXMA(event: TxmaEvent): Promise<void> {
+	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
 		const messageBody = JSON.stringify(event);
 		const params = {
 			MessageBody: messageBody,
-			QueueUrl: process.env.TXMA_QUEUE_URL,
+			QueueUrl,
 		};
 
 		this.logger.info("Sending message to TxMA", {
 			event_name: event.event_name,
 		});
 		try {
-			await sqsClient.send(new SendMessageCommand(params));
+			await createSqsClient().send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA", {
 				event_name: event.event_name,
 			});
