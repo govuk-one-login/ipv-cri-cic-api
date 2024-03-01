@@ -55,10 +55,10 @@ describe("E2E Happy Path Tests", () => {
 		
 		// Validate TxMA Queue
 		const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
-		validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName: "CIC_CRI_START_SCHEMA.json" }, allTxmaEventBodies);
-		// validateTxMAEventData({ eventName: "CIC_CRI_AUTH_CODE_ISSUED", schemaName: "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA.json" }, allTxmaEventBodies);
-		// validateTxMAEventData({ eventName: "CIC_CRI_END", schemaName: "CIC_CRI_END_SCHEMA.json" }, allTxmaEventBodies);
-		validateTxMAEventData({ eventName: "CIC_CRI_VC_ISSUED", schemaName: "CIC_CRI_VC_ISSUED_SCHEMA.json" }, allTxmaEventBodies);
+		validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName: "CIC_CRI_START_SCHEMA" }, allTxmaEventBodies);
+		validateTxMAEventData({ eventName: "CIC_CRI_AUTH_CODE_ISSUED", schemaName: "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA" }, allTxmaEventBodies);
+		validateTxMAEventData({ eventName: "CIC_CRI_END", schemaName: "CIC_CRI_END_SCHEMA" }, allTxmaEventBodies);
+		validateTxMAEventData({ eventName: "CIC_CRI_VC_ISSUED", schemaName: "CIC_CRI_VC_ISSUED_SCHEMA" }, allTxmaEventBodies);
 	}, 20000);
 });
 

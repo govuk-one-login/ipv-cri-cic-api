@@ -6,7 +6,11 @@ import { XMLParser } from "fast-xml-parser";
 import { ISessionItem } from "../../models/ISessionItem";
 import { constants } from "../utils/ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
-import { TxmaEvent } from "../../utils/TxmaEvent";
+import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
+import * as CIC_CRI_START_SCHEMA from "../data/CIC_CRI_START_SCHEMA.json";
+import * as CIC_CRI_AUTH_CODE_ISSUED_SCHEMA from "../data/CIC_CRI_AUTH_CODE_ISSUED_SCHEMA.json";
+import * as CIC_CRI_END_SCHEMA from "../data/CIC_CRI_END_SCHEMA.json";
+import * as CIC_CRI_VC_ISSUED_SCHEMA from "../data/CIC_CRI_VC_ISSUED_SCHEMA.json";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_CIC_API_URL });
 const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
@@ -28,7 +32,12 @@ const awsSigv4Interceptor = aws4Interceptor({
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
 const xmlParser = new XMLParser();
+
 const ajv = new Ajv({ strictTuples: false });
+ajv.addSchema(CIC_CRI_START_SCHEMA, "CIC_CRI_START_SCHEMA");
+ajv.addSchema(CIC_CRI_AUTH_CODE_ISSUED_SCHEMA, "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA");
+ajv.addSchema(CIC_CRI_END_SCHEMA, "CIC_CRI_END_SCHEMA");
+ajv.addSchema(CIC_CRI_VC_ISSUED_SCHEMA, "CIC_CRI_VC_ISSUED_SCHEMA");
 
 export async function startStubServiceAndReturnSessionId(journeyType: string): Promise<any> {
 	const stubResponse = await stubStartPost(journeyType);
@@ -249,6 +258,13 @@ interface TestHarnessReponse {
 	data: TxmaEvent;
 }
 
+interface AllTxmaEvents {
+	"CIC_CRI_START"?: TxmaEvent;
+	"CIC_CRI_AUTH_CODE_ISSUED"?: TxmaEvent;
+	"CIC_CRI_END"?: TxmaEvent;
+	"CIC_CRI_VC_ISSUED"?: TxmaEvent;
+}
+
 const getTxMAS3FileNames = async (prefix: string): Promise<any> => {
 	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
 		params: {
@@ -259,8 +275,23 @@ const getTxMAS3FileNames = async (prefix: string): Promise<any> => {
 	return listObjectsParsedResponse?.ListBucketResult?.Contents;
 };
 
+const getAllTxMAS3FileContents = async (fileNames: any[]): Promise<AllTxmaEvents> => {
+	const allContents  = await fileNames.reduce(
+		async (accumulator: Promise<AllTxmaEvents>, fileName: any) => {
+			const resolvedAccumulator = await accumulator;
+
+			const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + fileName.Key, {});
+			resolvedAccumulator[eventContents?.data?.event_name] = eventContents.data;
+
+			return resolvedAccumulator;
+		}, Promise.resolve({}),
+	);
+
+	return allContents;
+};
+
 export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize: number): Promise<any> {
-	let objectList: any = {};
+	let objectList: AllTxmaEvents = {};
 	let fileNames: any = [];
 
 	do {
@@ -284,45 +315,30 @@ export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize
 			return undefined;
 		}
 
-		const additionalObjectList = await fileNames.reduce(async (accumulator: any, fileName: any) => {
-			const resolvedAccumulator = await accumulator;
-			const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + fileName.Key, {});
-
-			resolvedAccumulator[eventContents?.data?.event_name] = eventContents.data;
-			return resolvedAccumulator;
-		}, Promise.resolve({}));
-
+		const additionalObjectList = await getAllTxMAS3FileContents(fileNames);
 		objectList = { ...objectList, ...additionalObjectList };
 	}
-
 	return objectList;
 }
 
 
 export function validateTxMAEventData(
-	{ eventName, schemaName }: { eventName: string; schemaName: string }, allTxmaEventBodies: any, 
+	{ eventName, schemaName }: { eventName: TxmaEventName; schemaName: string }, allTxmaEventBodies: AllTxmaEvents, 
 ): void {
-	const currentEventBody: TxmaEvent = allTxmaEventBodies[eventName];
+	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
 
 	if (currentEventBody?.event_name) {
-		let valid: boolean;
-
-		import("../data/" + schemaName)
-			.then((jsonSchema) => {
-				console.log("jsonSchema", jsonSchema);
-				const validate = ajv.compile(jsonSchema);
-				valid = validate(currentEventBody);
-
-				if (!valid) {
-					console.error(currentEventBody.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-				}
-			})
-			.catch((error: any) => {
-				console.error("Error validating event", error);
-			})
-			.finally(() => {
-				expect(valid).toBe(true);
-			});
+		try {
+			const validate = ajv.getSchema(schemaName);
+			if (validate) {
+				expect(validate(currentEventBody)).toBe(true);
+			} else {
+				throw new Error(`Could not find schema ${schemaName}`);
+			}
+		} catch (error) {
+			console.error("Error validating event", error);
+			throw error;
+		}
 	} else {
 		throw new Error(`No event found in the test harness for ${eventName} event`);
 	}
