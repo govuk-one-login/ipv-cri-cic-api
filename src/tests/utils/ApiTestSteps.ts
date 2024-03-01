@@ -249,30 +249,53 @@ interface TestHarnessReponse {
 	data: TxmaEvent;
 }
 
+const getTxMAS3FileNames = async (prefix: string): Promise<any> => {
+	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
+		params: {
+			prefix: "txma/" + prefix,
+		},
+	});
+	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
+	return listObjectsParsedResponse?.ListBucketResult?.Contents;
+};
+
 export async function getTxmaEventsFromTestHarness(prefix: string, txmaEventSize: number): Promise<any> {
-	const keyList: any = {};
+	let objectList: any = {};
+	let fileNames: any = [];
 
 	do {
 		await new Promise(res => setTimeout(res, 3000));
+		fileNames = await getTxMAS3FileNames(prefix);
+	} while (fileNames.length < txmaEventSize);
 
-		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-			params: {
-				prefix: "txma/" + prefix,
-			},
-		});
-		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		const contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
 
-		if (!contents || !contents.Key) {
+	// AWS returns an array for multiple but an object for single
+	if (txmaEventSize === 1) {
+		if (!fileNames || !fileNames.Key) {
+			console.log("No TxMA events found for this session ID");
+			return undefined;
+		}
+	
+		const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + fileNames.Key, {});
+		objectList[eventContents?.data?.event_name] = eventContents.data;
+	} else {
+		if (!fileNames || !fileNames.length) {
+			console.log("No TxMA events found for this session ID");
 			return undefined;
 		}
 
-		const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + contents.Key, {});
-		keyList[eventContents?.data?.event_name] = eventContents.data;
+		const additionalObjectList = await fileNames.reduce(async (accumulator: any, fileName: any) => {
+			const resolvedAccumulator = await accumulator;
+			const eventContents: TestHarnessReponse = await HARNESS_API_INSTANCE.get("/object/" + fileName.Key, {});
 
-	} while (Object.keys(keyList).length < txmaEventSize);
+			resolvedAccumulator[eventContents?.data?.event_name] = eventContents.data;
+			return resolvedAccumulator;
+		}, Promise.resolve({}));
 
-	return keyList;
+		objectList = { ...objectList, ...additionalObjectList };
+	}
+
+	return objectList;
 }
 
 
@@ -281,11 +304,12 @@ export function validateTxMAEventData(
 ): void {
 	const currentEventBody: TxmaEvent = allTxmaEventBodies[eventName];
 
-	if (currentEventBody.event_name) {
+	if (currentEventBody?.event_name) {
 		let valid: boolean;
 
 		import("../data/" + schemaName)
 			.then((jsonSchema) => {
+				console.log("jsonSchema", jsonSchema);
 				const validate = ajv.compile(jsonSchema);
 				valid = validate(currentEventBody);
 
