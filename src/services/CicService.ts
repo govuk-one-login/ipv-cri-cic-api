@@ -292,6 +292,26 @@ export class CicService {
 		}
 	}
 
+	async updateSessionAuthState(sessionId: string, authSessionState: string): Promise<void> {
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET authSessionState = :authSessionState",
+			ExpressionAttributeValues: {
+				":authSessionState": authSessionState,
+			},
+		});
+
+		this.logger.info({ message: "Updating session table with auth state details", updateStateCommand });
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Updated auth state details in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving auth state details", error });
+			throw new AppError("updateItem - failed: got error saving auth state details", HttpCodesEnum.SERVER_ERROR);
+		}
+	}
+
 	async createAuthSession(session: ISessionItem): Promise<void> {
 		const putSessionCommand = new PutCommand({
 			TableName: this.tableName,
