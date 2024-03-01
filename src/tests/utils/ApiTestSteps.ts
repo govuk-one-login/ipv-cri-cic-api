@@ -8,6 +8,7 @@ import { constants } from "../utils/ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
 import * as CIC_CRI_START_SCHEMA from "../data/CIC_CRI_START_SCHEMA.json";
+import * as CIC_CRI_START_BANK_ACCOUNT_SCHEMA from "../data/CIC_CRI_START_BANK_ACCOUNT_SCHEMA.json";
 import * as CIC_CRI_AUTH_CODE_ISSUED_SCHEMA from "../data/CIC_CRI_AUTH_CODE_ISSUED_SCHEMA.json";
 import * as CIC_CRI_END_SCHEMA from "../data/CIC_CRI_END_SCHEMA.json";
 import * as CIC_CRI_VC_ISSUED_SCHEMA from "../data/CIC_CRI_VC_ISSUED_SCHEMA.json";
@@ -35,6 +36,7 @@ const xmlParser = new XMLParser();
 
 const ajv = new Ajv({ strictTuples: false });
 ajv.addSchema(CIC_CRI_START_SCHEMA, "CIC_CRI_START_SCHEMA");
+ajv.addSchema(CIC_CRI_START_BANK_ACCOUNT_SCHEMA, "CIC_CRI_START_BANK_ACCOUNT_SCHEMA");
 ajv.addSchema(CIC_CRI_AUTH_CODE_ISSUED_SCHEMA, "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA");
 ajv.addSchema(CIC_CRI_END_SCHEMA, "CIC_CRI_END_SCHEMA");
 ajv.addSchema(CIC_CRI_VC_ISSUED_SCHEMA, "CIC_CRI_VC_ISSUED_SCHEMA");
