@@ -153,12 +153,6 @@ export function validateJwtToken(responseString: any, data: any): void {
 	validateRawBody(rawBody, data);
 }
 
-export function validateWellKnownResponse(response: any): void {
-	expect(response.keys).toHaveLength(2);
-	expect(response.keys[0].use).toBe("sig");
-	expect(response.keys[1].use).toBe("enc");
-}
-
 function getJwtTokenUserInfo(responseString: any): any {
 	try {
 		const matches = responseString.match(/\[(.*?)\]/g);
