@@ -34,19 +34,11 @@ export class AccessTokenRequestProcessor {
   
     private readonly issuer: string;
 
-  constructor(logger: Logger, metrics: Metrics) {
-    	if (!SESSION_TABLE || !KMS_KEY_ARN || !ISSUER || !DNS_SUFFIX) {
-    		logger.error("Environment variable SESSION_TABLE or KMS_KEY_ARN or ISSUER or DNSSUFFIX is not configured", {
-    			messageCode: MessageCodes.MISSING_CONFIGURATION,
-    		});
-    		throw new AppError("Service incorrectly configured, missing some environment variables.", HttpCodesEnum.SERVER_ERROR);
-    	}
-
 
 	constructor(logger: Logger, metrics: Metrics) {
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
-		  this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
     	this.logger = logger;
     	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
