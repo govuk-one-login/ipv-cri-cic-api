@@ -72,7 +72,7 @@ export class UserInfoRequestProcessor {
 		
 		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger, DNS_SUFFIX);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
