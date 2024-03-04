@@ -1,29 +1,30 @@
-import { constants } from "../utils/ApiConstants";
-import { getKeyFromSession, startStubServiceAndReturnSessionId, validateBankAccountCriStartTxMAEvent, getSqsEventList } from "../utils/ApiTestSteps";
+import { constants } from "./ApiConstants";
+import { getKeyFromSession, startStubServiceAndReturnSessionId, wellKnownGet } from "./ApiTestSteps";
+import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
+describe("Happy path tests", () => {
+	describe("/session endpoint", () => {
+		it.each([
+			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+		])("For $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
+			const sessionId = sessionResponse.data.session_id;
 
-describe("/session Happy Path", () => {
-	it.each([
-		["FACE_TO_FACE"],
-		["NO_PHOTO_ID"],
-	])("BAV and F2F test", async (journeyType: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
-		expect(sessionResponse.status).toBe(200);
-		const sessionId = sessionResponse.data.session_id;
-		console.log(sessionId);
-		await expect(getKeyFromSession(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey")).resolves.toBe(journeyType);
+			const savedJourney = getKeyFromSession(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey");
+			await expect(savedJourney).resolves.toBe(journeyType);
+
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 1);
+			validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName }, allTxmaEventBodies);
+		});
 	});
-});
 
-describe("Happy Path - CIC_CRI_START Event Check", () => {
-	it.each([
-		{ journeyType: "NO_PHOTO_ID", context:"bank_account" },
-	])("BAV and F2F test", async ({ journeyType, context }:{ journeyType: string; context: string }) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
-		expect(sessionResponse.status).toBe(200);
-		const sessionId = sessionResponse.data.session_id;
-		// Validate CIC_CRI_START TxMA Event
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
-		await validateBankAccountCriStartTxMAEvent(sqsMessage, context);
+	it("./wellknown/jwks.json endpoint", async () => {
+		const { status, data } = await wellKnownGet();
+			
+		expect(status).toBe(200);
+		expect(data.keys).toHaveLength(2);
+		expect(data.keys[0].use).toBe("sig");
+		expect(data.keys[1].use).toBe("enc");
 	});
 });
