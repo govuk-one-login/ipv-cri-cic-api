@@ -1,4 +1,4 @@
-import { stubStartPost, sessionPost, claimedIdentityPost, startStubServiceAndReturnSessionId } from "../utils/ApiTestSteps";
+import { stubStartPost, sessionPost, claimedIdentityPost, startStubServiceAndReturnSessionId } from "./ApiTestSteps";
 import dataSlim from "../data/happyPathSlim.json";
 import dataNumeric from "../data/dataNumeric.json";
 import dataInvalidChar from "../data/dataInvalidChar.json";
