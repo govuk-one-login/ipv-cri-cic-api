@@ -15,19 +15,15 @@ import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { Constants } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+
 
 interface ClientConfig {
 	jwksEndpoint: string;
 	clientId: string;
 	redirectUri: string;
 }
-
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const CLIENT_CONFIG = process.env.CLIENT_CONFIG;
-const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
-const AUTH_SESSION_TTL_IN_SECS = process.env.AUTH_SESSION_TTL;
-const ISSUER = process.env.ISSUER;
 
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
@@ -42,22 +38,30 @@ export class SessionRequestProcessor {
 
 	private readonly validationHelper: ValidationHelper;
 
-	constructor(logger: Logger, metrics: Metrics) {
+	private readonly issuer: string;
 
-		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL_IN_SECS || !ISSUER ) {
-			logger.error("Environment variable SESSION_TABLE or CLIENT_CONFIG or ENCRYPTION_KEY_IDS or AUTH_SESSION_TTL is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError("Server Error", HttpCodesEnum.SERVER_ERROR );
-		}
+	private readonly authSessionTtlInSecs: string;
+
+	private readonly clientConfig: string;
+
+	private readonly txmaQueueUrl: string;
+
+	constructor(logger: Logger, metrics: Metrics) {
 
 		this.logger = logger;
 		this.metrics = metrics;
-
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(ENCRYPTION_KEY_IDS);
+		
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  		const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+		this.authSessionTtlInSecs = checkEnvironmentVariable(EnvironmentVariables.AUTH_SESSION_TTL, this.logger);
+		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, this.logger);
+		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+  		
+		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
 		this.validationHelper = new ValidationHelper();
 	}
 
@@ -75,7 +79,7 @@ export class SessionRequestProcessor {
 
 		let configClient: ClientConfig | undefined = undefined;
 		try {
-			const config = JSON.parse(CLIENT_CONFIG!) as ClientConfig[];
+			const config = JSON.parse(this.clientConfig) as ClientConfig[];
 			configClient = config.find(c => c.clientId === requestBodyClientId);
 		} catch (error) {
 			this.logger.error("Invalid or missing client configuration table", {
@@ -170,7 +174,7 @@ export class SessionRequestProcessor {
 			clientId: jwtPayload.client_id,
 			clientSessionId: jwtPayload.govuk_signin_journey_id as string,
 			redirectUri: jwtPayload.redirect_uri,
-			expiryDate: (Date.now() / 1000) + Number(AUTH_SESSION_TTL_IN_SECS),
+			expiryDate: (Date.now() / 1000) + +this.authSessionTtlInSecs,
 			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
@@ -204,9 +208,9 @@ export class SessionRequestProcessor {
 		}
 
 		try {
-			await this.cicService.sendToTXMA({
+			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 				event_name: "CIC_CRI_START",
-				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress),
+				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				...(jwtPayload.context && { extensions: {
 					evidence: {
 						context: jwtPayload.context,
