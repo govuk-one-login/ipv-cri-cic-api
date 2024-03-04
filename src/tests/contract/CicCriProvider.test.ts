@@ -30,7 +30,7 @@ describe("Pact Verification", () => {
 			publishVerificationResult: true,
 			providerVersion: "1.0.0",
 			// You can set the log level here, useful for debugging
-			logLevel: "debug",
+			logLevel: "info",
 		};
 	});  
   
