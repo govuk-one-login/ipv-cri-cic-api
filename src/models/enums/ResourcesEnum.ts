@@ -7,4 +7,5 @@ export enum ResourcesEnum {
 	TOKEN = "/token",
 	AUTHORIZATION = "/authorization",
 	SESSION = "/session",
+	ABORT = "/abort",
 }

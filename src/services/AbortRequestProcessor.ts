@@ -24,6 +24,12 @@ export class AbortRequestProcessor {
   private readonly cicService: CicService;
 
   constructor(logger: Logger, metrics: Metrics) {
+	if (!SESSION_TABLE || SESSION_TABLE.trim().length === 0 ||
+		//!TXMA_QUEUE_URL || TXMA_QUEUE_URL.trim().length === 0 ||
+		!ISSUER || ISSUER.trim().length === 0) {
+					logger.error("Environment variable SESSION_TABLE or TXMA_QUEUE_URL or ISSUER is not configured");
+					throw new AppError("Abort Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
+				}
   	this.logger = logger;
   	this.metrics = metrics;
   	this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
@@ -53,15 +59,6 @@ export class AbortRequestProcessor {
   		throw new AppError("Missing details in SESSION table", HttpCodesEnum.BAD_REQUEST);
   	}
 
-  	const decodedRedirectUri = decodeURIComponent(cicSessionInfo.redirectUri);
-  	const hasQuestionMark = decodedRedirectUri.includes("?");
-  	const redirectUri = `${decodedRedirectUri}${hasQuestionMark ? "&" : "?"}error=access_denied&state=${cicSessionInfo.state}`;
-
-  	if (cicSessionInfo.authSessionState === AuthSessionState.CIC_CRI_SESSION_ABORTED) {
-  		this.logger.info("Session has already been aborted");
-  		return new Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
-  	}
-
   	try {
   	  await this.cicService.updateSessionAuthState(cicSessionInfo.sessionId, AuthSessionState.CIC_CRI_SESSION_ABORTED);
   	} catch (error) {
@@ -88,6 +85,7 @@ export class AbortRequestProcessor {
   		});
   	}
 
-  	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
+  	const redirectUri = `${cicSessionInfo.redirectUri}?error=access_denied&state=${AuthSessionState.CIC_CRI_SESSION_ABORTED}`;
+	return new Response(HttpCodesEnum.FOUND_REDIRECT, "Session has been aborted", { Location: redirectUri });
   }
 }
