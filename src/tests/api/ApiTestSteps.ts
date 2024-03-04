@@ -1,14 +1,13 @@
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
-import Ajv from "ajv";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { aws4Interceptor } from "aws4-axios";
-import { XMLParser } from "fast-xml-parser";
 import { ISessionItem } from "../../models/ISessionItem";
-import { constants } from "../utils/ApiConstants";
+import { constants } from "./ApiConstants";
 import { jwtUtils } from "../../utils/JwtUtils";
 
+
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_CIC_API_URL });
-const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
+export const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_CIC_TEST_HARNESS_URL });
 
 const customCredentialsProvider = {
 	getCredentials: fromNodeProviderChain({
@@ -25,9 +24,6 @@ const awsSigv4Interceptor = aws4Interceptor({
 });
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
-
-const xmlParser = new XMLParser();
-const ajv = new Ajv({ strictTuples: false });
 
 export async function startStubServiceAndReturnSessionId(journeyType: string): Promise<any> {
 	const stubResponse = await stubStartPost(journeyType);
@@ -141,12 +137,6 @@ export function validateJwtToken(responseString: any, data: any): void {
 	validateRawBody(rawBody, data);
 }
 
-export function validateWellKnownResponse(response: any): void {
-	expect(response.keys).toHaveLength(2);
-	expect(response.keys[0].use).toBe("sig");
-	expect(response.keys[1].use).toBe("enc");
-}
-
 function getJwtTokenUserInfo(responseString: any): any {
 	try {
 		const matches = responseString.match(/\[(.*?)\]/g);
@@ -181,7 +171,6 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 		session = Object.fromEntries(
 			Object.entries(originalSession).map(([key, value]) => [key, value.N ?? value.S]),
 		) as unknown as ISessionItem;
-		console.log("getSessionById Response", session);
 	} catch (error: any) {
 		console.error({ message: "getSessionById - failed getting session from Dynamo", error });
 	}
@@ -222,100 +211,4 @@ function validateRawBody(rawBody: any, data: any): void {
 	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[0].value).toBe(data.firstName);
 	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[1].value).toBe(data.lastName);
 	expect(decodedRawBody.vc.credentialSubject.birthDate[0].value).toBe(data.dateOfBirth);
-}
-
-export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
-	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-		params: {
-			prefix: "txma/" + prefix,
-		},
-	});
-	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-	if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
-		return undefined;
-	}
-	let key: string;
-	if (Array.isArray(listObjectsParsedResponse?.ListBucketResult?.Contents)) {
-		key = listObjectsParsedResponse.ListBucketResult.Contents.at(-1).Key;
-	} else {
-		key = listObjectsParsedResponse.ListBucketResult.Contents.Key;
-	}
-
-	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
-	return getObjectResponse.data;
-}
-
-export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
-	let contents: any[];
-	let keyList: string[];
-
-	do {
-		await new Promise(res => setTimeout(res, 3000));
-
-		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-			params: {
-				prefix: folder + prefix,
-			},
-		});
-		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
-
-		if (!contents || !contents.length) {
-			return undefined;
-		}
-
-		keyList = contents.map(({ Key }) => Key);
-
-	} while (contents.length < txmaEventSize);
-
-	return keyList;
-}
-
-
-export async function validateTxMAEventData(keyList: any, journeyType: string): Promise<any> {
-	let i: any;
-	for (i = 0; i < keyList.length; i++) {
-		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
-		console.log(JSON.stringify(getObjectResponse.data));
-		let valid = true;
-		if (getObjectResponse.data.event_name === "CIC_CRI_START" && journeyType === "NO_PHOTO_ID") {
-			import("../data/" + getObjectResponse.data.event_name + "_BANK_ACCOUNT_SCHEMA.json")
-				.then((jsonSchema) => {
-					const validate = ajv.compile(jsonSchema);
-					valid = validate(getObjectResponse.data);
-					if (!valid) {
-						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-					}
-				})
-				.catch((err) => {
-					console.log(err.message);
-				})
-				.finally(() => {
-					expect(valid).toBe(true);
-				});
-		} else {
-			import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
-				.then((jsonSchema) => {
-					const validate = ajv.compile(jsonSchema);
-					valid = validate(getObjectResponse.data);
-					if (!valid) {
-						console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-					}
-				})
-				.catch((err) => {
-					console.log(err.message);
-				})
-				.finally(() => {
-					expect(valid).toBe(true);
-				});
-		}
-	}
-}
-
-export async function validateBankAccountCriStartTxMAEvent(key: any, context: string): Promise<any> {
-	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
-	if (getObjectResponse.data.event_name === "CIC_CRI_START") {
-		console.log(JSON.stringify(getObjectResponse.data, null, 2));
-		expect(getObjectResponse.data.extensions.evidence.context).toBe(context);
-	}
 }
