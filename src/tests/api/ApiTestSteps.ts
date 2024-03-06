@@ -209,7 +209,7 @@ async function validateRawHead(rawHead: any): Promise<void> {
 	const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
 	const hashArray = Array.from(new Uint8Array(hashBuffer));
 	const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-	expect(decodeRawHead.kid).toBe("did:web:review-c.dev.account.gov.uk#" + hashHex);
+	expect(decodeRawHead.kid).toBe("did:web:" + constants.DNS_SUFFIX + "#" + hashHex);
 }
 
 function validateRawBody(rawBody: any, data: any): void {
