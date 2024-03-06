@@ -7,7 +7,7 @@ import { Constants } from "./utils/Constants";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { Response, unauthorizedResponse } from "./utils/Response";
 import { AppError } from "./utils/AppError";
-import { AbortRequestProcessor } from "./services/AbortRequestProcessor"
+import { AbortRequestProcessor } from "./services/AbortRequestProcessor";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
@@ -56,9 +56,9 @@ export class AbortHandler implements LambdaInterface {
 			}
 
 			logger.info("Starting AbortRequestProcessor",
-			{
-				resource: event.resource,
-			});
+				{
+					resource: event.resource,
+				});
 			return await AbortRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 		} catch (error) {
 			logger.error({ message: "AbortRequestProcessor encountered an error.",

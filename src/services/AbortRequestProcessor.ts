@@ -27,15 +27,15 @@ export class AbortRequestProcessor {
   private readonly cicService: CicService;
 
   constructor(logger: Logger, metrics: Metrics) {
-	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, logger);
-	const sessionTableName = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+  	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
+  	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, logger);
+  	const sessionTableName = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
 
-	this.logger = logger;
-	this.metrics = metrics;
-	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+  	this.logger = logger;
+  	this.metrics = metrics;
+  	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	
-}
+  }
 
   static getInstance(
   	logger: Logger,
@@ -78,7 +78,7 @@ export class AbortRequestProcessor {
   	try {
   		await this.cicService.sendToTXMA(this.txmaQueueUrl, {
   			event_name: "CIC_CRI_SESSION_ABORTED",
-  			...buildCoreEventFields(cicSessionInfo, this.issuer as string, cicSessionInfo.clientIpAddress),
+  			...buildCoreEventFields(cicSessionInfo, this.issuer, cicSessionInfo.clientIpAddress),
   		});
   	} catch (error) {
   		this.logger.error("Auth session successfully aborted. Failed to send CIC_CRI_SESSION_ABORTED event to TXMA", {
@@ -88,6 +88,6 @@ export class AbortRequestProcessor {
   	}
 
   	const redirectUri = `${cicSessionInfo.redirectUri}?error=access_denied&state=${AuthSessionState.CIC_CRI_SESSION_ABORTED}`;
-	return new Response(HttpCodesEnum.FOUND_REDIRECT, "Session has been aborted", { Location: redirectUri });
+  	return new Response(HttpCodesEnum.FOUND_REDIRECT, "Session has been aborted", { Location: redirectUri });
   }
 }
