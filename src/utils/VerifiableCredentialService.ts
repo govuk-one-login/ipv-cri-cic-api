@@ -50,6 +50,7 @@ export class VerifiableCredentialService {
 			this.logger.info("VcService: USING MOCKED");
 			result = {
 				...mockVcClaims,
+				iss: this.issuer,
 				sub: subject,
 				vc: verifiedCredential,
 			};
