@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { Logger } from "@aws-lambda-powertools/logger";
 import { VerifiedCredential } from "./IVeriCredential";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
@@ -7,6 +8,7 @@ import { AppError } from "./AppError";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { Constants } from "./Constants";
 import { randomUUID } from "crypto";
+import { mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 
 export class VerifiableCredentialService {
 	readonly tableName: string;
@@ -43,14 +45,25 @@ export class VerifiableCredentialService {
 		const subject = sessionItem.subject;
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDay)
 			.build();
-		const result = {
-			sub: subject,
-			nbf: now,
-			iss: this.issuer,
-			iat: now,
-			jti: randomUUID(),
-			vc: verifiedCredential,
-		};
+		let result;
+		if (process.env.USE_MOCKED) {
+			this.logger.info("VcService: USING MOCKED");
+			result = {
+				...mockVcClaims,
+				iss: this.issuer,
+				sub: subject,
+				vc: verifiedCredential,
+			};
+		} else {
+			 result = {
+				sub: subject,
+				nbf: now,
+				iss: this.issuer,
+				iat: now,
+				jti: randomUUID(),
+				vc: verifiedCredential,
+			};
+		}
 
 		this.logger.info("Generated VerifiableCredential jwt", {
     		jti: result.jti,
