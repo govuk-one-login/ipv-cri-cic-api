@@ -61,6 +61,15 @@ export class AbortRequestProcessor {
   		throw new AppError("Missing details in SESSION table", HttpCodesEnum.BAD_REQUEST);
   	}
 
+	const decodedRedirectUri = decodeURIComponent(cicSessionInfo.redirectUri);
+  	const hasQuestionMark = decodedRedirectUri.includes("?");
+  	const redirectUri = `${decodedRedirectUri}${hasQuestionMark ? "&" : "?"}error=access_denied&state=${cicSessionInfo.state}`;
+
+  	if (cicSessionInfo.authSessionState === AuthSessionState.CIC_CRI_SESSION_ABORTED) {
+  		this.logger.info("Session has already been aborted");
+  		return new Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
+  	}
+
   	try {
   	  await this.cicService.updateSessionAuthState(cicSessionInfo.sessionId, AuthSessionState.CIC_CRI_SESSION_ABORTED);
   	} catch (error) {
@@ -87,7 +96,7 @@ export class AbortRequestProcessor {
   		});
   	}
 
-  	const redirectUri = `${cicSessionInfo.redirectUri}?error=access_denied&state=${AuthSessionState.CIC_CRI_SESSION_ABORTED}`;
-  	return new Response(HttpCodesEnum.FOUND_REDIRECT, "Session has been aborted", { Location: redirectUri });
+  	//const redirectUri = `${cicSessionInfo.redirectUri}?error=access_denied&state=${AuthSessionState.CIC_CRI_SESSION_ABORTED}`;
+  	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
   }
 }

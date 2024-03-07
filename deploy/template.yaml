@@ -247,7 +247,7 @@ Globals:
         ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
         SESSION_TABLE:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
-        EUETXMA_QU_URL: !Ref TxMASQSQueue
+        TXMA_QUEUE_URL: !Ref TxMASQSQueue
         REGION: !Sub "${AWS::Region}"
         SECRET_PREFIX: !If [
             UseSecretPrefix,

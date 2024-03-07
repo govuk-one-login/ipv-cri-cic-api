@@ -1,5 +1,5 @@
 import { constants } from "./ApiConstants";
-import { getKeyFromSession, startStubServiceAndReturnSessionId, wellKnownGet } from "./ApiTestSteps";
+import { getKeyFromSession, startStubServiceAndReturnSessionId, wellKnownGet, abortPost } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("Happy path tests", () => {
@@ -26,5 +26,25 @@ describe("Happy path tests", () => {
 		expect(data.keys).toHaveLength(2);
 		expect(data.keys[0].use).toBe("sig");
 		expect(data.keys[1].use).toBe("enc");
+	});
+
+	describe("E2E Happy Path /abort endpoint", () => {
+		let sessionId: string;
+		beforeEach(async () => {
+			const sessionResponse = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
+			sessionId = sessionResponse.data.session_id;
+			console.log("session id: " + sessionId);
+		});
+	
+		it("E2E Happy Path Journey - Abort Previously Aborted Session", async () => {
+			expect(sessionId).toBeTruthy();
+			const response = await abortPost(sessionId);
+			
+			expect(response.headers.location).toContain("%2Fredirect%3Ferror%3Daccess_denied%26state%3D");
+			const secondResponse = await abortPost(sessionId);
+
+			expect(secondResponse.status).toBe(200);
+			expect(secondResponse.data).toBe("Session has already been aborted");
+		});
 	});
 });

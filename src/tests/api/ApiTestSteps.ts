@@ -212,3 +212,14 @@ function validateRawBody(rawBody: any, data: any): void {
 	expect(decodedRawBody.vc.credentialSubject.name[0].nameParts[1].value).toBe(data.lastName);
 	expect(decodedRawBody.vc.credentialSubject.birthDate[0].value).toBe(data.dateOfBirth);
 }
+
+export async function abortPost(sessionId: string): Promise<any> {
+	const path = "/abort";
+	try {
+		const postRequest = await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
+		return postRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}`);
+		return error.response;
+	}
+}
