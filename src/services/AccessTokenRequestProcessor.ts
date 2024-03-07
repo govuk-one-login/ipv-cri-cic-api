@@ -14,10 +14,6 @@ import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
-const DNS_SUFFIX = process.env.DNSSUFFIX!;
-const ISSUER = process.env.ISSUER;
 
 export class AccessTokenRequestProcessor {
     private static instance: AccessTokenRequestProcessor;
@@ -90,7 +86,8 @@ export class AccessTokenRequestProcessor {
     		};
     		let accessToken;
     		try {
-    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload, DNS_SUFFIX);
+				const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, this.logger);
+    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload, dns_suffix);
     		} catch (error) {
     			this.logger.error("Failed to sign the accessToken Jwt", {
     				messageCode: MessageCodes.FAILED_SIGNING_JWT,
