@@ -20,10 +20,6 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { EnvironmentVariables } from "../utils/Constants";
 
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
-const DNS_SUFFIX = process.env.DNSSUFFIX;
-const ISSUER = process.env.ISSUER!;
 
 export class UserInfoRequestProcessor {
   
@@ -48,31 +44,20 @@ export class UserInfoRequestProcessor {
 	private readonly personIdentityTableName: string;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE || !ISSUER || !KMS_KEY_ARN || !DNS_SUFFIX) {
-			logger.error("Environment variable SESSION_TABLE or ISSUER or KMS_KEY_ARN or DNSSUFFIX is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		}
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(SESSION_TABLE, this.kmsJwtAdapter, ISSUER, this.logger, DNS_SUFFIX);
-		this.logger = logger;
-		this.validationHelper = new ValidationHelper();
-		this.metrics = metrics;
-
+		
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
+		const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, logger);
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
 		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
 		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
 		
 		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger, DNS_SUFFIX);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger, dns_suffix);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
