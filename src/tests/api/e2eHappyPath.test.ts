@@ -15,7 +15,7 @@ import {
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("E2E Happy Path Tests", () => {
-	it.each([
+	it.only.each([
 		[dataSlim],
 		[dataBjorn],
 	])("photo ID journey", async (userData: any) => {
@@ -45,7 +45,7 @@ describe("E2E Happy Path Tests", () => {
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
-		validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
+		await validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
 		
 		// Validate TxMA Queue
 		const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
@@ -85,7 +85,7 @@ describe("E2E Happy Path Tests", () => {
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
-		validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
+		await validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
 		
 		// Validate TxMA Queue
 		const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);

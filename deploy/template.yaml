@@ -4226,3 +4226,12 @@ Outputs:
     Condition: IsNotProdLikeEnvironment
     Description: "CIC Test Harness"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
+  VcSigningKeyId:
+    Condition: IsNotProdLikeEnvironment
+    Description: "Signing Key used to sign VC"
+    Value:
+      Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key-id"
+  DNSSuffix:
+    Condition: IsNotProdLikeEnvironment
+    Description: "F2F DNS Suffix"
+    Value: !FindInMap [EnvironmentVariables, !Ref Environment, DNSSUFFIX]
