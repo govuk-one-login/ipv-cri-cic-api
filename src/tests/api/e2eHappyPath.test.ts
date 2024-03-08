@@ -15,7 +15,7 @@ import {
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("E2E Happy Path Tests", () => {
-	it.only.each([
+	it.each([
 		[dataSlim],
 		[dataBjorn],
 	])("photo ID journey", async (userData: any) => {

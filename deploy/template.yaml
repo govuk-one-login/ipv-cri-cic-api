@@ -4233,5 +4233,5 @@ Outputs:
       Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key-id"
   DNSSuffix:
     Condition: IsNotProdLikeEnvironment
-    Description: "F2F DNS Suffix"
+    Description: "CIC DNS Suffix"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, DNSSUFFIX]
