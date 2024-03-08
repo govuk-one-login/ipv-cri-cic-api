@@ -96,7 +96,6 @@ export class AbortRequestProcessor {
   		});
   	}
 
-  	//const redirectUri = `${cicSessionInfo.redirectUri}?error=access_denied&state=${AuthSessionState.CIC_CRI_SESSION_ABORTED}`;
   	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
   }
 }

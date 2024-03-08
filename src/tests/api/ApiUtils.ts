@@ -26,7 +26,6 @@ interface AllTxmaEvents {
 	"CIC_CRI_AUTH_CODE_ISSUED"?: TxmaEvent;
 	"CIC_CRI_END"?: TxmaEvent;
 	"CIC_CRI_VC_ISSUED"?: TxmaEvent;
-	"CIC_CRI_SESSION_ABORTED"?: TxmaEvent;
 }
 
 const getTxMAS3FileNames = async (prefix: string): Promise<any> => {
