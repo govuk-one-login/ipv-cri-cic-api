@@ -25,6 +25,7 @@ jest.mock("../../../utils/JwtUtils", () => ({
 	jwtUtils: {
 		base64Encode: jest.fn().mockImplementation((args) => JSON.parse(args)),
 		base64DecodeToString: jest.fn().mockImplementation((args) => JSON.stringify(args)),
+		getHashedKid: jest.fn().mockImplementation((args) => JSON.stringify(args)),
 	},
 }));
 
@@ -37,7 +38,12 @@ describe("KmsJwtAdapter utils", () => {
 
 	describe("#sign", () => {
 		it("returns a signed access token", async () => {
-			const jwtHeader = { alg: "ES256", typ: "JWT", kid: process.env.KMS_KEY_ARN };
+			const jwtHeader = { alg: "ES256", typ: "JWT", kid: kmsJwtAdapter.kid };
+			const kid = kmsJwtAdapter.kid.split("/").pop();
+			const dnsSuffix = "test.gov.uk";
+			if (kid != null) {
+				jwtHeader.kid = (`did:web:${dnsSuffix}#${jwtUtils.getHashedKid(kid)}`);
+			}
 			const jwtPayload = {
 				sub: "b0668808-67ce-8jc7-a2fc-132b81612111",
 				aud: process.env.ISSUER,
@@ -45,10 +51,10 @@ describe("KmsJwtAdapter utils", () => {
 				exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
 			};
 
-			const accessToken = await kmsJwtAdapter.sign(jwtPayload);
-
+			const accessToken = await kmsJwtAdapter.sign(jwtPayload, dnsSuffix);
 			expect(jwtUtils.base64Encode).toHaveBeenNthCalledWith(1, JSON.stringify(jwtHeader));
 			expect(jwtUtils.base64Encode).toHaveBeenNthCalledWith(2, JSON.stringify(jwtPayload));
+			expect(jwtUtils.getHashedKid).toHaveBeenNthCalledWith(2, kid);
 			expect(format.derToJose).toHaveBeenCalledWith(Buffer.from("signature").toString("base64"), "ES256");
 			expect(accessToken).toBe(`${jwtHeader}.${jwtPayload}.JOSE-formatted signature`);
 		});
@@ -63,7 +69,7 @@ describe("KmsJwtAdapter utils", () => {
 
 			jest.spyOn(kmsJwtAdapter.kms, "sign").mockImplementationOnce(() => ({ Signature: null }));
 
-			await expect(kmsJwtAdapter.sign(jwtPayload)).rejects.toThrow(expect.objectContaining({ message: "Failed to sign Jwt" }));
+			await expect(kmsJwtAdapter.sign(jwtPayload, "test.gov.uk")).rejects.toThrow(expect.objectContaining({ message: "Failed to sign Jwt" }));
 		});
 	});
 
