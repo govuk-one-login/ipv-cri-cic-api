@@ -133,7 +133,7 @@ export async function wellKnownGet(): Promise<any> {
 
 export async function validateJwtToken(responseString: any, data: any): Promise<void> {
 	const [rawHead, rawBody, signature] = JSON.stringify(getJwtTokenUserInfo(responseString)).split(".");
-	// await validateRawHead(rawHead);
+	await validateRawHead(rawHead);
 	validateRawBody(rawBody, data);
 }
 
