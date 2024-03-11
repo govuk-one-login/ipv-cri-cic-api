@@ -1,5 +1,5 @@
 import { constants } from "./ApiConstants";
-import { getKeyFromSession, startStubServiceAndReturnSessionId, wellKnownGet, abortPost } from "./ApiTestSteps";
+import { getKeyFromSession, startStubServiceAndReturnSessionId, wellKnownGet } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("Happy path tests", () => {
