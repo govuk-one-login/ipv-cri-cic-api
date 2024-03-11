@@ -20,7 +20,6 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { EnvironmentVariables } from "../utils/Constants";
 
-
 export class UserInfoRequestProcessor {
   
 	private static instance: UserInfoRequestProcessor;
@@ -47,17 +46,16 @@ export class UserInfoRequestProcessor {
 		this.logger = logger;
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
-		
+
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
-		const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, logger);
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
 		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
 		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
 		
 		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger, dns_suffix);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {

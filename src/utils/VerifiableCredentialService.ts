@@ -19,21 +19,18 @@ export class VerifiableCredentialService {
 
 	private readonly kmsJwtAdapter: KmsJwtAdapter;
 
-	readonly dnsSuffix: string;
-
 	private static instance: VerifiableCredentialService;
 
-	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger, dnsSuffix: string) {
+	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger) {
 		this.issuer = issuer;
 		this.tableName = tableName;
 		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
-		this.dnsSuffix = dnsSuffix;
 	}
 
-	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string): VerifiableCredentialService {
+	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger): VerifiableCredentialService {
 		if (!VerifiableCredentialService.instance) {
-			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger, dnsSuffix);
+			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger);
 		}
 		return VerifiableCredentialService.instance;
 	}
@@ -73,7 +70,7 @@ export class VerifiableCredentialService {
     	});
 		try {
 			// Sign the VC
-			return await this.kmsJwtAdapter.sign(result, this.dnsSuffix);
+			return await this.kmsJwtAdapter.sign(result);
 		} catch (error) {
 			this.logger.error("Failed to sign Jwt", {
     			error,
