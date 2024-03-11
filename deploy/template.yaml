@@ -762,6 +762,7 @@ Resources:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -1041,6 +1042,7 @@ Resources:
           #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -4303,3 +4305,12 @@ Outputs:
     Condition: IsNotProdLikeEnvironment
     Description: "CIC Test Harness"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
+  VcSigningKeyId:
+    Condition: IsNotProdLikeEnvironment
+    Description: "Signing Key used to sign VC"
+    Value:
+      Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key-id"
+  DNSSuffix:
+    Condition: IsNotProdLikeEnvironment
+    Description: "CIC DNS Suffix"
+    Value: !FindInMap [EnvironmentVariables, !Ref Environment, DNSSUFFIX]
