@@ -14,6 +14,7 @@ import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 
+
 export class AccessTokenRequestProcessor {
     private static instance: AccessTokenRequestProcessor;
 
@@ -26,30 +27,30 @@ export class AccessTokenRequestProcessor {
     private readonly cicService: CicService;
 
     private readonly kmsJwtAdapter: KmsJwtAdapter;
+  
+    private readonly issuer: string;
 
-	private readonly issuer: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
-		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+    constructor(logger: Logger, metrics: Metrics) {
+    	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
-		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-    
+    	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
     	this.logger = logger;
     	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
     	this.metrics = metrics;
     	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-	}
+    }
 
-	static getInstance(logger: Logger, metrics: Metrics): AccessTokenRequestProcessor {
+    static getInstance(logger: Logger, metrics: Metrics): AccessTokenRequestProcessor {
 
     	if (!AccessTokenRequestProcessor.instance) {
     		AccessTokenRequestProcessor.instance = new AccessTokenRequestProcessor(logger, metrics);
     	}
     	return AccessTokenRequestProcessor.instance;
-	}
+    }
 
-	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+    async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
     	try {
     		const requestPayload = this.accessTokenRequestValidationHelper.validatePayload(event.body);
     		let session :ISessionItem | undefined;
@@ -85,7 +86,8 @@ export class AccessTokenRequestProcessor {
     		};
     		let accessToken;
     		try {
-    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
+    			const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, this.logger);
+    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload, dns_suffix);
     		} catch (error) {
     			this.logger.error("Failed to sign the accessToken Jwt", {
     				messageCode: MessageCodes.FAILED_SIGNING_JWT,
@@ -111,5 +113,5 @@ export class AccessTokenRequestProcessor {
     		this.logger.error({ message: "Error while trying to create access token ", error, messageCode: MessageCodes.FAILED_CREATING_ACCESS_TOKEN });
     		return new Response(error.statusCode, error.message);
     	}
-	}
+    }
 }
