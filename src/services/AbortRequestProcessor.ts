@@ -61,7 +61,7 @@ export class AbortRequestProcessor {
   		throw new AppError("Missing details in SESSION table", HttpCodesEnum.BAD_REQUEST);
   	}
 
-	const decodedRedirectUri = decodeURIComponent(cicSessionInfo.redirectUri);
+  	const decodedRedirectUri = decodeURIComponent(cicSessionInfo.redirectUri);
   	const hasQuestionMark = decodedRedirectUri.includes("?");
   	const redirectUri = `${decodedRedirectUri}${hasQuestionMark ? "&" : "?"}error=access_denied&state=${cicSessionInfo.state}`;
 

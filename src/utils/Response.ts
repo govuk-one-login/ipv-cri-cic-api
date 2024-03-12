@@ -27,5 +27,8 @@ export const GenericServerError = {
 export const unauthorizedResponse = {
 	statusCode: HttpCodesEnum.UNAUTHORIZED,
 	headers: SECURITY_HEADERS,
-	body: "Unauthorized",
+	body: JSON.stringify({
+		redirect: null,
+		message: "Unauthorized",
+	}),
 };
