@@ -41,7 +41,6 @@ describe("Happy path tests", () => {
 		});
 
 		it("Successful Request Test - Abort After Session Request", async () => {
-			console.log("Session Id: " + sessionId);
 			const response = await abortPost(sessionId);
 			expect(response.status).toBe(200);
 			expect(response.data).toBe("Session has been aborted");
@@ -58,7 +57,6 @@ describe("Happy path tests", () => {
 			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "state", "" + url.searchParams.get("state"));
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 2);
-			console.log(allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName: "CIC_CRI_START_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "CIC_CRI_SESSION_ABORTED", schemaName: "CIC_CRI_SESSION_ABORTED_SCHEMA" }, allTxmaEventBodies);
 
