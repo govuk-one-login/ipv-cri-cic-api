@@ -55,7 +55,7 @@ export class AbortRequestProcessor {
   	});
 
   	if (!cicSessionInfo) {
-  		this.logger.warn("Missing details in SESSION TABLE", {
+  		this.logger.error("Missing details in SESSION TABLE", {
   			messageCode: MessageCodes.SESSION_NOT_FOUND,
   		});
   		throw new AppError("Missing details in SESSION table", HttpCodesEnum.BAD_REQUEST);
