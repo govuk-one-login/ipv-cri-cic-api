@@ -211,8 +211,7 @@ export async function getSessionAndVerifyKey(sessionId: string, tableName: strin
 export async function abortPost(sessionId: string): Promise<AxiosResponse<string>> {
 	const path = "/abort";
 	try {
-		const postRequest = await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
-		return postRequest;
+		return await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
