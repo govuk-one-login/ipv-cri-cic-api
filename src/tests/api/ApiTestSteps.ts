@@ -199,6 +199,25 @@ export async function getKeyFromSession(sessionId: string, tableName: string, ke
 		throw new Error("getKeyFromSession - Failed to get " + key + " value: " + e);
 	}
 }
+export async function getSessionAndVerifyKey(sessionId: string, tableName: string, key: string, expectedValue: string): Promise<void> {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+	try {
+		expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
+	} catch (error: any) {
+		throw new Error("getSessionAndVerifyKey - Failed to verify " + key + " value: " + error);
+	}
+}
+
+export async function abortPost(sessionId: string): Promise<AxiosResponse<string>> {
+	const path = "/abort";
+	try {
+		return await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}`);
+		return error.response;
+	}
+}
+
 
 async function validateRawHead(rawHead: any): Promise<void> {
 	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
