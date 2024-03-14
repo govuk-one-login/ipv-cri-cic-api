@@ -24,13 +24,11 @@ export const GenericServerError = {
 	body: "Internal server error",
 };
 
-export const unauthorizedResponse = () => {
-	return {
-		statusCode: HttpCodesEnum.UNAUTHORIZED,
-		headers: SECURITY_HEADERS,
-		body: JSON.stringify({
-			redirect: null,
-			message: "Unauthorized",
-		}),
-	};
+export const unauthorizedResponse = {
+	statusCode: HttpCodesEnum.UNAUTHORIZED,
+	headers: SECURITY_HEADERS,
+	body: JSON.stringify({
+		redirect: null,
+		message: "Unauthorized",
+	}),
 };

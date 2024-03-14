@@ -245,6 +245,9 @@ Globals:
         POWERTOOLS_LOG_LEVEL: !Ref PowertoolsLogLevel # The LogLevel for the AWS PowerTools LogHelper
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI # The Metric Namespace for the AWS PowerTools MetricHelper
         ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+        SESSION_TABLE:
+          Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        TXMA_QUEUE_URL: !Ref TxMASQSQueue
         REGION: !Sub "${AWS::Region}"
         SECRET_PREFIX: !If [
             UseSecretPrefix,
@@ -635,8 +638,8 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: ClaimedIdHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          # SESSION_TABLE:
+          #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           PERSON_IDENTITY_TABLE_NAME:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
 
@@ -753,8 +756,8 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          # SESSION_TABLE:
+          #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           PERSON_IDENTITY_TABLE_NAME:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
           KMS_KEY_ARN:
@@ -894,8 +897,8 @@ Resources:
           AUTH_SESSION_TTL:
             !FindInMap [EnvironmentVariables, !Ref Environment, AUTHSESSIONTTL]
           POWERTOOLS_SERVICE_NAME: SessionHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          # SESSION_TABLE:
+          #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           PERSON_IDENTITY_TABLE_NAME:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
           KMS_KEY_ARN:
@@ -1035,8 +1038,8 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AccessTokenHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          # SESSION_TABLE:
+          #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
@@ -1152,8 +1155,8 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationCodeHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          # SESSION_TABLE:
+          #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -1463,8 +1466,8 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: SessionConfigHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          # SESSION_TABLE:
+          #   Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1556,6 +1559,80 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
+
+  AbortFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AbortLogGroup
+    Properties:
+      FunctionName: !Sub "CIC-Abort-${AWS::StackName}"
+      Handler: AbortHandler.lambdaHandler
+      CodeUri: ../src/
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AbortHandler
+          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBWritePolicy:
+            TableName: !ImportValue
+              Fn::Sub: "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue:
+                !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt [TxMASQSQueue, Arn]
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt [TxMAKMSEncryptionKey, Arn]
+      Events:
+        documentSelection:
+          Type: Api
+          Properties:
+            Path: /abort
+            Method: post
+            RestApiId: !Ref CICRestApi
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - AbortHandler.ts
+
+  AbortLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/CIC-Abort-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  AbortLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
+      FilterPattern: ""
+      LogGroupName: !Ref AbortLogGroup
+
+  AbortPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AbortFunction
+      Principal: apigateway.amazonaws.com
 
 # Alarms
 # BackEnd5xxAlarms

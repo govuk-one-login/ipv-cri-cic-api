@@ -18,6 +18,8 @@ export class Constants {
 
     static readonly SESSION_CONFIG_LOGGER_SVC_NAME = "SessionConfigHandler";
 
+    static readonly ABORT_LOGGER_SVC_NAME = "AbortHandler";
+
     static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
 
     static readonly DEBUG = "DEBUG";
