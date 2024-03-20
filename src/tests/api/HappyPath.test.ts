@@ -27,7 +27,7 @@ describe("Happy path tests", () => {
 		it.each([
 			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
-		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 			const sessionId = sessionResponse.data.session_id;
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -41,7 +41,7 @@ describe("Happy path tests", () => {
 		it.each([
 			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
-		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 			const sessionId = sessionResponse.data.session_id;
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -60,7 +60,7 @@ describe("Happy path tests", () => {
 		it.each([
 			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
-		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 			const sessionId = sessionResponse.data.session_id;
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -76,7 +76,7 @@ describe("Happy path tests", () => {
 		it.each([
 			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
-		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 			const sessionId = sessionResponse.data.session_id;
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
