@@ -3,7 +3,7 @@
 /* eslint-disable max-lines-per-function */
 import userData from "../data/happyPathSlim.json";
 import { constants } from "./ApiConstants";
-import { abortPost, getKeyFromSession, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost } from "./ApiTestSteps";
+import { abortPost, getKeyFromSession, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost, authorizationGet, tokenPost, userInfoPost } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("Happy path tests", () => {
@@ -15,11 +15,83 @@ describe("Happy path tests", () => {
 			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
 			const sessionId = sessionResponse.data.session_id;
 
-			const savedJourney = getKeyFromSession(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey");
-			await expect(savedJourney).resolves.toBe(journeyType);
+			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey", journeyType);
+			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "authSessionState", "CIC_SESSION_CREATED");
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 1);
 			validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName }, allTxmaEventBodies);
+		});
+	});
+
+	describe("/claimedIdentity endpoint", () => {
+		it.each([
+			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
+			const sessionId = sessionResponse.data.session_id;
+			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+			expect(claimedIdentityResponse.status).toBe(200);
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "authSessionState", "CIC_DATA_RECEIVED");
+		});
+	});
+
+	describe("/authorization endpoint", () => {
+		it.each([
+			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
+			const sessionId = sessionResponse.data.session_id;
+			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+			const authResponse = await authorizationGet(sessionId);
+			expect(authResponse.status).toBe(200);
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "authSessionState", "CIC_AUTH_CODE_ISSUED");
+
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 2);
+			validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "CIC_CRI_AUTH_CODE_ISSUED", schemaName: "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA" }, allTxmaEventBodies);
+		});
+	});
+
+	describe("/token endpoint", () => {
+		it.each([
+			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
+			const sessionId = sessionResponse.data.session_id;
+			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+			const authResponse = await authorizationGet(sessionId);
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+			expect(tokenResponse.status).toBe(200);
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "authSessionState", "CIC_ACCESS_TOKEN_ISSUED");
+		});
+	});
+
+	describe("/userinfo endpoint", () => {
+		it.each([
+			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+		])("Successful Request Tests", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			const sessionResponse = await startStubServiceAndReturnSessionId(journeyType);
+			const sessionId = sessionResponse.data.session_id;
+			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+			const authResponse = await authorizationGet(sessionId);
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+			const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
+			expect(userInfoResponse.status).toBe(200);
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "authSessionState", "CIC_ACCESS_TOKEN_ISSUED");
+
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
+			validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "CIC_CRI_AUTH_CODE_ISSUED", schemaName: "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "CIC_CRI_END", schemaName: "CIC_CRI_END_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "CIC_CRI_VC_ISSUED", schemaName: "CIC_CRI_VC_ISSUED_SCHEMA" }, allTxmaEventBodies);
 		});
 	});
 
