@@ -25,9 +25,10 @@ const awsSigv4Interceptor = aws4Interceptor({
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
-export async function startStubServiceAndReturnSessionId(journeyType: string): Promise<any> {
+export async function startStubServiceAndReturnSessionId(journeyType: string): Promise<string> {
 	const stubResponse = await stubStartPost(journeyType);
-	return sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+	const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+	return sessionResponse.data.session_id;
 }
 
 export async function stubStartPost(journeyType: string): Promise<any> {

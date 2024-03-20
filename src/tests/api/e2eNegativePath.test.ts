@@ -38,7 +38,8 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 
 describe("/session Unhappy Path", () => {
 	it("Invalid 'context' test", async () => {
-		const sessionResponse = await startStubServiceAndReturnSessionId("INVALID");
+		const stubResponse = await stubStartPost("INVALID");
+		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 		expect(sessionResponse.status).toBe(401);
 	});
 });
@@ -46,8 +47,7 @@ describe("/session Unhappy Path", () => {
 describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 	let sessionId: any;
 	beforeAll(async () => {
-		const sessionResponse = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
-		sessionId = sessionResponse.data.session_id;
+		sessionId = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
 	});
 
 	it("E2E Negative Path Journey - Claimed Identity: No Name in Payload", async () => {
@@ -73,7 +73,9 @@ describe("Claimed Identity Negative Path Tests", () => {
 		[dataSpaceStart],
 		[dataSpaceEnd],
 	])("E2E Happy Path Journey - User Info", async (userData: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
+		const stubResponse = await stubStartPost("FACE_TO_FACE");
+		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+
 		expect(sessionResponse.status).toBe(200);
 		console.log(sessionResponse.data);
 		const sessionId = sessionResponse.data.session_id;
