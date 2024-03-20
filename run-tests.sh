@@ -15,6 +15,7 @@ export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)/start
 export DEV_CIC_TEST_HARNESS_URL=$(remove_quotes "$CFN_CICTestHarnessURL")
 export VC_SIGNING_KEY_ID=$(remove_quotes "$CFN_VcSigningKeyId")
 export DNS_SUFFIX=$(remove_quotes "$CFN_DNSSuffix")
+export DEV_CIC_SESSION_TABLE_NAME=$(remove_quotes "$CFN_SessionTableName")
 
 cd /src; npm run test:api
 error_code=$?

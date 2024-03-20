@@ -4314,3 +4314,10 @@ Outputs:
     Condition: IsNotProdLikeEnvironment
     Description: "CIC DNS Suffix"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, DNSSUFFIX]
+  SessionTableName:
+    Condition: IsNotProdLikeEnvironment
+    Description: "CIC Session Table Name"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTable-name
