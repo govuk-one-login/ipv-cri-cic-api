@@ -19,10 +19,7 @@ describe("E2E Happy Path Tests", () => {
 		[dataSlim],
 		[dataBjorn],
 	])("photo ID journey", async (userData: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId(userData.journeyType);
-		expect(sessionResponse.status).toBe(200);
-
-		const sessionId = sessionResponse.data.session_id;
+		const sessionId = await startStubServiceAndReturnSessionId(userData.journeyType);
 		console.log("sessionId", sessionId);
 
 		// Session Config
@@ -39,14 +36,14 @@ describe("E2E Happy Path Tests", () => {
 		expect(authResponse.status).toBe(200);
 
 		// Post Token
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 		expect(tokenResponse.status).toBe(200);
 
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
 		await validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
-		
+
 		// Validate TxMA Queue
 		const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
 		validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName: "CIC_CRI_START_SCHEMA" }, allTxmaEventBodies);
@@ -59,10 +56,7 @@ describe("E2E Happy Path Tests", () => {
 		[dataManuel],
 		[dataBillyJoe],
 	])("non photo ID journey", async (userData: any) => {
-		const sessionResponse = await startStubServiceAndReturnSessionId(userData.journeyType);
-		expect(sessionResponse.status).toBe(200);
-
-		const sessionId = sessionResponse.data.session_id;
+		const sessionId = await startStubServiceAndReturnSessionId(userData.journeyType);
 		console.log("sessionId", sessionId);
 
 		// Session Config
@@ -79,14 +73,14 @@ describe("E2E Happy Path Tests", () => {
 		expect(authResponse.status).toBe(200);
 
 		// Post Token
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 		expect(tokenResponse.status).toBe(200);
 
 		// Post User Info
 		const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
 		await validateJwtToken(JSON.stringify(userInfoResponse.data), userData);
-		
+
 		// Validate TxMA Queue
 		const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
 		validateTxMAEventData({ eventName: "CIC_CRI_START", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" }, allTxmaEventBodies);
