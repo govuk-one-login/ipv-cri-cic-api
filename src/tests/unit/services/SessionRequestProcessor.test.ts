@@ -1,3 +1,6 @@
+/* eslint-disable max-lines-per-function */
+/* eslint @typescript-eslint/unbound-method: 0 */
+/* eslint jest/unbound-method: error */
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -11,15 +14,17 @@ import { Jwt } from "../../../utils/IVeriCredential";
 import { ValidationHelper } from "../../../utils/ValidationHelper";
 import { ISessionItem } from "../../../models/ISessionItem";
 
-/* eslint @typescript-eslint/unbound-method: 0 */
-/* eslint jest/unbound-method: error */
-
 let sessionRequestProcessor: SessionRequestProcessor;
 const mockCicService = mock<CicService>();
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const logger = mock<Logger>();
 const metrics = mock<Metrics>();
 const mockValidationHelper = mock<ValidationHelper>();
+
+jest.mock("crypto", () => ({
+	...jest.requireActual("crypto"),
+	randomUUID: () => "sessionId",
+}));
 
 const decodedJwtFactory = ():Jwt => {
 	return {
@@ -74,13 +79,8 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report unrecognised client", async () => {
-
-		// Arrange
-
-		// Act
 		const response = await sessionRequestProcessor.processRequest(SESSION_WITH_INVALID_CLIENT);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.BAD_REQUEST);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -92,14 +92,10 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report a JWE decryption failure", async () => {
-
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockRejectedValue("error");
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -111,17 +107,13 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report a failure to decode JWT", async () => {
-
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockImplementation(() => {
 			throw Error("Error");
 		});
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -133,16 +125,12 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report a JWT verification failure", async () => {
-
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(null);
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -154,16 +142,12 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report an unexpected error verifying JWT", async () => {
-
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockRejectedValue({});
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -175,17 +159,13 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report a JWT validation failure", async () => {
-
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		mockValidationHelper.isJwtValid.mockReturnValue("errors");
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
@@ -196,17 +176,14 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should report session already exists", async () => {
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		mockValidationHelper.isJwtValid.mockReturnValue("");
 		mockCicService.getSessionById.mockResolvedValue(sessionItemFactory());
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
@@ -216,13 +193,12 @@ describe("SessionRequestProcessor", () => {
 		);
 		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: expect.any(String),
+			sessionId: "sessionId",
 			govuk_signin_journey_id: "abcdef",
 		});
 	});
 
-	it("should fail to create a session", async () => {
-		// Arrange
+	it("should handle session creation failure", async () => {
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
@@ -230,10 +206,8 @@ describe("SessionRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 		mockCicService.createAuthSession.mockRejectedValue("error");
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
@@ -243,13 +217,12 @@ describe("SessionRequestProcessor", () => {
 		);
 		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: expect.any(String),
+			sessionId: "sessionId",
 			govuk_signin_journey_id: "abcdef",
 		});
 	});
 
 	it("should create a new session", async () => {
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
@@ -257,19 +230,16 @@ describe("SessionRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 		mockCicService.createAuthSession.mockResolvedValue();
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.OK);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: expect.any(String),
+			sessionId: "sessionId",
 			govuk_signin_journey_id: "abcdef",
 		});
 	});
 
 	it("should create a new session but report a TxMA failure", async () => {
-		// Arrange
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
@@ -278,10 +248,8 @@ describe("SessionRequestProcessor", () => {
 		mockCicService.createAuthSession.mockResolvedValue();
 		mockCicService.sendToTXMA.mockRejectedValue("failed");
 
-		// Act
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
 		expect(response.statusCode).toBe(HttpCodesEnum.OK);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -291,28 +259,89 @@ describe("SessionRequestProcessor", () => {
 			}),
 		);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: expect.any(String),
+			sessionId: "sessionId",
 			govuk_signin_journey_id: "abcdef",
 		});
 	});
 
-	it("the session created should have a valid expiryDate", async () => {
-		// Arrange
+	it("should send correct TXMA event", async () => {
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		mockValidationHelper.isJwtValid.mockReturnValue("");
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 		mockCicService.createAuthSession.mockResolvedValue();
-		mockCicService.savePersonIdentity.mockRejectedValue("error");
 		jest.useFakeTimers();
 		const fakeTime = 1684933200;
 		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
-		// Act
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		// Assert
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			event_name: "CIC_CRI_START",
+			client_id: undefined,
+			component_id: "https://XXX-c.env.account.gov.uk",
+			timestamp: 1684933200,
+			event_timestamp_ms: 1684933200000,
+			user: {
+				govuk_signin_journey_id: "abcdef",
+				ip_address: "",
+				persistent_session_id: undefined,
+				session_id: "sessionId",
+				transaction_id: "",
+				user_id: "",
+			},
+		});
+	});
+
+	it("should send correct TXMA event where context is provided in JWT", async () => {
+		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+		mockKmsJwtAdapter.decode.mockReturnValue({ ...decodedJwtFactory(), payload: { ...decodedJwtFactory().payload, context: "bank_account" } });
+		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+		mockValidationHelper.isJwtValid.mockReturnValue("");
+		mockCicService.getSessionById.mockResolvedValue(undefined);
+		mockCicService.createAuthSession.mockResolvedValue();
+		jest.useFakeTimers();
+		const fakeTime = 1684933200;
+		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+
+		await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			event_name: "CIC_CRI_START",
+			client_id: undefined,
+			component_id: "https://XXX-c.env.account.gov.uk",
+			timestamp: 1684933200,
+			event_timestamp_ms: 1684933200000,
+			user: {
+				govuk_signin_journey_id: "abcdef",
+				ip_address: "",
+				persistent_session_id: undefined,
+				session_id: "sessionId",
+				transaction_id: "",
+				user_id: "",
+			},
+			extensions: {
+				evidence: {
+					context: "bank_account",
+				},
+			},
+		});
+	});
+
+	it("the session created should have a valid expiryDate", async () => {
+		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+		mockValidationHelper.isJwtValid.mockReturnValue("");
+		mockCicService.getSessionById.mockResolvedValue(undefined);
+		mockCicService.createAuthSession.mockResolvedValue();
+		jest.useFakeTimers();
+		const fakeTime = 1684933200;
+		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+
+		await sessionRequestProcessor.processRequest(VALID_SESSION);
+
 		expect(mockCicService.createAuthSession).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({

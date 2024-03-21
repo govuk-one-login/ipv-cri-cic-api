@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -8,7 +9,6 @@ import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
-import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
@@ -91,6 +91,13 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
+		jest.clearAllMocks();
+		jest.useFakeTimers();
+		jest.setSystemTime(new Date(1585695600000));
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
 	});
 
 	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
@@ -103,11 +110,12 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_END",
 			client_id: mockSession.clientId,
 			component_id: process.env.ISSUER,
-			timestamp: absoluteTimeNow(),
+			timestamp: 1585695600,
+			event_timestamp_ms: 1585695600000,
 			user: {
 				govuk_signin_journey_id: mockSession.clientSessionId,
 				ip_address: mockSession.clientIpAddress,
@@ -117,11 +125,12 @@ describe("UserInfoRequestProcessor", () => {
 				user_id: mockSession.subject,
 			},
 		});
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_VC_ISSUED",
 			client_id: mockSession.clientId,
 			component_id: process.env.ISSUER,
-			timestamp: absoluteTimeNow(),
+			timestamp: 1585695600,
+			event_timestamp_ms: 1585695600000,
 			user: {
 				govuk_signin_journey_id: mockSession.clientSessionId,
 				ip_address: mockSession.clientIpAddress,
@@ -203,7 +212,7 @@ describe("UserInfoRequestProcessor", () => {
 
 	it("Return 401 when we receive expired JWT access_token", async () => {
 		// @ts-ignore
-		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = absoluteTimeNow() - 500;
+		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = 1585695600 - 500;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore

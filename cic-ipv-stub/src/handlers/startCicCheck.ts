@@ -16,6 +16,8 @@ export const v3KmsClient = new KMSClient({
   maxAttempts: 2,
 });
 
+let frontendURL: string; 
+
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -28,6 +30,8 @@ export const handler = async (
   if (overrides?.addSharedClaims != null) {
     addSharedClaims = overrides.addSharedClaims;
   }
+
+	frontendURL = overrides?.frontendURL != null ? overrides.frontendURL : config.frontUri
 
   const defaultClaims = {
     name: [
@@ -62,7 +66,7 @@ export const handler = async (
     redirect_uri: config.redirectUri,
     response_type: "code",
     govuk_signin_journey_id: crypto.randomBytes(16).toString("hex"),
-    aud: config.frontUri,
+    aud: frontendURL,
     iss: "https://ipv.core.account.gov.uk",
     client_id: config.clientId,
     state: crypto.randomBytes(16).toString("hex"),
@@ -94,7 +98,7 @@ export const handler = async (
       request,
       responseType: "code",
       clientId: config.clientId,
-      AuthorizeLocation: `${process.env.OIDC_FRONT_BASE_URI}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
+      AuthorizeLocation: `${frontendURL}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
     }),
   };
 };

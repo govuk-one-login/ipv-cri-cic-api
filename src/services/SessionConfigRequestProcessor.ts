@@ -2,13 +2,11 @@ import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { Constants } from "../utils/Constants";
-
-const SESSION_TABLE = process.env.SESSION_TABLE;
+import { Constants, EnvironmentVariables } from "../utils/Constants";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 
 export class SessionConfigRequestProcessor {
 	private static instance: SessionConfigRequestProcessor;
@@ -20,15 +18,11 @@ export class SessionConfigRequestProcessor {
 	private readonly cicService: CicService;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		if (!SESSION_TABLE) {
-			logger.error("Environment variable SESSION_TABLE is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError( "Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
-		}
 		this.logger = logger;
 		this.metrics = metrics;
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  	
+		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): SessionConfigRequestProcessor {

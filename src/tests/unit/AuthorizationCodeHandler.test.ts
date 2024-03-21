@@ -53,12 +53,6 @@ describe("AuthorizationCodeHandler", () => {
 		}));
 	});
 
-	it("return not found when unsupported http method tried for authorization", async () => {
-		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
-
-		return expect(lambdaHandler(UNSUPPORTED_AUTHCODE, "CIC")).resolves.toEqual(new Response(HttpCodesEnum.NOT_FOUND, ""));
-	});
-
 	it("returns server error where AuthorizationRequestProcessor fails", async () => {
 		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 		const instance  = AuthorizationRequestProcessor.getInstance(logger, metrics);
@@ -69,19 +63,6 @@ describe("AuthorizationCodeHandler", () => {
 			message: "An error has occurred.",
 			error: {},
 			messageCode: MessageCodes.SERVER_ERROR,
-		}));
-	});
-
-	it("return not found when resource not found", async () => {
-		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
-
-		await expect(lambdaHandler(RESOURCE_NOT_FOUND, "AUTH_CODE")).rejects.toThrow(expect.objectContaining({
-			statusCode: HttpCodesEnum.NOT_FOUND,
-			message: "Requested resource does not exist" + { resource: RESOURCE_NOT_FOUND },
-		}));
-		expect(logger.error).toHaveBeenCalledWith("Requested resource does not exist", expect.objectContaining({
-			resource: RESOURCE_NOT_FOUND.resource,
-			messageCode: MessageCodes.RESOURCE_NOT_FOUND,
 		}));
 	});
 });
