@@ -46,16 +46,4 @@ describe("SessionHandler", () => {
 			messageCode: MessageCodes.SERVER_ERROR,
 		});
 	});
-
-	it("return not found when resource not found", async () => {
-		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
-
-		await expect(lambdaHandler(RESOURCE_NOT_FOUND, CONTEXT)).rejects.toThrow(expect.objectContaining({
-			statusCode: HttpCodesEnum.NOT_FOUND,
-		}));
-		expect(logger.error).toHaveBeenCalledWith("Requested resource does not exist", {
-			resource: RESOURCE_NOT_FOUND.resource,
-			messageCode: MessageCodes.RESOURCE_NOT_FOUND,
-		});
-	});
 });

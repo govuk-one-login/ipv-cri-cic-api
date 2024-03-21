@@ -1,5 +1,5 @@
 import axios from "axios";
-import { constants } from "../utils/ApiConstants";
+import { constants } from "./ApiConstants";
 
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_CIC_API_URL });
 

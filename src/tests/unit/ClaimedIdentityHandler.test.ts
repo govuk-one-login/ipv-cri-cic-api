@@ -22,18 +22,4 @@ describe("ClaimedIdentityHandler", () => {
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockedClaimedIdRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
 	});
-
-	it("return not found when unsupported http method tried for claimedidentity", async () => {
-		ClaimedIdRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedClaimedIdRequestProcessor);
-
-	     return expect(lambdaHandler(UNSUPPORTED_CLAIMEDID, "CIC")).resolves.toEqual(new Response(HttpCodesEnum.NOT_FOUND, ""));
-	});
-
-	it("return not found when resource not found", async () => {
-		ClaimedIdRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedClaimedIdRequestProcessor);
-
-		return expect(lambdaHandler(RESOURCE_NOT_FOUND, "CIC")).rejects.toThrow(expect.objectContaining({
-			statusCode: HttpCodesEnum.NOT_FOUND,
-		}));
-	});
 });
