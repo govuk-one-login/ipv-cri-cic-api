@@ -10,12 +10,10 @@ import { Response } from "../utils/Response";
 import { AccessTokenRequestValidationHelper } from "../utils/AccessTokenRequestValidationHelper";
 import { ISessionItem } from "../models/ISessionItem";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
-import { Constants } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const KMS_KEY_ARN = process.env.KMS_KEY_ARN;
-const ISSUER = process.env.ISSUER;
 
 export class AccessTokenRequestProcessor {
     private static instance: AccessTokenRequestProcessor;
@@ -29,22 +27,23 @@ export class AccessTokenRequestProcessor {
     private readonly cicService: CicService;
 
     private readonly kmsJwtAdapter: KmsJwtAdapter;
+  
+    private readonly issuer: string;
+
 
     constructor(logger: Logger, metrics: Metrics) {
-    	if (!SESSION_TABLE || !KMS_KEY_ARN || !ISSUER) {
-    		logger.error("Environment variable SESSION_TABLE or KMS_KEY_ARN or ISSUER is not configured", {
-    			messageCode: MessageCodes.MISSING_CONFIGURATION,
-    		});
-    		throw new AppError("Service incorrectly configured, missing some environment variables.", HttpCodesEnum.SERVER_ERROR);
-    	}
+    	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
+    	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
     	this.logger = logger;
-    	this.kmsJwtAdapter = new KmsJwtAdapter(KMS_KEY_ARN);
+    	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
     	this.metrics = metrics;
-    	this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
+    	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
     }
 
     static getInstance(logger: Logger, metrics: Metrics): AccessTokenRequestProcessor {
+
     	if (!AccessTokenRequestProcessor.instance) {
     		AccessTokenRequestProcessor.instance = new AccessTokenRequestProcessor(logger, metrics);
     	}
@@ -81,13 +80,14 @@ export class AccessTokenRequestProcessor {
     		// Generate access token
     		const jwtPayload = {
     			sub: session.sessionId,
-    			aud: ISSUER,
-    			iss: ISSUER,
+    			aud: this.issuer,
+    			iss: this.issuer,
     			exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
     		};
     		let accessToken;
     		try {
-    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
+    			const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, this.logger);
+    			accessToken = await this.kmsJwtAdapter.sign(jwtPayload, dns_suffix);
     		} catch (error) {
     			this.logger.error("Failed to sign the accessToken Jwt", {
     				messageCode: MessageCodes.FAILED_SIGNING_JWT,
