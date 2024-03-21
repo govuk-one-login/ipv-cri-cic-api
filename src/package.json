@@ -1,5 +1,5 @@
 {
-    "name": "CIC",
+    "name": "cic",
     "version": "1.0.0",
     "description": "OneLogin CIC CRI",
     "repository": "https://github.com/govuk-one-login/ipv-cri-cic-api",
@@ -16,10 +16,16 @@
         "@aws-sdk/credential-providers": "3.352.0",
         "@aws-sdk/lib-dynamodb": "3.293.0",
         "@aws-sdk/node-http-handler": "^3.374.0",
+        "@pact-foundation/pact": "^12.1.3",
         "ajv": "^8.12.0",
         "aws-xray-sdk-core": "^3.4.1",
         "axios": ">=1.3.4",
         "class-validator": "0.14.0",
+        "cross-env": "^7.0.3",
+        "npm-run-all": "^4.1.5",
+        "express": "^4.18.2",
+        "express-asyncify": "^2.1.2",
+        "body-parser": "^1.20.2",
         "ecdsa-sig-formatter": "^1.0.11",
         "esbuild": "0.17.12",
         "jose": "^4.11.2",
@@ -35,7 +41,14 @@
         "test:infra": "./node_modules/.bin/jest --testMatch '**/infra/?(*.)test.ts' ",
         "api": "./node_modules/.bin/jest --runInBand --testPathPattern=tests/api/",
         "test:api": "npm run compile && npm run api",
-        "test:pii": "bash ./check-logs.sh"
+        "test:pii": "bash ./check-logs.sh",
+        "kill:dynamodblocal": "cd tests/contract; ./scripts/kill-dynamodb-local.sh",
+        "start:dynamodblocal": "cd tests/contract; ./scripts/setup-dynamodb-local.sh",
+        "start:contract": "npm-run-all -s start:dynamodblocal wait-start:contract",
+        "wait-start:contract": "wait-on tcp:127.0.0.1:8000 && cd tests/contract && ts-node ./app.ts",
+        "test:provider": "./node_modules/.bin/jest --testMatch '**/contract/CicCriProvider.test.ts' --coverage=false",
+        "test:contract": "wait-on tcp:127.0.0.1:3000; cd tests/contract; npm run test:provider; npm run kill:dynamodblocal",
+        "test:contract:ci": "cross-env USE_MOCKED=true AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy AWS_PAGER=\"\" npm-run-all -p -r start:contract test:contract"
     },
     "devDependencies": {
         "@aws-cdk/assertions": "^1.204.0",
@@ -47,6 +60,7 @@
         "@types/node-jose": "^1.1.10",
         "@typescript-eslint/eslint-plugin": "^5.59.11",
         "@typescript-eslint/eslint-plugin-tslint": "^6.13.0",
+        "@types/express": "^4.17.21",
         "aws4-axios": "^3.2.24",
         "dotenv": "^16.0.3",
         "eslint": "^8.56.0",
@@ -67,7 +81,8 @@
         "ts-standard": "^12.0.2",
         "tslint": "^6.1.3",
         "typescript": "^4.9.4",
-        "yaml-cfn": "^0.3.2"
+        "yaml-cfn": "^0.3.2",
+        "wait-on": "^7.2.0"
     },
     "engines": {
         "node": "^18.0.0"

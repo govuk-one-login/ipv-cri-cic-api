@@ -18,6 +18,8 @@ export class Constants {
 
     static readonly SESSION_CONFIG_LOGGER_SVC_NAME = "SessionConfigHandler";
 
+    static readonly ABORT_LOGGER_SVC_NAME = "AbortHandler";
+
     static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
 
     static readonly DEBUG = "DEBUG";
@@ -61,4 +63,17 @@ export class Constants {
     static readonly NO_PHOTO_ID_JOURNEY = "NO_PHOTO_ID";
 
     static readonly EXPECTED_CONTEXT = "bank_account";
+    
 }
+
+export const EnvironmentVariables = {
+	SESSION_TABLE: "SESSION_TABLE",
+	ISSUER: "ISSUER",
+	KMS_KEY_ARN: "KMS_KEY_ARN",
+	ENCRYPTION_KEY_IDS: "ENCRYPTION_KEY_IDS",
+	AUTH_SESSION_TTL: "AUTH_SESSION_TTL",
+	CLIENT_CONFIG: "CLIENT_CONFIG",
+	TXMA_QUEUE_URL: "TXMA_QUEUE_URL",
+	PERSON_IDENTITY_TABLE_NAME: "PERSON_IDENTITY_TABLE_NAME",
+	DNS_SUFFIX: "DNSSUFFIX",
+};
