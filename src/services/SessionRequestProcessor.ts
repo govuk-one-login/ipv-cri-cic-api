@@ -76,6 +76,7 @@ export class SessionRequestProcessor {
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
 		const clientIpAddress = event.requestContext.identity?.sourceIp ?? null;
+		const sessionId: string = randomUUID();
 
 		let configClient: ClientConfig | undefined = undefined;
 		try {
@@ -118,6 +119,10 @@ export class SessionRequestProcessor {
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
+		this.logger.appendKeys({
+			sessionId,
+			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+		});
 		try {
 			if (configClient?.jwksEndpoint) {
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
@@ -147,13 +152,8 @@ export class SessionRequestProcessor {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
 			return unauthorizedResponse;
-		}
-
-		const sessionId: string = randomUUID();
-		this.logger.appendKeys({
-			sessionId,
-			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
-		});
+		}		
+		
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
 				this.logger.error("sessionId already exists in the database", {
