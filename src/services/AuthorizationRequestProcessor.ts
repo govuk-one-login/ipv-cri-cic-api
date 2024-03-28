@@ -13,6 +13,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { EnvironmentVariables } from "../utils/Constants";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
@@ -87,7 +88,7 @@ export class AuthorizationRequestProcessor {
 
 			try {
 				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
-					event_name: "CIC_CRI_AUTH_CODE_ISSUED",
+					event_name: TxmaEventNames.CIC_CRI_AUTH_CODE_ISSUED,
 					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 
 				});

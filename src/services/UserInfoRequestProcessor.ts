@@ -19,6 +19,7 @@ import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { EnvironmentVariables } from "../utils/Constants";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 
 
 export class UserInfoRequestProcessor {
@@ -189,7 +190,7 @@ export class UserInfoRequestProcessor {
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 			try {
 				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
-					event_name: "CIC_CRI_VC_ISSUED",
+					event_name: TxmaEventNames.CIC_CRI_VC_ISSUED,
 					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 					restricted: {
 						name: [{
@@ -208,7 +209,7 @@ export class UserInfoRequestProcessor {
 			
 			try {
 				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
-					event_name: "CIC_CRI_END",
+					event_name: TxmaEventNames.CIC_CRI_END,
 					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				});
 			} catch (error) {

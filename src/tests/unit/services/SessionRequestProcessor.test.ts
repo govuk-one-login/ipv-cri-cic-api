@@ -279,7 +279,6 @@ describe("SessionRequestProcessor", () => {
 
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_START",
-			client_id: undefined,
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1684933200,
 			event_timestamp_ms: 1684933200000,
@@ -309,7 +308,6 @@ describe("SessionRequestProcessor", () => {
 
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_START",
-			client_id: undefined,
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1684933200,
 			event_timestamp_ms: 1684933200000,
