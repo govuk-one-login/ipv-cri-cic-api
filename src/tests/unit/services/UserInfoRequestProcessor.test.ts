@@ -112,7 +112,6 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_END",
-			client_id: mockSession.clientId,
 			component_id: process.env.ISSUER,
 			timestamp: 1585695600,
 			event_timestamp_ms: 1585695600000,
@@ -127,7 +126,6 @@ describe("UserInfoRequestProcessor", () => {
 		});
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "CIC_CRI_VC_ISSUED",
-			client_id: mockSession.clientId,
 			component_id: process.env.ISSUER,
 			timestamp: 1585695600,
 			event_timestamp_ms: 1585695600000,

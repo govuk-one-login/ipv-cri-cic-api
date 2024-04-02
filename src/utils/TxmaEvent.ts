@@ -27,7 +27,6 @@ export interface Extensions {
 
 export interface BaseTxmaEvent {
 	"user": TxmaUser;
-	"client_id": string;
 	"timestamp": number;
 	"event_timestamp_ms": number;
 	"component_id": string;
@@ -55,7 +54,6 @@ export const buildCoreEventFields = (
 			govuk_signin_journey_id: session.clientSessionId,
 			ip_address: sourceIp,
 		},
-		client_id: session.clientId,
 		timestamp: Math.floor(Date.now() / 1000),
 		event_timestamp_ms: now,
 		component_id: issuer,

@@ -17,6 +17,7 @@ import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 
 
 interface ClientConfig {
@@ -209,7 +210,7 @@ export class SessionRequestProcessor {
 
 		try {
 			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
-				event_name: "CIC_CRI_START",
+				event_name: TxmaEventNames.CIC_CRI_START,
 				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				...(jwtPayload.context && { extensions: {
 					evidence: {

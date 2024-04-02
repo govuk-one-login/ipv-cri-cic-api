@@ -10,6 +10,7 @@ import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { EnvironmentVariables } from "../utils/Constants";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 
 
 export class AbortRequestProcessor {
@@ -86,7 +87,7 @@ export class AbortRequestProcessor {
 
   	try {
   		await this.cicService.sendToTXMA(this.txmaQueueUrl, {
-  			event_name: "CIC_CRI_SESSION_ABORTED",
+  			event_name: TxmaEventNames.CIC_CRI_SESSION_ABORTED,
   			...buildCoreEventFields(cicSessionInfo, this.issuer, cicSessionInfo.clientIpAddress),
   		});
   	} catch (error) {
