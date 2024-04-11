@@ -21,7 +21,8 @@ describe("UserInfoRequestProcessor - invalid configuration", () => {
 			new UserInfoRequestProcessor(logger, metrics);
 		}).toThrow("Service incorrectly configured");
 		expect(logger.error).toHaveBeenCalledTimes(1);
-		expect(logger.error).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+		expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+			message: "Missing SESSION_TABLE environment variable",
 			messageCode: "MISSING_CONFIGURATION",
 		}));
 	});

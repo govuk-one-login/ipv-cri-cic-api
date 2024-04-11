@@ -9,26 +9,22 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { randomUUID } from "crypto";
 import { ISessionItem } from "../models/ISessionItem";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { Constants } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
+
 
 interface ClientConfig {
 	jwksEndpoint: string;
 	clientId: string;
 	redirectUri: string;
 }
-
-const SESSION_TABLE = process.env.SESSION_TABLE;
-const CLIENT_CONFIG = process.env.CLIENT_CONFIG;
-const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
-const AUTH_SESSION_TTL_IN_SECS = process.env.AUTH_SESSION_TTL;
-const ISSUER = process.env.ISSUER;
 
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
@@ -43,22 +39,30 @@ export class SessionRequestProcessor {
 
 	private readonly validationHelper: ValidationHelper;
 
-	constructor(logger: Logger, metrics: Metrics) {
+	private readonly issuer: string;
 
-		if (!SESSION_TABLE || !CLIENT_CONFIG || !ENCRYPTION_KEY_IDS || !AUTH_SESSION_TTL_IN_SECS || !ISSUER ) {
-			logger.error("Environment variable SESSION_TABLE or CLIENT_CONFIG or ENCRYPTION_KEY_IDS or AUTH_SESSION_TTL is not configured", {
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			});
-			throw new AppError("Server Error", HttpCodesEnum.SERVER_ERROR );
-		}
+	private readonly authSessionTtlInSecs: string;
+
+	private readonly clientConfig: string;
+
+	private readonly txmaQueueUrl: string;
+
+	constructor(logger: Logger, metrics: Metrics) {
 
 		this.logger = logger;
 		this.metrics = metrics;
-
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
 		this.metrics.addMetric("Called", MetricUnits.Count, 1);
-		this.cicService = CicService.getInstance(SESSION_TABLE, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(ENCRYPTION_KEY_IDS);
+		
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  		const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+		this.authSessionTtlInSecs = checkEnvironmentVariable(EnvironmentVariables.AUTH_SESSION_TTL, this.logger);
+		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, this.logger);
+		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+  		
+		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
 		this.validationHelper = new ValidationHelper();
 	}
 
@@ -73,10 +77,11 @@ export class SessionRequestProcessor {
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
 		const clientIpAddress = event.requestContext.identity?.sourceIp ?? null;
+		const sessionId: string = randomUUID();
 
 		let configClient: ClientConfig | undefined = undefined;
 		try {
-			const config = JSON.parse(CLIENT_CONFIG!) as ClientConfig[];
+			const config = JSON.parse(this.clientConfig) as ClientConfig[];
 			configClient = config.find(c => c.clientId === requestBodyClientId);
 		} catch (error) {
 			this.logger.error("Invalid or missing client configuration table", {
@@ -100,7 +105,7 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.FAILED_DECRYPTING_JWE,
 			});
-			return unauthorizedResponse();
+			return unauthorizedResponse;
 		}
 
 		let parsedJwt: Jwt;
@@ -111,10 +116,14 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.FAILED_DECODING_JWT,
 			});
-			return unauthorizedResponse();
+			return unauthorizedResponse;
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
+		this.logger.appendKeys({
+			sessionId,
+			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+		});
 		try {
 			if (configClient?.jwksEndpoint) {
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
@@ -122,7 +131,7 @@ export class SessionRequestProcessor {
 					this.logger.error("Failed to verify JWT", {
 						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 					});
-					return unauthorizedResponse();
+					return unauthorizedResponse;
 				}
 			} else {
 				this.logger.error("Incomplete Client Configuration", {
@@ -135,7 +144,7 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.UNEXPECTED_ERROR_VERIFYING_JWT,
 			});
-			return unauthorizedResponse();
+			return unauthorizedResponse;
 		}
 
 		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.EXPECTED_CONTEXT);
@@ -143,14 +152,9 @@ export class SessionRequestProcessor {
 			this.logger.error(JwtErrors, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
-			return unauthorizedResponse();
-		}
-
-		const sessionId: string = randomUUID();
-		this.logger.appendKeys({
-			sessionId,
-			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
-		});
+			return unauthorizedResponse;
+		}		
+		
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
 				this.logger.error("sessionId already exists in the database", {
@@ -171,7 +175,7 @@ export class SessionRequestProcessor {
 			clientId: jwtPayload.client_id,
 			clientSessionId: jwtPayload.govuk_signin_journey_id as string,
 			redirectUri: jwtPayload.redirect_uri,
-			expiryDate: (Date.now() / 1000) + Number(AUTH_SESSION_TTL_IN_SECS),
+			expiryDate: (Date.now() / 1000) + +this.authSessionTtlInSecs,
 			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
 			subject: jwtPayload.sub ? jwtPayload.sub : "",
@@ -205,9 +209,9 @@ export class SessionRequestProcessor {
 		}
 
 		try {
-			await this.cicService.sendToTXMA({
-				event_name: "CIC_CRI_START",
-				...buildCoreEventFields(session, ISSUER as string, session.clientIpAddress, absoluteTimeNow),
+			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
+				event_name: TxmaEventNames.CIC_CRI_START,
+				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				...(jwtPayload.context && { extensions: {
 					evidence: {
 						context: jwtPayload.context,

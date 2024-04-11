@@ -1,0 +1,51 @@
+{
+    "sessionId": {
+      "S": "e5e38b62-36f3-40a0-84fe-b75d377587da"
+    },
+    "birthDates": {
+      "L": [
+        {
+          "M": {
+            "value": {
+              "S": "1932-02-25"
+            }
+          }
+        }
+      ]
+    },
+    "expiryDate": {
+      "N": "4865226539"
+    },
+    "personNames": {
+      "L": [
+        {
+          "M": {
+            "nameParts": {
+              "L": [
+                {
+                  "M": {
+                    "type": {
+                      "S": "GivenName"
+                    },
+                    "value": {
+                      "S": "Mary"
+                    }
+                  }
+                },
+                {
+                  "M": {
+                    "type": {
+                      "S": "FamilyName"
+                    },
+                    "value": {
+                      "S": "Watson"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+}

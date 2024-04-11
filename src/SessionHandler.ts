@@ -1,9 +1,9 @@
+/* eslint-disable max-len */
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
 import { SessionRequestProcessor } from "./services/SessionRequestProcessor";
-import { ResourcesEnum } from "./models/enums/ResourcesEnum";
 import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
@@ -30,28 +30,19 @@ class Session implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
-		switch (event.resource) {
-			case ResourcesEnum.SESSION:
-				try {
-					logger.info("Received session request", { requestId: event.requestContext.requestId });
-					return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
-				} catch (error) {
-					logger.error("An error has occurred.", {
-						messageCode: MessageCodes.SERVER_ERROR,
-						error,
-					});
-					if (error instanceof AppError) {
-						return new Response(error.statusCode, error.message);
-					}
-					return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
-				}
-			default:
-				logger.error("Requested resource does not exist", {
-					resource: event.resource,
-					messageCode: MessageCodes.RESOURCE_NOT_FOUND,
-				});
-				throw new AppError("Not Found", HttpCodesEnum.NOT_FOUND);
-		}
+		try {
+			logger.info("Received session request", { requestId: event.requestContext.requestId });
+			return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
+		} catch (error: any) {
+			logger.error("An error has occurred.", {
+				messageCode: MessageCodes.SERVER_ERROR,
+				error,
+			});
+			if (error instanceof AppError) {
+				return new Response(error.statusCode, error.message);
+			}
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+		}			
 
 	}
 
