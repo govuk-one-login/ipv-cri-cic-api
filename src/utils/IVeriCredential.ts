@@ -1,9 +1,6 @@
 export interface CredentialSubject {
 	name?: object[];
 	birthDate?: object[];
-	device_information?: {
-		encoded: string;
-	};
 }
 
 export interface VerifiedCredential {
@@ -12,8 +9,7 @@ export interface VerifiedCredential {
 	credentialSubject: CredentialSubject;
 }
 
-export interface TxMACredentialSubject {
-	credentialSubject: CredentialSubject;
+export interface TxMACredentialSubject extends CredentialSubject {
 	device_information?: {
 		encoded: string;
 	};
@@ -24,6 +20,7 @@ export interface TxMAVerifiedCredential {
 	type: string[];
 	credentialSubject: TxMACredentialSubject;
 }
+
 // limit to supported algs https://datatracker.ietf.org/doc/html/rfc7518
 export type Algorithm =
     "HS256" | "HS384" | "HS512" |
