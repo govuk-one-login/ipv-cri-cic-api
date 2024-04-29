@@ -5,7 +5,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { Constants } from "./utils/Constants";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
-import { Response, unauthorizedResponse } from "./utils/Response";
+import { Response } from "./utils/Response";
 import { AppError } from "./utils/AppError";
 import { AbortRequestProcessor } from "./services/AbortRequestProcessor";
 import { getSessionIdHeaderErrors } from "./utils/Validations";
