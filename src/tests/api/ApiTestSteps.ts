@@ -54,7 +54,6 @@ export async function stubStartPost(journeyType: string): Promise<any> {
 export async function sessionPost(clientId?: string, request?: string): Promise<any> {
 	const path = "/session";
 	try {
-		// const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
 		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request }, { headers: { "txma-audit-encoded": "encoded-header", "x-forwarded-for": "user ip address" } });
 		return postRequest;
 	} catch (error: any) {

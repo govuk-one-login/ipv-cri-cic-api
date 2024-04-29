@@ -1,4 +1,4 @@
-import { VerifiedCredential } from "./IVeriCredential";
+import { TxMACredentialSubject } from "./IVeriCredential";
 import { ISessionItem } from "../models/ISessionItem";
 
 export type TxmaEventName =
@@ -34,7 +34,7 @@ export interface BaseTxmaEvent {
 
 export interface TxmaEvent extends BaseTxmaEvent {
 	"event_name": TxmaEventName;
-	"restricted"?: VerifiedCredential["credentialSubject"];
+	"restricted"?: TxMACredentialSubject["credentialSubject"];
 	"extensions"?: Extensions;
 }
 

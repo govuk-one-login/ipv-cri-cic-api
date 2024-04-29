@@ -5,10 +5,24 @@ export interface CredentialSubject {
 		encoded: string;
 	};
 }
+
 export interface VerifiedCredential {
 	"@context": string[];
 	type: string[];
 	credentialSubject: CredentialSubject;
+}
+
+export interface TxMACredentialSubject {
+	credentialSubject: CredentialSubject;
+	device_information?: {
+		encoded: string;
+	};
+}
+
+export interface TxMAVerifiedCredential {
+	"@context": string[];
+	type: string[];
+	credentialSubject: TxMACredentialSubject;
 }
 // limit to supported algs https://datatracker.ietf.org/doc/html/rfc7518
 export type Algorithm =
