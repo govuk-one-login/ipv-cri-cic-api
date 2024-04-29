@@ -9,18 +9,6 @@ export interface VerifiedCredential {
 	credentialSubject: CredentialSubject;
 }
 
-export interface TxMACredentialSubject extends CredentialSubject {
-	device_information?: {
-		encoded: string;
-	};
-}
-
-export interface TxMAVerifiedCredential {
-	"@context": string[];
-	type: string[];
-	credentialSubject: TxMACredentialSubject;
-}
-
 // limit to supported algs https://datatracker.ietf.org/doc/html/rfc7518
 export type Algorithm =
     "HS256" | "HS384" | "HS512" |
