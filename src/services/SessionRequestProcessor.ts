@@ -76,8 +76,8 @@ export class SessionRequestProcessor {
 		let encodedHeader, clientIpAddress;
 
 		if (event.headers) {
-		encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
-		clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+			encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
+			clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 		} else {
 			clientIpAddress = event.requestContext.identity?.sourceIp;
 		}

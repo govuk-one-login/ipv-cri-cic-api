@@ -292,7 +292,7 @@ describe("SessionRequestProcessor", () => {
 					transaction_id: "",
 					user_id: "",
 				},
-			},"ABCDEFG");
+			}, "ABCDEFG");
 		});
 
 		it("ip_address is source IP if no X_FORWARDED_FOR header is present", async () => {
@@ -306,7 +306,7 @@ describe("SessionRequestProcessor", () => {
 			const fakeTime = 1684933200;
 			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
-			const job = await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { "txma-audit-encoded": "ABCDEFG"  } });
+			const job = await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { "txma-audit-encoded": "ABCDEFG" } });
 			console.log("job", job);
 			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 				event_name: "CIC_CRI_START",
@@ -321,7 +321,7 @@ describe("SessionRequestProcessor", () => {
 					transaction_id: "",
 					user_id: "",
 				},
-			},"ABCDEFG");
+			}, "ABCDEFG");
 		});
 
 		it("correctly sends context field when it is provided in JWT", async () => {
@@ -355,7 +355,7 @@ describe("SessionRequestProcessor", () => {
 						context: "bank_account",
 					},
 				},
-			},"ABCDEFG");
+			}, "ABCDEFG");
 		});
 	});
 
