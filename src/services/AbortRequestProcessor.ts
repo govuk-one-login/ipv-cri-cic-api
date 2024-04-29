@@ -49,7 +49,7 @@ export class AbortRequestProcessor {
   	return AbortRequestProcessor.instance;
   }
 
-  async processRequest(sessionId: string): Promise<Response> {
+  async processRequest(sessionId: string, encodedHeader: string): Promise<Response> {
   	const cicSessionInfo = await this.cicService.getSessionById(sessionId);
   	this.logger.appendKeys({
   		govuk_signin_journey_id: cicSessionInfo?.clientSessionId,
@@ -89,7 +89,7 @@ export class AbortRequestProcessor {
   		await this.cicService.sendToTXMA(this.txmaQueueUrl, {
   			event_name: TxmaEventNames.CIC_CRI_SESSION_ABORTED,
   			...buildCoreEventFields(cicSessionInfo, this.issuer, cicSessionInfo.clientIpAddress),
-  		});
+  		}, encodedHeader);
   	} catch (error) {
   		this.logger.error("Auth session successfully aborted. Failed to send CIC_CRI_SESSION_ABORTED event to TXMA", {
   			error,

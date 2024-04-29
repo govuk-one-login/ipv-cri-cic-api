@@ -1,6 +1,9 @@
 export interface CredentialSubject {
-	name: object[];
-	birthDate: object[];
+	name?: object[];
+	birthDate?: object[];
+	device_information?: {
+		encoded: string;
+	};
 }
 export interface VerifiedCredential {
 	"@context": string[];

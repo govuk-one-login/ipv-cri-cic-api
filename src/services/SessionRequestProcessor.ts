@@ -5,7 +5,6 @@ import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
@@ -74,9 +73,17 @@ export class SessionRequestProcessor {
 	}
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+		let encodedHeader, clientIpAddress;
+
+		if (event.headers) {
+		encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
+		clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+		} else {
+			clientIpAddress = event.requestContext.identity?.sourceIp;
+		}
+		
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
-		const clientIpAddress = event.requestContext.identity?.sourceIp ?? null;
 		const sessionId: string = randomUUID();
 
 		let configClient: ClientConfig | undefined = undefined;
@@ -217,7 +224,7 @@ export class SessionRequestProcessor {
 						context: jwtPayload.context,
 					},
 				} }),
-			});
+			}, encodedHeader);
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
 				error,

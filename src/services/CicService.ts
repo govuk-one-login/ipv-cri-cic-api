@@ -203,7 +203,13 @@ export class CicService {
 		}
 	}
 
-	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
+	async sendToTXMA(QueueUrl: string, event: TxmaEvent, encodedHeader?: string): Promise<void> {
+		
+		if (encodedHeader) {
+			event.restricted = event.restricted ?? { device_information: { encoded: "" } };
+			event.restricted.device_information = { encoded: encodedHeader };
+		}
+
 		const messageBody = JSON.stringify(event);
 		const params = {
 			MessageBody: messageBody,

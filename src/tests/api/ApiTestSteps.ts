@@ -54,7 +54,8 @@ export async function stubStartPost(journeyType: string): Promise<any> {
 export async function sessionPost(clientId?: string, request?: string): Promise<any> {
 	const path = "/session";
 	try {
-		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
+		// const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
+		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request }, { headers: { "txma-audit-encoded": "encoded-header", "x-forwarded-for": "user ip address" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -212,7 +213,7 @@ export async function getSessionAndVerifyKey(sessionId: string, tableName: strin
 export async function abortPost(sessionId: string): Promise<AxiosResponse<string>> {
 	const path = "/abort";
 	try {
-		return await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
+		return await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId, "txma-audit-encoded": "encoded-header" } });
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
