@@ -13,6 +13,7 @@ import { JWTPayload } from "jose";
 import { Jwt } from "../../../utils/IVeriCredential";
 import { ValidationHelper } from "../../../utils/ValidationHelper";
 import { ISessionItem } from "../../../models/ISessionItem";
+import { Constants } from "../../../utils/Constants";
 
 let sessionRequestProcessor: SessionRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -264,66 +265,97 @@ describe("SessionRequestProcessor", () => {
 		});
 	});
 
-	it("should send correct TXMA event", async () => {
-		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
-		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		mockValidationHelper.isJwtValid.mockReturnValue("");
-		mockCicService.getSessionById.mockResolvedValue(undefined);
-		mockCicService.createAuthSession.mockResolvedValue();
-		jest.useFakeTimers();
-		const fakeTime = 1684933200;
-		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+	describe("should send correct TXMA event", () => {
+		it("ip_address is X_FORWARDED_FOR if header is present", async () => {
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			mockValidationHelper.isJwtValid.mockReturnValue("");
+			mockCicService.getSessionById.mockResolvedValue(undefined);
+			mockCicService.createAuthSession.mockResolvedValue();
+			jest.useFakeTimers();
+			const fakeTime = 1684933200;
+			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
-		await sessionRequestProcessor.processRequest(VALID_SESSION);
+			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
-			event_name: "CIC_CRI_START",
-			component_id: "https://XXX-c.env.account.gov.uk",
-			timestamp: 1684933200,
-			event_timestamp_ms: 1684933200000,
-			user: {
-				govuk_signin_journey_id: "abcdef",
-				ip_address: "",
-				persistent_session_id: undefined,
-				session_id: "sessionId",
-				transaction_id: "",
-				user_id: "",
-			},
-		});
-	});
-
-	it("should send correct TXMA event where context is provided in JWT", async () => {
-		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-		mockKmsJwtAdapter.decode.mockReturnValue({ ...decodedJwtFactory(), payload: { ...decodedJwtFactory().payload, context: "bank_account" } });
-		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		mockValidationHelper.isJwtValid.mockReturnValue("");
-		mockCicService.getSessionById.mockResolvedValue(undefined);
-		mockCicService.createAuthSession.mockResolvedValue();
-		jest.useFakeTimers();
-		const fakeTime = 1684933200;
-		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
-
-		await sessionRequestProcessor.processRequest(VALID_SESSION);
-
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
-			event_name: "CIC_CRI_START",
-			component_id: "https://XXX-c.env.account.gov.uk",
-			timestamp: 1684933200,
-			event_timestamp_ms: 1684933200000,
-			user: {
-				govuk_signin_journey_id: "abcdef",
-				ip_address: "",
-				persistent_session_id: undefined,
-				session_id: "sessionId",
-				transaction_id: "",
-				user_id: "",
-			},
-			extensions: {
-				evidence: {
-					context: "bank_account",
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+				event_name: "CIC_CRI_START",
+				component_id: "https://XXX-c.env.account.gov.uk",
+				timestamp: 1684933200,
+				event_timestamp_ms: 1684933200000,
+				user: {
+					govuk_signin_journey_id: "abcdef",
+					ip_address: "1.1.1",
+					persistent_session_id: undefined,
+					session_id: "sessionId",
+					transaction_id: "",
+					user_id: "",
 				},
-			},
+			}, "ABCDEFG");
+		});
+
+		it("ip_address is source IP if no X_FORWARDED_FOR header is present", async () => {
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			mockValidationHelper.isJwtValid.mockReturnValue("");
+			mockCicService.getSessionById.mockResolvedValue(undefined);
+			mockCicService.createAuthSession.mockResolvedValue();
+			jest.useFakeTimers();
+			const fakeTime = 1684933200;
+			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+
+			const job = await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { "txma-audit-encoded": "ABCDEFG" } });
+			console.log("job", job);
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+				event_name: "CIC_CRI_START",
+				component_id: "https://XXX-c.env.account.gov.uk",
+				timestamp: 1684933200,
+				event_timestamp_ms: 1684933200000,
+				user: {
+					govuk_signin_journey_id: "abcdef",
+					ip_address: "2.2.2",
+					persistent_session_id: undefined,
+					session_id: "sessionId",
+					transaction_id: "",
+					user_id: "",
+				},
+			}, "ABCDEFG");
+		});
+
+		it("correctly sends context field when it is provided in JWT", async () => {
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue({ ...decodedJwtFactory(), payload: { ...decodedJwtFactory().payload, context: "bank_account" } });
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			mockValidationHelper.isJwtValid.mockReturnValue("");
+			mockCicService.getSessionById.mockResolvedValue(undefined);
+			mockCicService.createAuthSession.mockResolvedValue();
+			jest.useFakeTimers();
+			const fakeTime = 1684933200;
+			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+
+			await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+				event_name: "CIC_CRI_START",
+				component_id: "https://XXX-c.env.account.gov.uk",
+				timestamp: 1684933200,
+				event_timestamp_ms: 1684933200000,
+				user: {
+					govuk_signin_journey_id: "abcdef",
+					ip_address: "1.1.1",
+					persistent_session_id: undefined,
+					session_id: "sessionId",
+					transaction_id: "",
+					user_id: "",
+				},
+				extensions: {
+					evidence: {
+						context: "bank_account",
+					},
+				},
+			}, "ABCDEFG");
 		});
 	});
 

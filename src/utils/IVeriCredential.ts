@@ -1,12 +1,14 @@
 export interface CredentialSubject {
-	name: object[];
-	birthDate: object[];
+	name?: object[];
+	birthDate?: object[];
 }
+
 export interface VerifiedCredential {
 	"@context": string[];
 	type: string[];
 	credentialSubject: CredentialSubject;
 }
+
 // limit to supported algs https://datatracker.ietf.org/doc/html/rfc7518
 export type Algorithm =
     "HS256" | "HS384" | "HS512" |

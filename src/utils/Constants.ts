@@ -63,6 +63,10 @@ export class Constants {
     static readonly NO_PHOTO_ID_JOURNEY = "NO_PHOTO_ID";
 
     static readonly EXPECTED_CONTEXT = "bank_account";
+
+	static readonly X_FORWARDED_FOR = "x-forwarded-for";
+
+	static readonly ENCODED_AUDIT_HEADER = "txma-audit-encoded";
     
 }
 
