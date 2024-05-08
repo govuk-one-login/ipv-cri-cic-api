@@ -5,7 +5,6 @@ import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
@@ -17,6 +16,7 @@ import { JwtPayload, Jwt } from "../utils/IVeriCredential";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 
 
 interface ClientConfig {
@@ -73,9 +73,18 @@ export class SessionRequestProcessor {
 	}
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+		let encodedHeader, clientIpAddress;
+
+		if (event.headers) {
+			encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
+			clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+		} else {
+			clientIpAddress = event.requestContext.identity?.sourceIp;
+		}
+		
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
-		const clientIpAddress = event.requestContext.identity?.sourceIp ?? null;
+		const sessionId: string = randomUUID();
 
 		let configClient: ClientConfig | undefined = undefined;
 		try {
@@ -118,6 +127,10 @@ export class SessionRequestProcessor {
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
+		this.logger.appendKeys({
+			sessionId,
+			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+		});
 		try {
 			if (configClient?.jwksEndpoint) {
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
@@ -147,13 +160,8 @@ export class SessionRequestProcessor {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
 			return unauthorizedResponse;
-		}
-
-		const sessionId: string = randomUUID();
-		this.logger.appendKeys({
-			sessionId,
-			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
-		});
+		}		
+		
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
 				this.logger.error("sessionId already exists in the database", {
@@ -209,14 +217,14 @@ export class SessionRequestProcessor {
 
 		try {
 			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
-				event_name: "CIC_CRI_START",
+				event_name: TxmaEventNames.CIC_CRI_START,
 				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				...(jwtPayload.context && { extensions: {
 					evidence: {
 						context: jwtPayload.context,
 					},
 				} }),
-			});
+			}, encodedHeader);
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
 				error,

@@ -31,9 +31,6 @@
                 "ip_address"
             ]
         },
-        "client_id": {
-            "type": "string"
-        },
         "timestamp": {
             "type": "integer"
         },
@@ -42,12 +39,30 @@
         },
         "component_id": {
             "type": "string"
+        },
+        "restricted": {
+            "type": "object",
+            "properties": {
+                "device_information": {
+                    "type": "object",
+                    "properties": {
+                        "encoded": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "encoded"
+                    ]
+                }
+            },
+            "required": [
+                "device_information"
+            ]
         }
     },
     "required": [
         "event_name",
         "user",
-        "client_id",
         "timestamp",
         "event_timestamp_ms",
         "component_id"

@@ -1,4 +1,4 @@
-import { VerifiedCredential } from "./IVeriCredential";
+import { CredentialSubject } from "./IVeriCredential";
 import { ISessionItem } from "../models/ISessionItem";
 
 export type TxmaEventName =
@@ -25,9 +25,20 @@ export interface Extensions {
 	"evidence": Evidence;
 }
 
+export interface TxMACredentialSubject extends CredentialSubject {
+	device_information?: {
+		encoded: string;
+	};
+}
+
+export interface TxMAVerifiedCredential {
+	"@context": string[];
+	type: string[];
+	credentialSubject: TxMACredentialSubject;
+}
+
 export interface BaseTxmaEvent {
 	"user": TxmaUser;
-	"client_id": string;
 	"timestamp": number;
 	"event_timestamp_ms": number;
 	"component_id": string;
@@ -35,7 +46,7 @@ export interface BaseTxmaEvent {
 
 export interface TxmaEvent extends BaseTxmaEvent {
 	"event_name": TxmaEventName;
-	"restricted"?: VerifiedCredential["credentialSubject"];
+	"restricted"?: TxMAVerifiedCredential["credentialSubject"];
 	"extensions"?: Extensions;
 }
 
@@ -55,7 +66,6 @@ export const buildCoreEventFields = (
 			govuk_signin_journey_id: session.clientSessionId,
 			ip_address: sourceIp,
 		},
-		client_id: session.clientId,
 		timestamp: Math.floor(Date.now() / 1000),
 		event_timestamp_ms: now,
 		component_id: issuer,
