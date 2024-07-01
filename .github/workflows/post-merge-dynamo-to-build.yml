@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'infra-l2-dynamo/**'
+      - .github/workflows/post-merge-dynamo-to-build.yml
 
 permissions:
   id-token: write

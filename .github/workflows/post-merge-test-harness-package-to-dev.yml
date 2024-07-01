@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - 'test-harness/**'
+      - .github/workflows/post-merge-test-harness-package-to-build.yml
   workflow_dispatch:
 
 permissions:

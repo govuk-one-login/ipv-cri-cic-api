@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - 'cic-ipv-stub/**'
+      - .github/workflows/post-merge-ipv-stub-package-to-dev.yml
   workflow_dispatch:
 
 permissions:
