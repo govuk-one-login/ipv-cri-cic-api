@@ -154,14 +154,11 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse;
 		}
 
-		const JwtErrorsBankAccount = this.validationHelper.isJwtValid(
-			jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.CONTEXT_BANK_ACCOUNT);
-			
-		const JwtErrorsLowConfidence = this.validationHelper.isJwtValid(
-			jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.CONTEXT_LOW_CONFIDENCE);
-			
-		if (JwtErrorsBankAccount.length > 0 && JwtErrorsLowConfidence.length > 0) {
-			this.logger.error(JwtErrorsBankAccount, {
+		const JwtErrors = this.validationHelper.isJwtValid(
+			jwtPayload, requestBodyClientId, configClient.redirectUri);
+
+		if (JwtErrors.length > 0) {
+			this.logger.error(JwtErrors, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
 			return unauthorizedResponse;		
