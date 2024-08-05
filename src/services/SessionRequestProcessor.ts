@@ -154,14 +154,20 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse;
 		}
 
-		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.EXPECTED_CONTEXT);
-		if (JwtErrors.length > 0) {
-			this.logger.error(JwtErrors, {
+		// NEEDS REFACTORING
+		const JwtErrorsBankAccount = this.validationHelper.isJwtValid(
+			jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.CONTEXT_BANK_ACCOUNT);
+			
+		const JwtErrorsLowConfidence = this.validationHelper.isJwtValid(
+			jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.CONTEXT_LOW_CONFIDENCE);
+			
+		if (JwtErrorsBankAccount.length > 0 && JwtErrorsLowConfidence.length > 0) {
+			this.logger.error(JwtErrorsBankAccount, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
-			return unauthorizedResponse;
-		}		
-		
+			return unauthorizedResponse;		
+		}
+
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
 				this.logger.error("sessionId already exists in the database", {
@@ -190,7 +196,10 @@ export class SessionRequestProcessor {
 			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
-			journey: jwtPayload.context ? Constants.NO_PHOTO_ID_JOURNEY : Constants.FACE_TO_FACE_JOURNEY,
+			journey: jwtPayload.context === Constants.CONTEXT_BANK_ACCOUNT ? Constants.NO_PHOTO_ID_JOURNEY 
+				: (jwtPayload.context === Constants.CONTEXT_LOW_CONFIDENCE 
+					? Constants.LOW_CONFIDENCE_JOURNEY 
+					: Constants.FACE_TO_FACE_JOURNEY),
 		};
 
 		try {
