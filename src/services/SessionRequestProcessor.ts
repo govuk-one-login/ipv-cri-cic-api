@@ -154,7 +154,6 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse;
 		}
 
-		// NEEDS REFACTORING
 		const JwtErrorsBankAccount = this.validationHelper.isJwtValid(
 			jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.CONTEXT_BANK_ACCOUNT);
 			
