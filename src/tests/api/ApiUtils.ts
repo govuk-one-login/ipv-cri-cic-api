@@ -4,6 +4,7 @@ import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
 import * as CIC_CRI_START_SCHEMA from "../data/CIC_CRI_START_SCHEMA.json";
 import * as CIC_CRI_START_BANK_ACCOUNT_SCHEMA from "../data/CIC_CRI_START_BANK_ACCOUNT_SCHEMA.json";
+import * as CIC_CRI_START_LOW_CONFIDENCE_SCHEMA from "../data/CIC_CRI_START_LOW_CONFIDENCE_SCHEMA.json";
 import * as CIC_CRI_AUTH_CODE_ISSUED_SCHEMA from "../data/CIC_CRI_AUTH_CODE_ISSUED_SCHEMA.json";
 import * as CIC_CRI_END_SCHEMA from "../data/CIC_CRI_END_SCHEMA.json";
 import * as CIC_CRI_VC_ISSUED_SCHEMA from "../data/CIC_CRI_VC_ISSUED_SCHEMA.json";
@@ -11,6 +12,7 @@ import * as CIC_CRI_SESSION_ABORTED_SCHEMA from "../data/CIC_CRI_SESSION_ABORTED
 
 const ajv = new Ajv({ strictTuples: false });
 ajv.addSchema(CIC_CRI_START_SCHEMA, "CIC_CRI_START_SCHEMA");
+ajv.addSchema(CIC_CRI_START_LOW_CONFIDENCE_SCHEMA, "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA");
 ajv.addSchema(CIC_CRI_START_BANK_ACCOUNT_SCHEMA, "CIC_CRI_START_BANK_ACCOUNT_SCHEMA");
 ajv.addSchema(CIC_CRI_AUTH_CODE_ISSUED_SCHEMA, "CIC_CRI_AUTH_CODE_ISSUED_SCHEMA");
 ajv.addSchema(CIC_CRI_END_SCHEMA, "CIC_CRI_END_SCHEMA");
