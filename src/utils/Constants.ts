@@ -62,7 +62,11 @@ export class Constants {
 
     static readonly NO_PHOTO_ID_JOURNEY = "NO_PHOTO_ID";
 
-    static readonly EXPECTED_CONTEXT = "bank_account";
+    static readonly LOW_CONFIDENCE_JOURNEY = "LOW_CONFIDENCE";
+
+    static readonly CONTEXT_BANK_ACCOUNT = "bank_account";
+
+    static readonly CONTEXT_LOW_CONFIDENCE = "hmrc_check";
 
 	static readonly X_FORWARDED_FOR = "x-forwarded-for";
 
