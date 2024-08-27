@@ -58,15 +58,11 @@ export class Constants {
 
 	static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id"];
 
-    static readonly FACE_TO_FACE_JOURNEY = "FACE_TO_FACE";
+    static readonly FACE_TO_FACE_JOURNEY = "f2f";
 
-    static readonly NO_PHOTO_ID_JOURNEY = "NO_PHOTO_ID";
+    static readonly NO_PHOTO_ID_JOURNEY = "bank_account";
 
-    static readonly LOW_CONFIDENCE_JOURNEY = "LOW_CONFIDENCE";
-
-    static readonly CONTEXT_BANK_ACCOUNT = "bank_account";
-
-    static readonly CONTEXT_LOW_CONFIDENCE = "hmrc_check";
+    static readonly LOW_CONFIDENCE_JOURNEY = "hmrc_check";
 
 	static readonly X_FORWARDED_FOR = "x-forwarded-for";
 
