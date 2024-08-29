@@ -180,18 +180,7 @@ export class SessionRequestProcessor {
 			return GenericServerError;
 		}
 
-		let journeyContext;
-		
-		switch (jwtPayload.context) {
-			case Constants.CONTEXT_BANK_ACCOUNT:
-				journeyContext = Constants.NO_PHOTO_ID_JOURNEY;
-				break;
-			case Constants.CONTEXT_LOW_CONFIDENCE:
-				journeyContext = Constants.LOW_CONFIDENCE_JOURNEY;
-				break;
-			default:
-				journeyContext = Constants.FACE_TO_FACE_JOURNEY;
-		}
+		const journeyContext = jwtPayload.context ? jwtPayload.context : Constants.FACE_TO_FACE_JOURNEY;
 
 		const session: ISessionItem = {
 			sessionId,
@@ -235,11 +224,11 @@ export class SessionRequestProcessor {
 			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 				event_name: TxmaEventNames.CIC_CRI_START,
 				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
-				...(jwtPayload.context && { extensions: {
-					evidence: {
-						context: jwtPayload.context,
-					},
-				} }),
+				...{ extensions: {
+					evidence: [{
+						context:  journeyContext,
+					}],
+				} },
 			}, encodedHeader);
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {

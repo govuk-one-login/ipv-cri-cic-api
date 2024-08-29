@@ -22,7 +22,7 @@ export interface Evidence {
 }
 
 export interface Extensions {
-	"evidence": Evidence;
+	"evidence": [Evidence];
 }
 
 export interface TxMACredentialSubject extends CredentialSubject {
