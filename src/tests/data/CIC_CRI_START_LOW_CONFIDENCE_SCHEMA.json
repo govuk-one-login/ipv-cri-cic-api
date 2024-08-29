@@ -44,14 +44,19 @@
             "type": "object",
             "properties": {
                 "evidence": {
-                    "type": "object",
-                    "properties": {
-                        "context": {
-                            "type": "string"
+                    "type": "array",
+                    "items": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "context": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "context"
+                            ]
                         }
-                    },
-                    "required": [
-                        "context"
                     ]
                 }
             },
@@ -87,5 +92,6 @@
         "component_id",
         "extensions",
         "restricted"
-    ]
+    ],
+    "additionalProperties": false
 }

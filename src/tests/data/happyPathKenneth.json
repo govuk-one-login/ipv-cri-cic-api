@@ -2,5 +2,5 @@
     "firstName": "Kenneth",
     "lastName": "Decerqueira",
     "dateOfBirth": "1970-03-26",
-    "journeyType": "LOW_CONFIDENCE"
+    "journeyType": "hmrc_check"
 }

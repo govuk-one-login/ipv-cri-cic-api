@@ -37,7 +37,7 @@
                     "N": "4865226539"
                   },
                   "journey": {
-                    "S": "FACE_TO_FACE"
+                    "S": "f2f"
                   },
                   "redirectUri": {
                     "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity"
@@ -85,7 +85,7 @@
                   "N": "4865226539"
                 },
                 "journey": {
-                  "S": "FACE_TO_FACE"
+                  "S": "f2f"
                 },
                 "redirectUri": {
                   "S": "https://ipvstub.review-c.dev.account.gov.uk/redirect"
