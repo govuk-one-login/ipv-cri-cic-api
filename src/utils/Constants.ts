@@ -56,7 +56,7 @@ export class Constants {
 
     static readonly GIVEN_NAME_REGEX = /^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$/;
 
-	static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id"];
+	  static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id"];
 
     static readonly FACE_TO_FACE_JOURNEY = "f2f";
 
@@ -64,9 +64,9 @@ export class Constants {
 
     static readonly LOW_CONFIDENCE_JOURNEY = "hmrc_check";
 
-	static readonly X_FORWARDED_FOR = "x-forwarded-for";
+	  static readonly X_FORWARDED_FOR = "x-forwarded-for";
 
-	static readonly ENCODED_AUDIT_HEADER = "txma-audit-encoded";
+	  static readonly ENCODED_AUDIT_HEADER = "txma-audit-encoded";
     
 }
 

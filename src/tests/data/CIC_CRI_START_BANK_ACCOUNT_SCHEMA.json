@@ -44,14 +44,19 @@
             "type": "object",
             "properties": {
                 "evidence": {
-                    "type": "object",
-                    "properties": {
-                        "context": {
-                            "type": "string"
+                    "type": "array",
+                    "items": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "context": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "context"
+                            ]
                         }
-                    },
-                    "required": [
-                        "context"
                     ]
                 }
             },
@@ -85,7 +90,8 @@
         "timestamp",
         "event_timestamp_ms",
         "component_id",
-        "extensions"
+        "extensions",
+        "restricted"
     ],
     "additionalProperties": false
 }
