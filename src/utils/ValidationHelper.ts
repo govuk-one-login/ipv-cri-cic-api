@@ -94,8 +94,8 @@ export class ValidationHelper {
 			return `JWT validation/verification failed: Unable to retrieve redirect URI for client_id: ${requestBodyClientId}`;
 		} else if (expectedRedirectUri !== jwtPayload.redirect_uri) {
 			return `JWT validation/verification failed: Redirect uri ${jwtPayload.redirect_uri} does not match configuration uri ${expectedRedirectUri}`;
-		} else if (jwtPayload.context != null && jwtPayload.context !== Constants.CONTEXT_BANK_ACCOUNT && jwtPayload.context !== Constants.CONTEXT_LOW_CONFIDENCE) {
-			return `JWT validation/verification failed: Context ${jwtPayload.context} does not match configuration context ${Constants.CONTEXT_BANK_ACCOUNT} or ${Constants.CONTEXT_LOW_CONFIDENCE}`;
+		} else if (jwtPayload.context != null && jwtPayload.context !== Constants.NO_PHOTO_ID_JOURNEY && jwtPayload.context !== Constants.LOW_CONFIDENCE_JOURNEY) {
+			return `JWT validation/verification failed: Context ${jwtPayload.context} does not match configuration context ${Constants.NO_PHOTO_ID_JOURNEY} or ${Constants.LOW_CONFIDENCE_JOURNEY}`;
 		}
 		return "";
 	};

@@ -292,6 +292,11 @@ describe("SessionRequestProcessor", () => {
 					transaction_id: "",
 					user_id: "",
 				},
+				extensions: {
+					evidence: [{
+						context: "f2f",
+					}],
+				},
 			}, "ABCDEFG");
 		});
 
@@ -320,6 +325,11 @@ describe("SessionRequestProcessor", () => {
 					session_id: "sessionId",
 					transaction_id: "",
 					user_id: "",
+				},
+				extensions: {
+					evidence: [{
+						context: "f2f",
+					}],
 				},
 			}, "ABCDEFG");
 		});
@@ -351,9 +361,43 @@ describe("SessionRequestProcessor", () => {
 					user_id: "",
 				},
 				extensions: {
-					evidence: {
+					evidence: [{
 						context: "bank_account",
-					},
+					}],
+				},
+			}, "ABCDEFG");
+		});
+
+		it("correctly sets context field to 'f2f' when no context is provided in JWT", async () => {
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			mockValidationHelper.isJwtValid.mockReturnValue("");
+			mockCicService.getSessionById.mockResolvedValue(undefined);
+			mockCicService.createAuthSession.mockResolvedValue();
+			jest.useFakeTimers();
+			const fakeTime = 1684933200;
+			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+
+			await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+				event_name: "CIC_CRI_START",
+				component_id: "https://XXX-c.env.account.gov.uk",
+				timestamp: 1684933200,
+				event_timestamp_ms: 1684933200000,
+				user: {
+					govuk_signin_journey_id: "abcdef",
+					ip_address: "1.1.1",
+					persistent_session_id: undefined,
+					session_id: "sessionId",
+					transaction_id: "",
+					user_id: "",
+				},
+				extensions: {
+					evidence: [{
+						context: "f2f",
+					}],
 				},
 			}, "ABCDEFG");
 		});
