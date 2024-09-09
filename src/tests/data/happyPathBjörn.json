@@ -2,5 +2,5 @@
     "firstName": "Bjorn",
     "lastName": "Test-User",
     "dateOfBirth": "1970-03-26",
-    "journeyType": "FACE_TO_FACE"
+    "journeyType": "f2f"
 }

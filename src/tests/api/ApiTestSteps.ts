@@ -36,10 +36,10 @@ export async function stubStartPost(journeyType: string): Promise<any> {
 
 	let postRequest: AxiosResponse;
 	switch (journeyType) {
-		case "NO_PHOTO_ID":
+		case "bank_account":
 			postRequest = await axios.post(`${path}`, { context: "bank_account" });
 			break;
-		case "LOW_CONFIDENCE":
+		case "hmrc_check":
 			postRequest = await axios.post(`${path}`, { context: "hmrc_check" });
 			break;
 		case "INVALID":

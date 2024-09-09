@@ -10,7 +10,7 @@ import dataSpaceEnd from "../data/dataSpaceEnd.json";
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	let stubResponse: any;
 	beforeAll(async () => {
-		stubResponse = await stubStartPost("FACE_TO_FACE");
+		stubResponse = await stubStartPost("f2f");
 	});
 
 	it("E2E Negative Path Journey - Sessions: Empty Request Body", async () => {
@@ -47,7 +47,7 @@ describe("/session Unhappy Path", () => {
 describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 	let sessionId: any;
 	beforeAll(async () => {
-		sessionId = await startStubServiceAndReturnSessionId("FACE_TO_FACE");
+		sessionId = await startStubServiceAndReturnSessionId("f2f");
 	});
 
 	it("E2E Negative Path Journey - Claimed Identity: No Name in Payload", async () => {
@@ -73,7 +73,7 @@ describe("Claimed Identity Negative Path Tests", () => {
 		[dataSpaceStart],
 		[dataSpaceEnd],
 	])("E2E Happy Path Journey - User Info", async (userData: any) => {
-		const stubResponse = await stubStartPost("FACE_TO_FACE");
+		const stubResponse = await stubStartPost("f2f");
 		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 
 		expect(sessionResponse.status).toBe(200);
