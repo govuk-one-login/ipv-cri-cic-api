@@ -17,22 +17,26 @@ export VC_SIGNING_KEY_ID=$(remove_quotes "$CFN_VcSigningKeyId")
 export DNS_SUFFIX=$(remove_quotes "$CFN_DNSSuffix")
 export DEV_CIC_SESSION_TABLE_NAME=$(remove_quotes "$CFN_SessionTableName")
 
-echo "Tests (CIC-CRI)"
+echo "Traffic tests (CIC-CRI)"
 # disabling error_check to allow report generation for successful + failed tests
 set +e
-cd /src; npm run test:api 
+apt-get install jq -y
+
+cd /src;
+
+echo "Waiting for 5 minutes before starting traffic tests (CIC-CRI)"
+sleep 300
+
+echo "Running Traffic tests (CIC-CRI)"
+for i in {1..10}
+do
+  echo "CIC-CRI-Test# $i"
+  npm run test:pii
+done
+
 error_code=$?
-cp -rf results $TEST_REPORT_ABSOLUTE_DIR
 if [ $error_code -ne 0 ]
 then
   exit $error_code
 fi
 
-sleep 2m
-
-set -e
-apt-get install jq -y
-cd /src; npm run test:pii
-error_code=$?
-
-exit $error_code
