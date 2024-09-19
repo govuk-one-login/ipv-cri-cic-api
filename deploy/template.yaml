@@ -66,6 +66,12 @@ Parameters:
     Description: "Set to true to apply reserved concurrency when deploying in DEV environments"
     Type: String
     Default: "false"
+  LambdaCanaryDeployment:
+    Description: >
+      Canary strategy to be used with your Lambda applications please refer to documentation for configurations -
+      https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/automating-updates-to-serverless-apps.html
+    Type: String
+    Default: "AllAtOnce"
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
@@ -192,7 +198,13 @@ Conditions:
   ApplyReservedConcurrency: !Or
     - Condition: IsNotDevelopment
     - !Equals [!Ref ApplyReservedConcurrencyInDev, true]
-  
+  UseCanaryDeploy:
+    Fn::Or:
+      - Fn::Equals: [ !Ref Environment, "dev" ]
+      - Fn::Equals: [ !Ref Environment, "build" ]
+      - Fn::Equals: [ !Ref Environment, "staging" ]
+      - Fn::Equals: [ !Ref Environment, "integration" ]
+      - Fn::Equals: [ !Ref Environment, "production" ]
 
 Globals:
   Function:
@@ -257,6 +269,28 @@ Globals:
           ] # What is this? @TODO
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
+    DeploymentPreference:
+      Enabled:
+        Fn::If:
+          - UseCanaryDeploy
+          - true
+          - false
+      Type:
+        Fn::If:
+          - UseCanaryDeploy
+          - !Ref LambdaCanaryDeployment
+          - !Ref "AWS::NoValue"
+      Role:
+        Fn::If:
+          - UseCanaryDeploy
+          - !GetAtt LambdaDeployRole.Arn
+          - !Ref "AWS::NoValue"
+      Alarms:
+        Fn::If:
+          - DeployAlarms
+          - - !Ref 5XXErrorAlarm
+            - !Ref 5XXErrorCriticalAlarm
+          - - !Ref "AWS::NoValue"
 
 Resources:
   # Log metric filter and alarm for S3 bucket policy changes
@@ -472,6 +506,27 @@ Resources:
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+
+  LambdaDeployRole:
+    Type: AWS::IAM::Role
+    Condition: UseCanaryDeploy
+    # checkov:skip=CKV_AWS_111: "Ensure IAM policies does not allow write access without constraints
+    # The network interface permissions can only be applied at the '*' resource level
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.eu-west-2.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda"
 
   ### Start of API Gateway definition.
 
