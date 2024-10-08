@@ -998,11 +998,13 @@ components:
         given_names:
           type: string
           example: Frederick Joseph
-          pattern: ^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$
+          pattern: /^[A-Za-z .'-]*$/
+          minLength: 2
           description: claimed given legal name
         family_names:
           type: string
-          pattern: ^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$
+          pattern: /^[A-Za-z .'-]*$/
+          minLength: 2
           example: Flintstone
           description: claimed family legal name
         date_of_birth:
