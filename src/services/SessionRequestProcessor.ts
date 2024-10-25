@@ -154,14 +154,17 @@ export class SessionRequestProcessor {
 			return unauthorizedResponse;
 		}
 
-		const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri, Constants.EXPECTED_CONTEXT);
+
+		const JwtErrors = this.validationHelper.isJwtValid(
+			jwtPayload, requestBodyClientId, configClient.redirectUri);
+
 		if (JwtErrors.length > 0) {
 			this.logger.error(JwtErrors, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
-			return unauthorizedResponse;
-		}		
-		
+			return unauthorizedResponse;		
+		}
+
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
 				this.logger.error("sessionId already exists in the database", {
@@ -177,6 +180,8 @@ export class SessionRequestProcessor {
 			return GenericServerError;
 		}
 
+		const journeyContext = jwtPayload.context ? jwtPayload.context : Constants.FACE_TO_FACE_JOURNEY;
+
 		const session: ISessionItem = {
 			sessionId,
 			clientId: jwtPayload.client_id,
@@ -190,7 +195,7 @@ export class SessionRequestProcessor {
 			clientIpAddress,
 			attemptCount: 0,
 			authSessionState: "CIC_SESSION_CREATED",
-			journey: jwtPayload.context ? Constants.NO_PHOTO_ID_JOURNEY : Constants.FACE_TO_FACE_JOURNEY,
+			journey: journeyContext,
 		};
 
 		try {
@@ -219,11 +224,11 @@ export class SessionRequestProcessor {
 			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
 				event_name: TxmaEventNames.CIC_CRI_START,
 				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
-				...(jwtPayload.context && { extensions: {
-					evidence: {
-						context: jwtPayload.context,
-					},
-				} }),
+				...{ extensions: {
+					evidence: [{
+						context:  journeyContext,
+					}],
+				} },
 			}, encodedHeader);
 		} catch (error) {
 			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {

@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -79,7 +80,7 @@ export class ValidationHelper {
 	};
 
 	isJwtValid = (jwtPayload: JwtPayload,
-		requestBodyClientId: string, expectedRedirectUri: string, expectedContext: string): string => {
+		requestBodyClientId: string, expectedRedirectUri: string): string => {
 
 		if (!this.isJwtComplete(jwtPayload)) {
 			return "JWT validation/verification failed: Missing mandatory fields in JWT payload";
@@ -93,10 +94,9 @@ export class ValidationHelper {
 			return `JWT validation/verification failed: Unable to retrieve redirect URI for client_id: ${requestBodyClientId}`;
 		} else if (expectedRedirectUri !== jwtPayload.redirect_uri) {
 			return `JWT validation/verification failed: Redirect uri ${jwtPayload.redirect_uri} does not match configuration uri ${expectedRedirectUri}`;
-		} else if (jwtPayload.context != null && expectedContext !== jwtPayload.context) {
-			return `JWT validation/verification failed: Context ${jwtPayload.context} does not match configuration context ${expectedContext}`;
+		} else if (jwtPayload.context != null && jwtPayload.context !== Constants.NO_PHOTO_ID_JOURNEY && jwtPayload.context !== Constants.LOW_CONFIDENCE_JOURNEY) {
+			return `JWT validation/verification failed: Context ${jwtPayload.context} does not match configuration context ${Constants.NO_PHOTO_ID_JOURNEY} or ${Constants.LOW_CONFIDENCE_JOURNEY}`;
 		}
-
 		return "";
 	};
 }

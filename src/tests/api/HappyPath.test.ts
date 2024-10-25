@@ -9,8 +9,9 @@ import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils"
 describe("Happy path tests", () => {
 	describe("/session endpoint", () => {
 		it.each([
-			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
 		])("For $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
@@ -24,8 +25,9 @@ describe("Happy path tests", () => {
 
 	describe("/claimedIdentity endpoint", () => {
 		it.each([
-			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
 		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
@@ -38,8 +40,9 @@ describe("Happy path tests", () => {
 
 	describe("/authorization endpoint", () => {
 		it.each([
-			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
 		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
@@ -57,8 +60,9 @@ describe("Happy path tests", () => {
 
 	describe("/token endpoint", () => {
 		it.each([
-			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
 		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
@@ -73,8 +77,9 @@ describe("Happy path tests", () => {
 
 	describe("/userinfo endpoint", () => {
 		it.each([
-			{ journeyType: "FACE_TO_FACE", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "NO_PHOTO_ID", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
 		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
