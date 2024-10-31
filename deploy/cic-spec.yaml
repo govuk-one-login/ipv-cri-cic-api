@@ -998,16 +998,21 @@ components:
         given_names:
           type: string
           example: Frederick Joseph
-          pattern: ^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$
+          pattern: ^[A-Za-z .'-]*$
+          minLength: 2
+          maxLength: 40
           description: claimed given legal name
         family_names:
           type: string
-          pattern: ^[a-zA-Z.'-]+( [a-zA-Z.'-]+)*$
+          pattern: ^[A-Za-z .'-]*$
           example: Flintstone
+          minLength: 2
+          maxLength: 40
           description: claimed family legal name
         date_of_birth:
           type: string
           format: date
+          maxLength: 18
           example: "1970-01-01"
           description: claimed Date of Birth
     JWKSFile:
