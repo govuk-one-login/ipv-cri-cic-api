@@ -71,7 +71,7 @@ Parameters:
       Canary strategy to be used with your Lambda applications please refer to documentation for configurations -
       https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/automating-updates-to-serverless-apps.html
     Type: String
-    Default: "AllAtOnce"
+    Default: "Linear10PercentEvery1Minute"
 
 Mappings:
   EnvironmentConfiguration: # This is where you store per-environment settings.
