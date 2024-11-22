@@ -1723,7 +1723,7 @@ Resources:
         - Id: errorThreshold
           Label: errorThreshold
           ReturnData: true
-          Expression: IF(invocations<10,0,errorPercentage)
+          Expression: IF(invocations<1,0,errorPercentage)
         - Id: invocations
           ReturnData: false
           MetricStat:
