@@ -287,10 +287,8 @@ Globals:
           - !Ref "AWS::NoValue"
       Alarms:
         Fn::If:
-          - DeployAlarms
-          - - !Ref 5XXErrorAlarm
-            - !Ref 5XXErrorCriticalAlarm
-            - !Ref 4XXErrorAlarm
+          - UseCanaryDeploy
+          - - !Ref 4XXErrorAlarm
           - - !Ref "AWS::NoValue"
 
 Resources:
@@ -1710,7 +1708,6 @@ Resources:
 
   4XXErrorAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-4XXErrorAlarm"
       AlarmDescription: !Sub "There has been a proportion of 4XX errors on the backend api-gateway. ${SupportManualURL}"
