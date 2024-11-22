@@ -1714,8 +1714,8 @@ Resources:
       ActionsEnabled: true
       InsufficientDataActions: [ ]
       Dimensions: [ ]
-      EvaluationPeriods: 3
-      DatapointsToAlarm: 2
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
