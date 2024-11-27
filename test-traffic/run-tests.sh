@@ -31,7 +31,7 @@ echo "Running Traffic tests (CIC-CRI)"
 for i in {1..10}
 do
   echo "CIC-CRI-Test# $i"
-  npm run test:pii
+  npm run test:api
 done
 
 error_code=$?
