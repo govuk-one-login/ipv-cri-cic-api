@@ -258,6 +258,12 @@ Globals:
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
 
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W6001 # Output value is an import from another output
+
 Resources:
   # Log metric filter and alarm for S3 bucket policy changes
   S3BucketActivityEventMetricFilter:
@@ -625,7 +631,6 @@ Resources:
 
   CICApiMapping:
     Type: AWS::ApiGateway::BasePathMapping
-    DependsOn: "CICApiCustomDomainName"
     Properties:
       DomainName: !Ref CICApiCustomDomainName
       RestApiId: !Ref CICRestApi
@@ -1667,7 +1672,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -1717,7 +1721,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -1767,7 +1770,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -1831,7 +1833,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -1893,7 +1894,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -1957,7 +1957,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -2019,7 +2018,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2083,7 +2081,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -2145,7 +2142,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2209,7 +2205,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -2271,7 +2266,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2335,7 +2329,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -2397,7 +2390,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2461,7 +2453,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -2523,7 +2514,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2587,7 +2577,6 @@ Resources:
         - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 80
@@ -2651,7 +2640,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2713,7 +2701,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2775,7 +2762,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2837,7 +2823,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2899,7 +2884,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -2961,7 +2945,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -3023,7 +3006,6 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 1
@@ -3087,7 +3069,6 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      Dimensions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 2500
