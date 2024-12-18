@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: Generic Key Stack
+
+Parameters:
+  Environment:
+    Description: The environment type
+    Type: String
+    AllowedValues:
+      - dev
+      - build
+      - staging
+    Default: dev
+
+Resources:
+  KMSSigningKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: A KMS Key for signing.
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource:
+              - "*"
+      KeySpec: ECC_NIST_P256
+      KeyUsage: SIGN_VERIFY
+      MultiRegion: false
+
+  KMSEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: A KMS Key for encrypting.
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource:
+              - "*"
+      KeySpec: RSA_2048
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+
+Outputs:
+  SigningKeyArn:
+    Description: "The Arn of a signing key"
+    Value: !GetAtt KMSSigningKey.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-signing-key"
+
+  SigningKeyId:
+    Description: "The Id of the a signing key"
+    Value: !Ref KMSSigningKey
+    Export:
+      Name: !Sub "${AWS::StackName}-signing-key-id"
+
+  EncryptionKeyArn:
+    Description: "The ARN of the encryption key"
+    Value: !GetAtt KMSEncryptionKey.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-encryption-key"
+
+  EncryptionKeyId:
+    Description: "The Id of the encryption key"
+    Value: !Ref KMSEncryptionKey
+    Export:
+      Name: !Sub "${AWS::StackName}-encryption-key-id"

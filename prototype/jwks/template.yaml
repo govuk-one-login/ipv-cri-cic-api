@@ -1,0 +1,298 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: Generic JWKS Stack
+
+Parameters:
+  Environment:
+    Description: The environment type
+    Type: String
+    AllowedValues:
+      - dev
+      - build
+      - staging
+    Default: dev
+  KMSStackName:
+    Type: String
+    Default: "coral-tests"
+    Description: The name of the KMS stack deployed.
+
+Globals:
+  Function:
+    Timeout: 5
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        SIGNING_KEY_ID: 
+          Fn::ImportValue: !Sub "${L2KMSStackName}-signing-key-id"
+        ENCRYPTION_KEY_ID: 
+          Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key-id"
+        ISSUER: Account.environment.DNS
+
+Resources:
+  KMSSigningKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}-active-signing-key
+      TargetKeyId: Fn::ImportValue: !Sub "${L2KMSStackName}-signing-key-id"
+
+  KMSEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}-encryption-key
+      TargetKeyId: Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key-id"
+
+  JsonWebKeysBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-jwks-keys-${Environment}
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref JsonWebKeysBucketAccessLogs
+        LogFilePrefix: !Sub ${AWS::StackName}-jwks-keys
+
+  JsonWebKeysBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref JsonWebKeysBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: "*"
+            Resource: !Sub
+              - arn:aws:s3:::${bucketName}/*
+              - bucketName: !Ref JsonWebKeysBucket
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  JsonWebKeysBucketAccessLogs:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-jwks-keys-access-logs-${Environment}
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
+
+  JsonWebKeysBucketAccessLogsPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref JsonWebKeysBucketAccessLogs
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: "*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+            Effect: Deny
+            Principal:
+              AWS: "*"
+            Resource: !Sub
+              - arn:aws:s3:::${bucketName}/*
+              - bucketName: !Ref JsonWebKeysBucketAccessLogs
+          - Action:
+              - s3:PutObject
+            Condition:
+              ArnLike:
+                aws:SourceArn: !GetAtt JsonWebKeysBucket.Arn
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Resource: !Sub
+              - arn:aws:s3:::${bucketName}/*
+              - bucketName: !Ref JsonWebKeysBucketAccessLogs
+
+  ### JWKS Resources
+  JsonWebKeysFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - JsonWebKeysFunctionLogGroup
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: false
+        EntryPoints:
+          - src/functions/jwks/jwksHandler.ts
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-jwks
+      Description: Convert ID Check public encryption keys to JWKS format and upload to S3
+      Runtime: nodejs20.x
+      Handler: jwksHandler.lambdaHandler
+      Role: !GetAtt JsonWebKeysFunctionLambdaRole.Arn
+      Environment:
+        Variables:
+          KEY_IDs: !Join [",", [Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key-id"]]
+          BUCKET_NAME: !Ref JsonWebKeysBucket
+      VpcConfig:
+        SubnetIds:
+          - !ImportValue devplatform-vpc-PrivateSubnetIdA
+          - !ImportValue devplatform-vpc-PrivateSubnetIdB
+          - !ImportValue devplatform-vpc-PrivateSubnetIdC
+        SecurityGroupIds:
+          - !ImportValue devplatform-vpc-AWSServicesEndpointSecurityGroupId
+
+  JsonWebKeysFunctionLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-jwks-lambda
+      Description: Role of JWKS function
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: UploadPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub
+                    - arn:aws:s3:::${TargetBucket}/*
+                    - TargetBucket: !Ref JsonWebKeysBucket
+        - PolicyName: GetPublicKeyPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:GetPublicKey
+                Resource: !GetAtt KMSEncryptionKey.Arn
+        - PolicyName: LoggingPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+        - PolicyName: VpcPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                Resource: "*"
+
+  JsonWebKeysFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-jwks
+
+  JsonWebKeysCustomResource:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt JsonWebKeysFunction.Arn
+
+  JsonWebKeysBucketApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-jwks-bucket
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: JsonWebKeysBucketPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub ${JsonWebKeysBucket.Arn}/.well-known/jwks.json
+
+  ### Application
+  JWKSApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-jwks-api
+      Description: API Gateway for Key Sharing
+      EndpointConfiguration: REGIONAL
+      StageName: !Ref Environment
+      OpenApiVersion: 3.0.1
+      AccessLogSetting:
+        DestinationArn: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${SessionsApiAccessLogs}
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user","requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath", "status":"$context.status","protocol":"$context.protocol", "responseLength":"$context.responseLength" }'
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: /*
+          HttpMethod: "*"
+          DataTraceEnabled: false
+          MetricsEnabled: true
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ./jwks.openapi.yaml
+
+Outputs:
+  ActiveSigningKeyAlias:
+    Description: "The Arn of the active signing key"
+    Value: !Ref KMSSigningKeyAlias
+    Export:
+      Name: !Sub "${AWS::StackName}-active-signing-key-alias"
+
+  ActiveEncryptionKeyAlias:
+    Description: "The Id of the active encryption key"
+    Value: !Ref KMSEncryptionKeyAlias
+    Export:
+      Name: !Sub "${AWS::StackName}-active-encryption-key-alias"
+  
+  ActiveSigningKeyId:
+    Description: "The kid value or the active signing key"
+    Value: "who knows how to get this here"
+  
+  ActiveEncryptionKeyId:
+    Description: "The kid value or the active encryption key"
+    Value: "who knows how to get this here"
+
+  KeySharingLocation:
+    Description: "The URL of the JWKS Endpoint"
+    Export:
+      Name: !Sub "${AWS::StackName}-JWKS-URL"
+    Value: !Sub "https://${JWKSApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/.well-known/jwks.json"
