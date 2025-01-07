@@ -267,21 +267,9 @@ Globals:
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
     DeploymentPreference:
-      Enabled:
-        Fn::If:
-          - UseCanaryDeploy
-          - true
-          - false
-      Type:
-        Fn::If:
-          - UseCanaryDeploy
-          - !Ref LambdaDeploymentPreference
-          - !Ref "AWS::NoValue"
-      Role:
-        Fn::If:
-          - UseCanaryDeploy
-          - !GetAtt LambdaDeployRole.Arn
-          - !Ref "AWS::NoValue"
+      Enabled: true
+      Type: !Ref LambdaDeploymentPreference
+      Role: !GetAtt LambdaDeployRole.Arn
       Alarms:
         Fn::If:
           - DeployAlarms
