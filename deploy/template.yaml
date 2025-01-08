@@ -267,21 +267,9 @@ Globals:
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
     AutoPublishAlias: live
     DeploymentPreference:
-      Enabled:
-        Fn::If:
-          - UseCanaryDeploy
-          - true
-          - false
-      Type:
-        Fn::If:
-          - UseCanaryDeploy
-          - !Ref LambdaDeploymentPreference
-          - !Ref "AWS::NoValue"
-      Role:
-        Fn::If:
-          - UseCanaryDeploy
-          - !GetAtt LambdaDeployRole.Arn
-          - !Ref "AWS::NoValue"
+      Enabled: true
+      Type: !Ref LambdaDeploymentPreference
+      Role: !GetAtt LambdaDeployRole.Arn
       Alarms:
         Fn::If:
           - DeployAlarms
@@ -506,7 +494,6 @@ Resources:
 
   LambdaDeployRole:
     Type: AWS::IAM::Role
-    Condition: UseCanaryDeploy
     # checkov:skip=CKV_AWS_111: "Ensure IAM policies does not allow write access without constraints
     # The network interface permissions can only be applied at the '*' resource level
     Properties:
