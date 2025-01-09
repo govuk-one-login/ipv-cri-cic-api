@@ -68,9 +68,6 @@ Mappings:
       DNSSUFFIX: review-c.account.gov.uk
 
 Conditions:
-  CreateDevResources: !Equals
-    - !Ref Environment
-    - dev
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -169,7 +166,6 @@ Resources:
 
   StubApiMapping:
     Type: AWS::ApiGateway::BasePathMapping
-    DependsOn: "StubApiCustomDomainName"
     Properties:
       DomainName: !Ref StubApiCustomDomainName
       RestApiId: !Ref IPVStubApiGw
@@ -184,9 +180,6 @@ Resources:
       PathPart: redirect
 
   RedirectMethodGet:
-    DependsOn:
-      - RedirectPath
-      - IPVStubRedirectFunction
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
@@ -221,8 +214,6 @@ Resources:
       PathPart: .well-known
 
   JwksJSONFile:
-    DependsOn:
-      - WellKnownPath
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref IPVStubApiGw
@@ -230,9 +221,6 @@ Resources:
       PathPart: jwks.json
 
   JwksMethodGet:
-    DependsOn:
-      - JwksJSONFile
-      - JwksFunction
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
@@ -267,9 +255,6 @@ Resources:
       PathPart: start
 
   StartCICMethodGet:
-    DependsOn:
-      - StartCICPath
-      - StartCICCheckFunction
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
