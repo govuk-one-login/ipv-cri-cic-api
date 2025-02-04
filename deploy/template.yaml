@@ -518,6 +518,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Environment
+      AlwaysDeploy: true
       OpenApiVersion: 3.0.1
       AccessLogSetting:
         Format: >-
