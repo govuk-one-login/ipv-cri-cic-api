@@ -631,6 +631,7 @@ Resources:
 
   ### API Gateway Custom Domain definition
   WAFv2ACLAssociation:
+    Condition: IsNotDevelopment
     Type: AWS::WAFv2::WebACLAssociation
     Properties:
       ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${CICRestApi}/stages/${CICRestApi.Stage}"
