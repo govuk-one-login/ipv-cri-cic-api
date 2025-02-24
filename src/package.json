@@ -27,7 +27,7 @@
         "esbuild": "0.17.12",
         "express": "^4.18.2",
         "express-asyncify": "^2.1.2",
-        "jose": "^4.11.2",
+        "jose": "^6.0.6",
         "node-jose": "^2.1.1",
         "npm-run-all": "^4.1.5"
     },
