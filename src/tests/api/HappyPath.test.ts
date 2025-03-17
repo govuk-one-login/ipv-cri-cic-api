@@ -12,7 +12,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("For $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState and TxMA event validation for $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "journey", journeyType);
@@ -25,10 +25,10 @@ describe("Happy path tests", () => {
 
 	describe("/claimedIdentity endpoint", () => {
 		it.each([
-			{ journeyType: "f2f" },
-			{ journeyType: "bank_account" },
-			{ journeyType: "hmrc_check" },
-		])("Successful Request Tests - $journeyType", async ({ journeyType }: { journeyType: string}) => {
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
+		])("Successful Request Tests - authSessionState validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -43,7 +43,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState and TxMA event validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -60,10 +60,10 @@ describe("Happy path tests", () => {
 
 	describe("/token endpoint", () => {
 		it.each([
-			{ journeyType: "f2f" },
-			{ journeyType: "bank_account" },
-			{ journeyType: "hmrc_check" },
-		])("Successful Request Tests - $journeyType", async ({ journeyType }: { journeyType: string }) => {
+			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
+			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
+			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
+		])("Successful Request Tests - authSessionState validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -80,7 +80,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -116,7 +116,7 @@ describe("Happy path tests", () => {
 
 		});
 
-		it("Successful Request Test - Abort After Session Request", async () => {
+		it("Successful Request Test - Abort After Session Request with authSessionState and TxMA event validation", async () => {
 			const response = await abortPost(sessionId);
 			expect(response.status).toBe(200);
 			expect(response.data).toBe("Session has been aborted");
@@ -138,7 +138,7 @@ describe("Happy path tests", () => {
 
 		});
 
-		it("Successful Request Test - Abort After Claimed Identity Request", async () => {
+		it("Successful Request Test - Abort After Claimed Identity Request with authSessionState and TxMA event validation", async () => {
 
 			// Claimed Identity
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
