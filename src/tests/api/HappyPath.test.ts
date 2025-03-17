@@ -28,7 +28,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - authSessionState validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState validation for $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -43,7 +43,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - authSessionState and TxMA event validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState and TxMA event validation for $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -63,7 +63,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - authSessionState validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState validation for $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -80,7 +80,7 @@ describe("Happy path tests", () => {
 			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
 			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
 			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - authSessionState validation for $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+		])("Successful Request Tests - authSessionState validation for $journeyType journey type", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
