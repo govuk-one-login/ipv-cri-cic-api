@@ -12,7 +12,6 @@ import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
-/* eslint jest/unbound-method: error */
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -81,13 +80,13 @@ describe("UserInfoRequestProcessor", () => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
 		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.cicService = mockCicService;
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
@@ -103,7 +102,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -162,7 +161,6 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when Authorization header is missing in the request", async () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -175,11 +173,10 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when access_token JWT validation fails", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = failingKmsJwtAdapterFactory();
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -192,11 +189,10 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when sub is missing from JWT access_token", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.sub = null;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -209,11 +205,10 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when we receive expired JWT access_token", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = 1585695600 - 500;
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -262,7 +257,6 @@ describe("UserInfoRequestProcessor", () => {
 
 	it("Return error when person names are missing", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
-		// @ts-ignore
 		mockPerson.personNames[0].nameParts = [];
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
@@ -289,7 +283,6 @@ describe("UserInfoRequestProcessor", () => {
 
 	it("Return error when person DoB is missing", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
-		// @ts-ignore
 		mockPerson.birthDates[0].value = "";
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
@@ -341,7 +334,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
@@ -369,7 +362,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
 		mockCicService.sendToTXMA.mockRejectedValue({});
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);

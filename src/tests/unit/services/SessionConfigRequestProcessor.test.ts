@@ -9,7 +9,6 @@ import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { SessionConfigRequestProcessor } from "../../../services/SessionConfigRequestProcessor";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
-import { VALID_SESSIONCONFIG } from "../data/session-config-events";
 import { Constants } from "../../../utils/Constants";
 
 let sessionConfigRequestProcessorTest: SessionConfigRequestProcessor;
@@ -44,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 describe("SessionConfigRequestProcessor", () => {
 	beforeAll(() => {
 		sessionConfigRequestProcessorTest = new SessionConfigRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		sessionConfigRequestProcessorTest.cicService = mockCicService;
 	});
 
