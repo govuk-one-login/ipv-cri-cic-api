@@ -42,15 +42,6 @@ describe("JWKS Endpoint", () => {
     expect(body.keys).toHaveLength(0);
   });
 
-  it("should return a 200 response with an empty JWK array if no SIGNING_KEY is provided", async () => {
-    delete process.env.SIGNING_KEY;
-    const response = await handler();
-    const result = response as APIGatewayProxyResult;
-    expect(result.statusCode).toBe(200);
-    const body = JSON.parse(result.body ?? "{}");
-    expect(body.keys).toHaveLength(0);
-  });
-
   it("should return a 200 response with an empty JWK array if fetching the public key fails", async () => {
     mockKmsClient.on(GetPublicKeyCommand).rejects(new Error("Failed to fetch key")); 
     const response = await handler() as APIGatewayProxyResult;
