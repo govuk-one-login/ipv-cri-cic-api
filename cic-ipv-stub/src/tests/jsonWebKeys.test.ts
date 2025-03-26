@@ -43,7 +43,7 @@ describe("JWKS Endpoint", () => {
     expect(body.keys).toHaveLength(0);
   });
 
-  it("should return a 200 response with an empty JWK array if fetching the public key fails", async () => {
+  it("should return a 200 response with an empty JWK array if the key retrieval fails", async () => {
     mockKmsClient.on(GetPublicKeyCommand).rejects(new Error("Failed to fetch key")); 
     const response = await handler() as APIGatewayProxyResult;
     expect(response.statusCode).toBe(200);
