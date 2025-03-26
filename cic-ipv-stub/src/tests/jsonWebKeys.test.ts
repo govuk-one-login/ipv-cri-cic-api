@@ -33,8 +33,9 @@ describe("JWKS Endpoint", () => {
     expect(jwks.keys.find((k: any) => k.use === "sig")).toBeDefined();
   });
 
-  it("should return a 200 response with an empty JWK array if no SIGNING_KEY is provided", async () => {
+  it("should return a 200 response with an empty JWK array if no keys are provided", async () => {
     delete process.env.SIGNING_KEY;
+    delete process.env.ADDITIONAL_KEY;
     const response = await handler();
     const result = response as APIGatewayProxyResult;
     expect(result.statusCode).toBe(200);
