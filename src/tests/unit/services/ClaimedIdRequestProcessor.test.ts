@@ -43,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 describe("ClaimedIdRequestProcessor", () => {
 	beforeAll(() => {
 		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		claimedIdRequestProcessorTest.cicService = mockCicService;
 	});
 

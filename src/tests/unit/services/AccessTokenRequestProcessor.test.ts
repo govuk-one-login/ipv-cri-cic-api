@@ -58,14 +58,14 @@ describe("AccessTokenRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		accessTokenRequestProcessorTest = new AccessTokenRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		accessTokenRequestProcessorTest.cicService = mockCicService;
 		request = VALID_ACCESSTOKEN;
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		accessTokenRequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		// Setting the request body with a valid params
 		request.body = `code=${AUTHORIZATION_CODE}&grant_type=authorization_code&redirect_uri=${ENCODED_REDIRECT_URI}`;
@@ -153,7 +153,7 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Return 500 Server Error when Failed to sign the access token Jwt", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		accessTokenRequestProcessorTest.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
 		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
 
@@ -162,7 +162,6 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Return 401 when getting session from dynamoDB errors", async () => {
-		// @ts-ignore
 		mockCicService.getSessionByAuthorizationCode.mockImplementation(() => {
 			throw new Error("Error while retrieving the session");
 		});
@@ -173,7 +172,6 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Return 500 when updating the session returns an error", async () => {
-		// @ts-ignore
 		mockCicService.updateSessionWithAccessTokenDetails.mockImplementation(() => {
 			throw new AppError("updateItem - failed: got error saving Access token details", HttpCodesEnum.SERVER_ERROR);
 		});

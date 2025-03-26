@@ -3,7 +3,7 @@
 /* eslint-disable max-lines-per-function */
 import userData from "../data/happyPathSlim.json";
 import { constants } from "./ApiConstants";
-import { abortPost, getKeyFromSession, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost, authorizationGet, tokenPost, userInfoPost } from "./ApiTestSteps";
+import { abortPost, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost, authorizationGet, tokenPost, userInfoPost } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("Happy path tests", () => {
@@ -25,10 +25,10 @@ describe("Happy path tests", () => {
 
 	describe("/claimedIdentity endpoint", () => {
 		it.each([
-			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
-			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			{ journeyType: "f2f" },
+			{ journeyType: "bank_account" },
+			{ journeyType: "hmrc_check" },
+		])("Successful Request Tests - $journeyType", async ({ journeyType }: { journeyType: string}) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			const claimedIdentityResponse = await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
@@ -60,10 +60,10 @@ describe("Happy path tests", () => {
 
 	describe("/token endpoint", () => {
 		it.each([
-			{ journeyType: "f2f", schemaName: "CIC_CRI_START_SCHEMA" },
-			{ journeyType: "bank_account", schemaName: "CIC_CRI_START_BANK_ACCOUNT_SCHEMA" },
-			{ journeyType: "hmrc_check", schemaName: "CIC_CRI_START_LOW_CONFIDENCE_SCHEMA" },
-		])("Successful Request Tests - $journeyType", async ({ journeyType, schemaName }: { journeyType: string; schemaName: string }) => {
+			{ journeyType: "f2f" },
+			{ journeyType: "bank_account" },
+			{ journeyType: "hmrc_check" },
+		])("Successful Request Tests - $journeyType", async ({ journeyType }: { journeyType: string }) => {
 			const sessionId = await startStubServiceAndReturnSessionId(journeyType);
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);

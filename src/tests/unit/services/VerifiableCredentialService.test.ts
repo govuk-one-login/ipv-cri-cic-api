@@ -85,13 +85,13 @@ describe("Issuing verified credentials", () => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
 		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.cicService = mockCicService;
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
@@ -104,7 +104,7 @@ describe("Issuing verified credentials", () => {
 		const expectedJwt = VALID_VC;
 		expectedJwt.iat = absoluteTimeNow();
 		expectedJwt.nbf = absoluteTimeNow();
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -119,7 +119,7 @@ describe("Issuing verified credentials", () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -142,12 +142,11 @@ describe("Issuing verified credentials", () => {
 			{ type: "GivenName", value: "NICK" },
 			{ type: "FamilyName", value: "OTHER" }], 3],
 	])("Return successful response with 200 OK and verify length of name parts in the VC", async (personName, expectedLength) => {
-		// @ts-ignore
 		mockPerson.personNames[0].nameParts = personName;
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);

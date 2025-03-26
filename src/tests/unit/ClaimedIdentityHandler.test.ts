@@ -1,9 +1,7 @@
 import { lambdaHandler } from "../../ClaimedIdentityHandler";
 import { mock } from "jest-mock-extended";
-import { VALID_CLAIMEDID, UNSUPPORTED_CLAIMEDID, RESOURCE_NOT_FOUND } from "./data/cic-events";
+import { VALID_CLAIMEDID } from "./data/cic-events";
 import { ClaimedIdRequestProcessor } from "../../services/ClaimedIdRequestProcessor";
-import { Response } from "../../utils/Response";
-import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 
 const mockedClaimedIdRequestProcessor = mock<ClaimedIdRequestProcessor>();
 

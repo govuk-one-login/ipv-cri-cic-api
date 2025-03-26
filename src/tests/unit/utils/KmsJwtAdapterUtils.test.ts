@@ -4,15 +4,23 @@ import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { Constants } from "../../../utils/Constants";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { jwtUtils } from "../../../utils/JwtUtils";
+import { MessageType } from "@aws-sdk/client-kms";
 
 jest.mock("@aws-sdk/client-kms", () => ({
+	MessageType: {
+		DIGEST: "DIGEST",
+		RAW: "RAW"
+	},
+	SigningAlgorithmSpec: {
+		ECDSA_SHA_256: "ECDSA_SHA_256"
+	},
 	KMS: jest.fn().mockImplementation(() => ({
 		sign: jest.fn().mockImplementation(() => ({
 			Signature: "signature",
 		})),
 		verify: jest.fn().mockImplementation(() => ({
 			SignatureValid: true,
-		})),
+		}))
 	})),
 }));
 
@@ -80,7 +88,7 @@ describe("KmsJwtAdapter utils", () => {
 			expect(kmsJwtAdapter.kms.verify).toHaveBeenCalledWith({
 				KeyId: process.env.KMS_KEY_ARN,
 				Message: Buffer.from("header.payload"),
-				MessageType: "RAW",
+				MessageType: MessageType.RAW,
 				Signature: "DER-formatted signature",
 				SigningAlgorithm: "ECDSA_SHA_256",
 			});

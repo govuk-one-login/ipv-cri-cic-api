@@ -8,7 +8,6 @@ process.env.SESSION_TABLE = "";
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
-/* eslint jest/unbound-method: error */
 
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
