@@ -5,13 +5,24 @@ import { GetPublicKeyCommand, KMSClient } from "@aws-sdk/client-kms";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 
 export const handler = async (): Promise<APIGatewayProxyResult> => {
-  const { signingKey } = getConfig();
+  const { signingKey, additionalKey } = getConfig();
   const jwks: Jwks = {
     keys: [],
   };
   if (signingKey != null) {
     const signingKeyId = signingKey.split("/").pop() ?? "";
     const formattedKey = await getAsJwk(signingKeyId);
+    if (formattedKey != null) {
+      jwks.keys.push(formattedKey);
+      // Add malformed key to 'well-known' endpoint response to test unhappy path
+      const malforedDummyKey = { ...formattedKey,  x: "TEST-NOT-VALID-x-coordinate-value", y: "TEST-NOT-VALID-y-coordinate-value", kid: '1234abcd-12ab-34cd-56ef-1234567890ab' };
+      jwks.keys.push(malforedDummyKey);
+    }
+  }
+
+  if (additionalKey != null) {
+    const additionalKeyId = additionalKey.split("/").pop() ?? "";
+    const formattedKey = await getAsJwk(additionalKeyId);
     if (formattedKey != null) {
       jwks.keys.push(formattedKey);
     }
@@ -31,8 +42,8 @@ const v3KmsClient = new KMSClient({
   maxAttempts: 2,
 });
 
-function getConfig(): { signingKey: string | null } {
-  return { signingKey: process.env.SIGNING_KEY ?? null };
+function getConfig(): { signingKey: string | null , additionalKey: string | null} {
+  return { signingKey: process.env.SIGNING_KEY ?? null, additionalKey: process.env.ADDITIONAL_KEY ?? null };
 }
 
 const getAsJwk = async (keyId: string): Promise<JsonWebKey | null> => {
