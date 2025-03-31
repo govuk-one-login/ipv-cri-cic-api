@@ -1,6 +1,5 @@
 /* eslint-disable max-lines-per-function */
 /* eslint @typescript-eslint/unbound-method: 0 */
-/* eslint jest/unbound-method: error */
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -13,7 +12,6 @@ import { JWTPayload } from "jose";
 import { Jwt } from "../../../utils/IVeriCredential";
 import { ValidationHelper } from "../../../utils/ValidationHelper";
 import { ISessionItem } from "../../../models/ISessionItem";
-import { Constants } from "../../../utils/Constants";
 
 let sessionRequestProcessor: SessionRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -71,11 +69,11 @@ const sessionItemFactory = ():ISessionItem => {
 describe("SessionRequestProcessor", () => {
 	beforeAll(() => {
 		sessionRequestProcessor = new SessionRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.cicService = mockCicService;
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.kmsDecryptor = mockKmsJwtAdapter;
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.validationHelper = mockValidationHelper;
 	});
 

@@ -43,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 describe("AuthorizationRequestProcessor", () => {
 	beforeAll(() => {
 		authorizationRequestProcessorTest = new AuthorizationRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		authorizationRequestProcessorTest.cicService = mockCicService;
 	});
 
