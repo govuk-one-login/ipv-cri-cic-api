@@ -41,6 +41,6 @@
     "compile": "./node_modules/.bin/tsc"
   },
   "engines": {
-    "node": "^18.0.0"
+    "node": "^20.18.3"
   }
 }

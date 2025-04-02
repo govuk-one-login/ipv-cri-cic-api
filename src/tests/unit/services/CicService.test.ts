@@ -2,7 +2,6 @@
 import { CicService } from "../../../services/CicService";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicSession } from "../../../models/CicSession";
-import { ISessionItem } from "../../../models/ISessionItem";
 import { randomUUID } from "crypto";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -18,7 +17,7 @@ const tableName = "MYTABLE";
 const sessionId = "SESSID";
 const expiryDate = 9999999999999;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
-const SESSION_RECORD = require("../data/db_record.json") as ISessionItem;
+import SESSION_RECORD from "../data/db_record.json";
 
 const FAILURE_VALUE = "throw_me";
 
