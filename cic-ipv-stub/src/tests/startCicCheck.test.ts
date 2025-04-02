@@ -95,19 +95,22 @@ describe("Start CIC Check Endpoint", () => {
     expect(body.clientId).toBeDefined();
     expect(body.AuthorizeLocation).toBeDefined();
   });
+  
 
-  it("should sign a JWT and return the key ID in the response header", async () => {
-    await handler(startDefault);
+  it("should sign the JWT using the correct key", async () => {
+    const response = await handler(startDefault);
     const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
     expect(signCommandInput.KeyId).toBe("key-id");
+    expect(response.statusCode).toBe(201);
   });
 
-  it("should sign a JWT and return the wrong key ID in the response header", async () => {
-    await handler(startCustomInvalidSigningKey);
+  it("should sign a JWT using the correct key when provided with a custom payload", async () => {
+    const response = await handler(startCustomInvalidSigningKey);
     const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
     expect(signCommandInput.KeyId).toBe("key-id");
+    expect(response.statusCode).toBe(201);
   });
-
 });
+
 
 

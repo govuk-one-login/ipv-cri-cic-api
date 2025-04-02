@@ -88,7 +88,11 @@ export const handler = async (
         ? overrides.shared_claims : defaultClaims;
   }  
 
-  const signedJwt = await sign(payload, config.signingKey, overrides.invalidKid);
+  let invalidKey;
+  if (overrides?.invalidKid != null) {
+    invalidKey = config.additionalKey;
+  }
+  const signedJwt = await sign(payload, config.signingKey, invalidKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
@@ -155,9 +159,8 @@ async function getPublicEncryptionKey(config: {
 
 async function sign(payload: JarPayload, keyId: string, additionalKey: string | undefined): Promise<string> {
   const signingKid = keyId.split("/").pop() ?? "";
-  const additionalKid = additionalKey?.split("/").pop()
   // If an additional key is provided to the function, use that key ID to enable unhappy path testing
-  const kid = additionalKey ? additionalKid ?? "" : signingKid;
+  const kid = additionalKey ? additionalKey.split("/").pop() ?? "" : signingKid;
   const alg = "ECDSA_SHA_256";
   const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid };
   const tokenComponents = {
@@ -181,7 +184,6 @@ async function sign(payload: JarPayload, keyId: string, additionalKey: string | 
       ),
     })
   );
-
   if (res?.Signature == null) {
     throw res as unknown as AWS.AWSError;
   }
