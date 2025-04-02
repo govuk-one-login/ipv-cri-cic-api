@@ -11,6 +11,7 @@ import {
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
 import startDefault from "../events/startDefault.json";
+import startCustomInvalidSigningKey from "../events/startCustomInvalidSigningKey.json";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
@@ -39,6 +40,16 @@ const mockJwks = {
   ],
 };
 
+process.env.REDIRECT_URI = "test.com/callback";
+process.env.JWKS_URI = "test.com/.well-known/jwks.json";
+process.env.CLIENT_ID = "test-id";
+process.env.SIGNING_KEY = "key-id";
+process.env.ADDITIONAL_KEY = "additional-key-id"
+process.env.OIDC_API_BASE_URI = "api-target.com";
+process.env.OIDC_FRONT_BASE_URI = "test-target.com";
+
+const kmsClient = mockClient(KMSClient);
+
 describe("Start CIC Check Endpoint", () => {
   beforeEach(() => {
     // TODO: Make response fixed for stronger test assertions
@@ -53,8 +64,6 @@ describe("Start CIC Check Endpoint", () => {
     axios.get.mockResolvedValue({ data: mockJwks });
 
     // format.derToJose = jest.fn();
-
-    const kmsClient = mockClient(KMSClient);
     kmsClient.on(SignCommand).resolves({
       Signature: new Uint8Array([
         197, 213, 5, 202, 58, 74, 45, 36, 122, 168, 27, 155, 70, 15, 9, 123, 11,
@@ -75,21 +84,30 @@ describe("Start CIC Check Endpoint", () => {
   });
 
   it("returns JAR data and target uri", async () => {
-    process.env.REDIRECT_URI = "test.com/callback";
-    process.env.JWKS_URI = "test.com/.well-known/jwks.json";
-    process.env.CLIENT_ID = "test-id";
-    process.env.SIGNING_KEY = "key-id";
-    process.env.OIDC_API_BASE_URI = "api-target.com";
-    process.env.OIDC_FRONT_BASE_URI = "test-target.com";
-
     const response = await handler(startDefault);
     expect(response.statusCode).toBe(201);
     expect(response.body).toBeDefined();
 
     const body = JSON.parse(response.body);
+
     expect(body.request).toBeDefined();
     expect(body.responseType).toBeDefined();
     expect(body.clientId).toBeDefined();
     expect(body.AuthorizeLocation).toBeDefined();
   });
+
+  it("should sign a JWT and return the key ID in the response header", async () => {
+    await handler(startDefault);
+    const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+    expect(signCommandInput.KeyId).toBe("key-id");
+  });
+
+  it("should sign a JWT and return the wrong key ID in the response header", async () => {
+    await handler(startCustomInvalidSigningKey);
+    const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+    expect(signCommandInput.KeyId).toBe("key-id");
+  });
+
 });
+
+

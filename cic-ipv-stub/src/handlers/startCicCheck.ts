@@ -88,7 +88,7 @@ export const handler = async (
         ? overrides.shared_claims : defaultClaims;
   }  
 
-  const signedJwt = await sign(payload, config.signingKey);
+  const signedJwt = await sign(payload, config.signingKey, overrides.invalidKid);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
@@ -108,6 +108,7 @@ export function getConfig(): {
   jwksUri: string;
   clientId: string;
   signingKey: string;
+  additionalKey: string;
   frontUri: string;
   backendUri: string;
 } {
@@ -117,6 +118,7 @@ export function getConfig(): {
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
     process.env.OIDC_API_BASE_URI == null ||
+    process.env.ADDITIONAL_KEY == null ||
     process.env.OIDC_FRONT_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
@@ -127,6 +129,7 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
+    additionalKey: process.env.ADDITIONAL_KEY,
     frontUri: process.env.OIDC_FRONT_BASE_URI,
     backendUri: process.env.OIDC_API_BASE_URI,
   };
@@ -150,8 +153,11 @@ async function getPublicEncryptionKey(config: {
   return publicEncryptionKey;
 }
 
-async function sign(payload: JarPayload, keyId: string): Promise<string> {
-  const kid = keyId.split("/").pop() ?? "";
+async function sign(payload: JarPayload, keyId: string, additionalKey: string | undefined): Promise<string> {
+  const signingKid = keyId.split("/").pop() ?? "";
+  const additionalKid = additionalKey?.split("/").pop()
+  // If an additional key is provided to the function, use that key ID to enable unhappy path testing
+  const kid = additionalKey ? additionalKid ?? "" : signingKid;
   const alg = "ECDSA_SHA_256";
   const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid };
   const tokenComponents = {
@@ -165,7 +171,6 @@ async function sign(payload: JarPayload, keyId: string): Promise<string> {
     ),
     signature: "",
   };
-
   const res = await v3KmsClient.send(
     new SignCommand({
       KeyId: kid,
@@ -176,6 +181,7 @@ async function sign(payload: JarPayload, keyId: string): Promise<string> {
       ),
     })
   );
+
   if (res?.Signature == null) {
     throw res as unknown as AWS.AWSError;
   }
