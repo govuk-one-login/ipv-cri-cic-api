@@ -1,5 +1,5 @@
-/* eslint-disable complexity */
-/* eslint-disable max-lines-per-function */
+ 
+ 
 import { Response, GenericServerError, unauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";

@@ -92,6 +92,7 @@ export const handler = async (
   if (overrides?.invalidKid != null) {
     invalidKey = config.additionalKey;
   }
+
   const signedJwt = await sign(payload, config.signingKey, invalidKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
   const request = await encrypt(signedJwt, publicEncryptionKey);
@@ -157,10 +158,11 @@ async function getPublicEncryptionKey(config: {
   return publicEncryptionKey;
 }
 
-async function sign(payload: JarPayload, keyId: string, additionalKey: string | undefined): Promise<string> {
+async function sign(payload: JarPayload, keyId: string, additionalKeyId: string | undefined): Promise<string> {
   const signingKid = keyId.split("/").pop() ?? "";
-  // If an additional key is provided to the function, use that key ID to enable unhappy path testing
-  const kid = additionalKey ? additionalKey.split("/").pop() ?? "" : signingKid;
+  const additionalKid = additionalKeyId?.split("/").pop() ?? "";
+  // If an additional key is provided to the function, return that key ID in the header to create a mismatch - enable unhappy path testing
+  const kid = additionalKeyId ? additionalKid : signingKid;
   const alg = "ECDSA_SHA_256";
   const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid };
   const tokenComponents = {
@@ -176,7 +178,8 @@ async function sign(payload: JarPayload, keyId: string, additionalKey: string | 
   };
   const res = await v3KmsClient.send(
     new SignCommand({
-      KeyId: kid,
+      // Key used to sign will always be default key
+      KeyId: signingKid,
       SigningAlgorithm: alg,
       MessageType: "RAW",
       Message: Buffer.from(

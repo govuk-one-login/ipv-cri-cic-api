@@ -67,9 +67,8 @@ export class KmsJwtAdapter {
     	const signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.kid === targetKid);
     	if (!signingKey) {
     		throw new Error(`No key found with kid '${targetKid}'`);
-		  }
+		}
     	const publicKey = await importJWK(signingKey, signingKey.alg);
-
     	try {
     		const { payload } = await jwtVerify(urlEncodedJwt, publicKey);
     		return payload;
