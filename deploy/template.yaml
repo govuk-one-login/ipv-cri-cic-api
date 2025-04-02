@@ -3672,79 +3672,74 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanThreshold
 
-# JourneyCompletionAlarms
-
-  UserInfoJWTErrorMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref UserInfoLogGroup
-      FilterPattern: '"CIC_FAILED_VERIFYING_JWT"'
-      MetricTransformations:
-        - MetricName: CICJWTVerificationErrors
-          MetricNamespace: AWS/Logs
-          MetricValue: "1"
+# JWTAlarms
 
   UserInfoLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/api-gateway/${AWS::StackName}-userInfo"
 
+  UserInfoJWTErrorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Condition: DeployAlarms
+    Properties:
+      LogGroupName: !Ref UserInfoLogGroup
+      FilterPattern: '{ $.messageCode = "CIC_FAILED_VERIFYING_JWT" }'
+      MetricTransformations:
+        - 
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "CICJWTVerificationErrors"
+
   VerifyAuthorizeRequestFailedVerifyingJwtAlarm:
+    DependsOn:
+      - "UserInfoJWTErrorMetricFilter"
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtAlarm"
       AlarmDescription: !Sub "CIC_FAILED_VERIFYING_JWT warning ${SupportManualURL}"
       ActionsEnabled: true
-      AlarmActions: []
-      OKActions: []
-      InsufficientDataActions: []
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: CICJWTVerificationErrors
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
-      Metrics:
-        - Id: jwtError
-          ReturnData: true
-          MetricStat:
-            Metric:
-              Namespace: AWS/Logs
-              MetricName: CICJWTVerificationErrors
-              Dimensions:
-                - Name: LogGroupName
-                  Value: !Ref UserInfoLogGroup
-            Period: 60
-            Stat: Sum
 
   VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm:
+    DependsOn:
+      - "UserInfoJWTErrorMetricFilter"
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm"
       AlarmDescription: !Sub "CIC_FAILED_VERIFYING_JWT critical ${SupportManualURL}"
       ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-      OKActions: []
-      InsufficientDataActions: []
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: [ ]
+      MetricName: CICJWTVerificationErrors
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
       EvaluationPeriods: 5
       DatapointsToAlarm: 5
       Threshold: 5
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
-      Metrics:
-        - Id: jwtError
-          ReturnData: true
-          MetricStat:
-            Metric:
-              Namespace: AWS/Logs
-              MetricName: CICJWTVerificationErrors
-              Dimensions:
-                - Name: LogGroupName
-                  Value: !Ref UserInfoLogGroup
-            Period: 60
-            Stat: Sum
 
 # Alarm Dashboards
 
