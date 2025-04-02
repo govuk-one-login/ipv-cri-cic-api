@@ -2,9 +2,7 @@
 import { lambdaHandler, logger, metrics } from "../../SessionHandler";
 import { mock } from "jest-mock-extended";
 import { SessionRequestProcessor } from "../../services/SessionRequestProcessor";
-import { UserInfoRequestProcessor } from "../../services/UserInfoRequestProcessor";
 import { VALID_SESSION } from "./data/session-events";
-import { RESOURCE_NOT_FOUND } from "./data/userInfo-events";
 import { CONTEXT } from "./data/context";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Response } from "../../utils/Response";

@@ -2,7 +2,7 @@ import format from "ecdsa-sig-formatter";
 import { Buffer } from "buffer";
 import { Jwt, JwtHeader, JwtPayload, JsonWebTokenError, Jwk } from "./IVeriCredential";
 import { jwtUtils } from "./JwtUtils";
-import { DecryptCommand, DecryptCommandInput, DecryptCommandOutput } from "@aws-sdk/client-kms";
+import { DecryptCommand, DecryptCommandInput, DecryptCommandOutput, MessageType, SigningAlgorithmSpec } from "@aws-sdk/client-kms";
 import crypto from "crypto";
 import { importJWK, JWTPayload, jwtVerify } from "jose";
 import axios from "axios";
@@ -13,13 +13,6 @@ export class KmsJwtAdapter {
     readonly kid: string;
 
     readonly kms: AWS.KMS;
-
-    /**
-     * An implemention the JWS standard using KMS to sign Jwts
-     *
-     * kid: The key Id of the KMS key
-     */
-    ALG = "ECDSA_SHA_256";
 
     constructor(kid: string) {
     	this.kid = kid;
@@ -40,8 +33,8 @@ export class KmsJwtAdapter {
     	const params = {
     		Message: Buffer.from(`${tokenComponents.header}.${tokenComponents.payload}`),
     		KeyId: this.kid,
-    		SigningAlgorithm: this.ALG,
-    		MessageType: "RAW",
+    		SigningAlgorithm: SigningAlgorithmSpec.ECDSA_SHA_256,
+    		MessageType: MessageType.RAW,
     	};
     	const res = await this.kms.sign(params);
     	if (res.Signature == null) {
@@ -59,9 +52,9 @@ export class KmsJwtAdapter {
     		const result = await this.kms.verify({
     			KeyId: this.kid,
     			Message: message,
-    			MessageType: "RAW",
+    			MessageType: MessageType.RAW,
     			Signature: derSignature,
-    			SigningAlgorithm: this.ALG,
+    			SigningAlgorithm: AWS.SigningAlgorithmSpec.ECDSA_SHA_256,
     		});
     		return result.SignatureValid ?? false;
     	} catch (error) {
