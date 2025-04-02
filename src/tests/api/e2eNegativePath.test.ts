@@ -34,6 +34,17 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 		expect(sessionRequest.data).toBe("Bad Request");
 	});
 
+	it.each([
+		{ journeyType: "f2f" },
+		{ journeyType: "bank_account" },
+		{ journeyType: "hmrc_check" },
+	])("JWT signature not varified using Core's signing key", async ({ journeyType }: { journeyType: string }) => {
+		const stubResponse = await stubStartPost(journeyType, true);
+		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+		expect(sessionResponse.status).toBe(401);
+
+	});
+
 });
 
 describe("/session Unhappy Path", () => {
