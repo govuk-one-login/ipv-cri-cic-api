@@ -3734,9 +3734,9 @@ Resources:
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
       Dimensions: [ ]
-      Period: 60
-      EvaluationPeriods: 5
-      DatapointsToAlarm: 5
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
       Threshold: 5
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
