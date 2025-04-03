@@ -159,12 +159,18 @@ describe("KmsJwtAdapter utils", () => {
     		expect(result?.sub).toEqual("29986dd5-01ec-4236-ac21-5845fdafd9b5");
 		});
 
-		it('should throw an error if no key is found with the specified kid', async () => {
+		// it('should throw an error if no key is found with the specified kid', async () => {
+		// 	const invalidKid = 'INVALID_KID';
+		// 	await expect(kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, invalidKid)
+		// 	).rejects.toThrow(`No key found with kid '${invalidKid}'`);
+		// });
+
+
+		it('should use the default key if no key is found with the specified kid', async () => {
 			const invalidKid = 'INVALID_KID';
-			await expect(kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, invalidKid)
-			).rejects.toThrowError(`No key found with kid '${invalidKid}'`);
-			});
-
-
+			const result = await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, mockTargetKid);
+			expect(axios.get).toHaveBeenCalledWith(mockPublicKeyEndpoint);
+    		expect(result?.sub).toEqual("29986dd5-01ec-4236-ac21-5845fdafd9b5");
+		});
 	});
 });

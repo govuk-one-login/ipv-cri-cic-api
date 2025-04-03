@@ -64,9 +64,11 @@ export class KmsJwtAdapter {
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid: string): Promise<JWTPayload | null> {
     	const oidcProviderJwks = (await axios.get(publicKeyEndpoint)).data;
-    	const signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.kid === targetKid);
+    	let signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.kid === targetKid);
     	if (!signingKey) {
-    		throw new Error(`No key found with kid '${targetKid}'`);
+			// Temporary fix in place to account for IPV Core not providing KID in higher environments
+			signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.use === "sig");
+    		// throw new Error(`No key found with kid '${targetKid}'`);
 		}
     	const publicKey = await importJWK(signingKey, signingKey.alg);
     	try {
