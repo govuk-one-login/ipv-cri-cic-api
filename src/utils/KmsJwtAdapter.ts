@@ -68,7 +68,9 @@ export class KmsJwtAdapter {
     	if (!signingKey) {
 			// Temporary fix in place to account for IPV Core not providing KID in higher environments
 			signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.use === "sig");
-    		// throw new Error(`No key found with kid '${targetKid}'`);
+		}
+		if (!signingKey) {
+			throw new Error(`No key found with kid '${targetKid}'`);
 		}
     	const publicKey = await importJWK(signingKey, signingKey.alg);
     	try {
