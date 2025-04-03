@@ -128,7 +128,7 @@ export class SessionRequestProcessor {
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
-		const jwtTargetKid : string = parsedJwt.header.kid!;
+		const jwtTargetKid: string | undefined = parsedJwt.header?.kid; 
 		this.logger.appendKeys({
 			sessionId,
 			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,

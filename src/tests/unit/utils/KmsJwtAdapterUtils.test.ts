@@ -172,5 +172,11 @@ describe("KmsJwtAdapter utils", () => {
 			expect(axios.get).toHaveBeenCalledWith(mockPublicKeyEndpoint);
     		expect(result?.sub).toEqual("29986dd5-01ec-4236-ac21-5845fdafd9b5");
 		});
+
+		it('should use the default key if no kid is provided', async () => {
+			const result = await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint);
+			expect(axios.get).toHaveBeenCalledWith(mockPublicKeyEndpoint);
+    		expect(result?.sub).toEqual("29986dd5-01ec-4236-ac21-5845fdafd9b5");
+		});
 	});
 });
