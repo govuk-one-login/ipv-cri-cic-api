@@ -3674,16 +3674,11 @@ Resources:
 
 # JWTAlarms
 
-  UserInfoLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/api-gateway/${AWS::StackName}-userInfo"
-
-  UserInfoJWTErrorMetricFilter:
+  JWTErrorMetricFilter:
     Type: AWS::Logs::MetricFilter
     Condition: DeployAlarms
     Properties:
-      LogGroupName: !Ref UserInfoLogGroup
+      LogGroupName: !Ref SessionFunctionLogGroup
       FilterPattern: '{ $.messageCode = "CIC_FAILED_VERIFYING_JWT" }'
       MetricTransformations:
         - 
@@ -3693,7 +3688,7 @@ Resources:
 
   VerifyAuthorizeRequestFailedVerifyingJwtAlarm:
     DependsOn:
-      - "UserInfoJWTErrorMetricFilter"
+      - "JWTErrorMetricFilter"
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
@@ -3718,7 +3713,7 @@ Resources:
 
   VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm:
     DependsOn:
-      - "UserInfoJWTErrorMetricFilter"
+      - "JWTErrorMetricFilter"
     Type: AWS::CloudWatch::Alarm
     Condition: DeployAlarms
     Properties:
