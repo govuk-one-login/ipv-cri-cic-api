@@ -3721,8 +3721,10 @@ Resources:
       AlarmDescription: !Sub "CIC_FAILED_VERIFYING_JWT critical ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
+        - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       AlarmActions:
+        - !ImportValue platform-alarm-pagerduty-alert-topic
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: [ ]
       MetricName: CICJWTVerificationErrors
