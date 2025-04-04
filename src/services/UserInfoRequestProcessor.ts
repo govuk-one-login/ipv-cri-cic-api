@@ -57,7 +57,7 @@ export class UserInfoRequestProcessor {
 		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
 		
 		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
+		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, logger);
 		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger, dns_suffix);
 	}
 
