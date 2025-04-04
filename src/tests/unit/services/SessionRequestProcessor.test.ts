@@ -135,7 +135,7 @@ describe("SessionRequestProcessor", () => {
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
-				messageCode: "FAILED_VERIFYING_JWT",
+				messageCode: "CIC_FAILED_VERIFYING_JWT",
 			}),
 		);
 	});
@@ -152,7 +152,7 @@ describe("SessionRequestProcessor", () => {
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
-				messageCode: "UNEXPECTED_ERROR_VERIFYING_JWT",
+				messageCode: "CIC_FAILED_VERIFYING_JWT",
 			}),
 		);
 	});
