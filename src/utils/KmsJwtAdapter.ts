@@ -8,11 +8,15 @@ import { importJWK, JWTPayload, jwtVerify } from "jose";
 import axios from "axios";
 import { createKmsClient } from "./KMSClient";
 import * as AWS from "@aws-sdk/client-kms";
+import { max } from "class-validator";
 
 export class KmsJwtAdapter {
     readonly kid: string;
 
     readonly kms: AWS.KMS;
+
+	private cachedJwks : any;
+	private cachedTime : any;
 
     constructor(kid: string) {
     	this.kid = kid;
@@ -63,16 +67,25 @@ export class KmsJwtAdapter {
     }
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string): Promise<JWTPayload | null> {
-    	const oidcProviderJwks = (await axios.get(publicKeyEndpoint)).data;
-    	const signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.use === "sig");
-    	const publicKey = await importJWK(signingKey, signingKey.alg);
-
-    	try {
-    		const { payload } = await jwtVerify(urlEncodedJwt, publicKey);
-    		return payload;
-    	} catch (error) {
-    		throw new Error("Failed to verify signature: " + error);
-    	}
+		if (!this.cachedJwks || new Date() > this.cachedTime) {
+			console.log("No cached keys found or cache time has expired")
+			const wellKnownJwksResult = (await axios.get(publicKeyEndpoint));
+			this.cachedJwks = wellKnownJwksResult.data.keys;
+			const cacheControl = wellKnownJwksResult.headers['cache-control'];
+			const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
+			// If header is missing or doesn't match the expected format, maxAgeMatch will be null, and we set cache time to default value of 300 (5 minutes)
+			const maxAge = maxAgeMatch ? parseInt(maxAgeMatch[1], 10) : 300;
+			this.cachedTime = new Date(Date.now() + (maxAge * 1000)); 
+			console.log("cachedTime: ", this.cachedTime);	
+		}
+		const signingKey = this.cachedJwks.find((key: Jwk)=> key.use === "sig");
+		const publicKey = await importJWK(signingKey, signingKey.alg);
+			try {
+				const { payload } = await jwtVerify(urlEncodedJwt, publicKey);
+				return payload;
+			} catch (error) {
+				throw new Error("Failed to verify signature: " + error);
+			}
     }
 
     decode(urlEncodedJwt: string): Jwt {
