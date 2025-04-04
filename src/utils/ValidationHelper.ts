@@ -1,4 +1,4 @@
-/* eslint-disable complexity */
+ 
 import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
 import { Logger } from "@aws-lambda-powertools/logger";

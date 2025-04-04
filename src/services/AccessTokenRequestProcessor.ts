@@ -64,7 +64,6 @@ export class AccessTokenRequestProcessor {
     			}
     			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
     			this.logger.appendKeys({ sessionId: session.sessionId });
-    			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
     		} catch (error) {
     			this.logger.error("Error while retrieving the session", {
     				messageCode: MessageCodes.SESSION_NOT_FOUND,
