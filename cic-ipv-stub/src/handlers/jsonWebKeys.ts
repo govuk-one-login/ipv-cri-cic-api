@@ -29,6 +29,9 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
   }
   return {
     statusCode: 200,
+    headers:{
+      'cache-control':'max-age=300'
+    },
     body: JSON.stringify(jwks),
   };
 };
