@@ -8,15 +8,23 @@ import { importJWK, JWTPayload, jwtVerify } from "jose";
 import axios from "axios";
 import { createKmsClient } from "./KMSClient";
 import * as AWS from "@aws-sdk/client-kms";
+import { Logger } from "@aws-lambda-powertools/logger";
 
 export class KmsJwtAdapter {
     readonly kid: string;
 
     readonly kms: AWS.KMS;
 
-    constructor(kid: string) {
+	private cachedJwks: any;
+
+	private cachedTime: any;
+
+	private readonly logger: Logger;
+
+    constructor(kid: string, logger: Logger) {
     	this.kid = kid;
     	this.kms = createKmsClient();
+		this.logger = logger;
     }
 	
     async sign(jwtPayload: JwtPayload, dnsSuffix: string): Promise<string> {
@@ -63,16 +71,30 @@ export class KmsJwtAdapter {
     }
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid?: string): Promise<JWTPayload | null> {
-    	const oidcProviderJwks = (await axios.get(publicKeyEndpoint)).data;
-    	let signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.kid === targetKid);
+		if (!this.cachedJwks || new Date() > this.cachedTime) {
+
+			this.logger.info("No cached keys found or cache time has expired");
+    		const wellKnownJwksResult = (await axios.get(publicKeyEndpoint));
+			this.cachedJwks = wellKnownJwksResult.data.keys;
+			const cacheControl = wellKnownJwksResult.headers['cache-control'];
+
+			// If header is missing or doesn't match the expected format, maxAgeMatch will be null, and we set cache time to default value of 300 (5 minutes)
+			const maxAge = cacheControl ? parseInt(cacheControl.match(/max-age=(\d+)/)?.[1], 10) || 300 : 300;
+			this.cachedTime = new Date(Date.now() + (maxAge * 1000));
+		}
+		this.logger.info("JWKS cache expiry time: " + this.cachedTime);
+    	let signingKey = this.cachedJwks.find((key: Jwk)=> key.kid === targetKid);
+
     	if (!signingKey) {
 			// Temporary fix in place to account for IPV Core not providing KID in higher environments
-			signingKey = oidcProviderJwks.keys.find((key: Jwk)=> key.use === "sig");
+			signingKey = this.cachedJwks.find((key: Jwk)=> key.use === "sig");
 		}
+
 		if (!signingKey) {
 			throw new Error(`No key found with kid '${targetKid}'`);
 		}
     	const publicKey = await importJWK(signingKey, signingKey.alg);
+
     	try {
     		const { payload } = await jwtVerify(urlEncodedJwt, publicKey);
     		return payload;

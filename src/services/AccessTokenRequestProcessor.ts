@@ -36,7 +36,7 @@ export class AccessTokenRequestProcessor {
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
     	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
     	this.logger = logger;
-    	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
+    	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, logger);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
     	this.metrics = metrics;
     	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());

@@ -61,7 +61,7 @@ export class SessionRequestProcessor {
 		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
   		
 		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
+		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger);
 		this.validationHelper = new ValidationHelper();
 	}
 
