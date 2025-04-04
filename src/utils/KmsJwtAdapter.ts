@@ -75,7 +75,6 @@ export class KmsJwtAdapter {
 
 			this.logger.info("No cached keys found or cache time has expired");
     		const wellKnownJwksResult = (await axios.get(publicKeyEndpoint));
-			console.log("!!!", wellKnownJwksResult);
 			this.cachedJwks = wellKnownJwksResult.data.keys;
 			const cacheControl = wellKnownJwksResult.headers['cache-control'];
 
