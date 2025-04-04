@@ -1,5 +1,5 @@
-/* eslint-disable complexity */
-/* eslint-disable max-lines-per-function */
+ 
+ 
 import { Response, GenericServerError, unauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
@@ -105,6 +105,7 @@ export class SessionRequestProcessor {
 		}
 
 		let urlEncodedJwt: string;
+		
 		try {
 			urlEncodedJwt = await this.kmsDecryptor.decrypt(deserialisedRequestBody.request);
 		} catch (error) {
@@ -127,13 +128,14 @@ export class SessionRequestProcessor {
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
+		const jwtTargetKid: string | undefined = parsedJwt.header?.kid; 
 		this.logger.appendKeys({
 			sessionId,
 			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
 		});
 		try {
 			if (configClient?.jwksEndpoint) {
-				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
+				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint, jwtTargetKid);
 				if (!payload) {
 					this.logger.error("Failed to verify JWT", {
 						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
@@ -153,7 +155,6 @@ export class SessionRequestProcessor {
 			});
 			return unauthorizedResponse;
 		}
-
 
 		const JwtErrors = this.validationHelper.isJwtValid(
 			jwtPayload, requestBodyClientId, configClient.redirectUri);

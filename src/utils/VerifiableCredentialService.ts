@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { Logger } from "@aws-lambda-powertools/logger";
 import { VerifiedCredential } from "./IVeriCredential";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";

@@ -31,28 +31,27 @@ export async function startStubServiceAndReturnSessionId(journeyType: string): P
 	return sessionResponse.data.session_id;
 }
 
-export async function stubStartPost(journeyType: string): Promise<any> {
+interface StubPayload {
+	context?: string;
+	invalidKid?: string;
+}
+
+export async function stubStartPost(journeyType: string, invalidKid?: boolean): Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
-
-	let postRequest: AxiosResponse;
-	switch (journeyType) {
-		case "bank_account":
-			postRequest = await axios.post(`${path}`, { context: "bank_account" });
-			break;
-		case "hmrc_check":
-			postRequest = await axios.post(`${path}`, { context: "hmrc_check" });
-			break;
-		case "INVALID":
-			postRequest = await axios.post(`${path}`, { context: "INVALID" });
-			break;
-		default:
-			postRequest = await axios.post(`${path}`);
-			break;
+  
+	let payload: StubPayload = {};
+	if (journeyType !== 'f2f') {
+	  payload.context = journeyType;
 	}
-
+  
+	if (invalidKid) {
+	  payload.invalidKid = "true";
+	}
+  
+	const postRequest: AxiosResponse = await axios.post(`${path}`, payload);
 	expect(postRequest.status).toBe(201);
 	return postRequest;
-}
+  }
 
 export async function sessionPost(clientId?: string, request?: string): Promise<any> {
 	const path = "/session";

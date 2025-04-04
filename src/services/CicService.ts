@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable no-console */
+ 
+ 
 import { CicSession } from "../models/CicSession";
 import { ISessionItem } from "../models/ISessionItem";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -369,7 +369,7 @@ export class CicService {
 		return [
 			{
 				value: birthDay,
-			// eslint-disable-next-line max-lines
+			 
 			},
 		];
 	}

@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+ 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
@@ -23,7 +23,7 @@ export const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, se
 
 class AuthorizationCodeHandler implements LambdaInterface {
 
-	// eslint-disable-next-line max-lines-per-function
+	 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 
