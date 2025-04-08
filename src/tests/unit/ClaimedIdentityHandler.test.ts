@@ -17,7 +17,7 @@ describe("ClaimedIdentityHandler", () => {
 
 		await lambdaHandler(VALID_CLAIMEDID, "CIC");
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
+		 
 		expect(mockedClaimedIdRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
 	});
 });

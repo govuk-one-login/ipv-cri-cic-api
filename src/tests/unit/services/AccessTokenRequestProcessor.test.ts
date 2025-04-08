@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -77,7 +77,7 @@ describe("AccessTokenRequestProcessor", () => {
 		mockCicService.getSessionByAuthorizationCode.mockResolvedValue(mockSession);
 
 		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
+		 
 		expect(mockCicService.getSessionByAuthorizationCode).toHaveBeenCalledTimes(1);
 
 		expect(out.body).toEqual(JSON.stringify({

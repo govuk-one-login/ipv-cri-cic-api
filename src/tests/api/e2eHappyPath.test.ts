@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import dataSlim from "../data/happyPathSlim.json";
 import dataBjorn from "../data/happyPathBjörn.json";
 import dataManuel from "../data/happyPathManuel.json";
@@ -19,7 +19,7 @@ describe("E2E Happy Path Tests", () => {
 	it.each([
 		[dataSlim],
 		[dataBjorn],
-	])("F2F journey", async (userData: any) => {
+	])("E2E CIC journey (F2F Journey Type) with Verifiable Credential and TxMA Event Validation", async (userData: any) => {
 		const sessionId = await startStubServiceAndReturnSessionId(userData.journeyType);
 		console.log("sessionId", sessionId);
 
@@ -56,7 +56,7 @@ describe("E2E Happy Path Tests", () => {
 	it.each([
 		[dataManuel],
 		[dataBillyJoe],
-	])("No Photo ID journey", async (userData: any) => {
+	])("E2E CIC journey (NoPhotoID/Bank Account Journey Type) with Verifiable Credential and TxMA Event Validation", async (userData: any) => {
 		const sessionId = await startStubServiceAndReturnSessionId(userData.journeyType);
 		console.log("sessionId", sessionId);
 
@@ -92,7 +92,7 @@ describe("E2E Happy Path Tests", () => {
 
 	it.each([
 		[dataKenneth],
-	])("Low Confidence - HMRC Check Journey", async (userData: any) => {
+	])("E2E CIC journey (Low Confidence/HMRC Check Journey Type) with Verifiable Credential and TxMA Event Validation", async (userData: any) => {
 		const sessionId = await startStubServiceAndReturnSessionId(userData.journeyType);
 		console.log("sessionId", sessionId);
 

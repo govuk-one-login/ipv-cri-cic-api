@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { CicService } from "../../../services/CicService";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicSession } from "../../../models/CicSession";

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 /* eslint @typescript-eslint/unbound-method: 0 */
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
