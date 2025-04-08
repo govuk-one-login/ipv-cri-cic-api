@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import dataSlim from "../data/happyPathSlim.json";
 import dataBjorn from "../data/happyPathBjörn.json";
 import dataManuel from "../data/happyPathManuel.json";

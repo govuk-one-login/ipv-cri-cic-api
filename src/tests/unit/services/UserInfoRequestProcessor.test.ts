@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";

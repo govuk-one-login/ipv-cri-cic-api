@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -71,7 +71,7 @@ describe("AuthorizationRequestProcessor", () => {
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
+		 
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
@@ -187,7 +187,7 @@ describe("AuthorizationRequestProcessor", () => {
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", { error: {}, messageCode: MessageCodes.ERROR_WRITING_TXMA });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
+		 
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});

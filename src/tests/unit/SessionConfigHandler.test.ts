@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { lambdaHandler, logger, metrics } from "../../SessionConfigHandler";
 import { mock } from "jest-mock-extended";
 import { Response } from "../../utils/Response";
