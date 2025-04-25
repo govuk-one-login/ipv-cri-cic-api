@@ -15,9 +15,9 @@ export class KmsJwtAdapter {
 
     readonly kms: AWS.KMS;
 
-	private cachedJwks: any;
+	cachedJwks: any;
 
-	private cachedTime: any;
+	cachedTime: Date | undefined;
 
 	private readonly logger: Logger;
 
@@ -71,8 +71,7 @@ export class KmsJwtAdapter {
     }
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid?: string): Promise<JWTPayload | null> {
-		if (!this.cachedJwks || new Date() > this.cachedTime) {
-
+		if (!this.cachedJwks || (this.cachedTime && new Date() > this.cachedTime)) {
 			this.logger.info("No cached keys found or cache time has expired");
     		const wellKnownJwksResult = (await axios.get(publicKeyEndpoint));
 			this.cachedJwks = wellKnownJwksResult.data.keys;
@@ -82,13 +81,7 @@ export class KmsJwtAdapter {
 			const maxAge = cacheControl ? parseInt(cacheControl.match(/max-age=(\d+)/)?.[1], 10) || 300 : 300;
 			this.cachedTime = new Date(Date.now() + (maxAge * 1000));
 		}
-		this.logger.info("JWKS cache expiry time: " + this.cachedTime);
     	let signingKey = this.cachedJwks.find((key: Jwk)=> key.kid === targetKid);
-
-    	if (!signingKey) {
-			// Temporary fix in place to account for IPV Core not providing KID in higher environments
-			signingKey = this.cachedJwks.find((key: Jwk)=> key.use === "sig");
-		}
 
 		if (!signingKey) {
 			throw new Error(`No key found with kid '${targetKid}'`);
