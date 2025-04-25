@@ -88,7 +88,7 @@ export const handler = async (
         ? overrides.shared_claims : defaultClaims;
   }  
 
-  // Unhappy path testing enabled by optional flag in provided in stub paylod
+  // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidKey;
   if (overrides?.missingKid != null) {
     invalidKey = crypto.randomUUID();
