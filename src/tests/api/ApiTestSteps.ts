@@ -34,12 +34,13 @@ export async function startStubServiceAndReturnSessionId(journeyType: string): P
 interface StubPayload {
 	context?: string;
 	invalidKid?: string;
+	missingKid?: string;
 }
 
-export async function stubStartPost(journeyType: string, invalidKid?: boolean): Promise<any> {
+export async function stubStartPost(journeyType: string, invalidKid?: boolean, missingKid?: boolean): Promise<any> {
 	const path = constants.DEV_IPV_STUB_URL;
-  
 	let payload: StubPayload = {};
+  
 	if (journeyType !== 'f2f') {
 	  payload.context = journeyType;
 	}
@@ -47,6 +48,10 @@ export async function stubStartPost(journeyType: string, invalidKid?: boolean): 
 	if (invalidKid) {
 	  payload.invalidKid = "true";
 	}
+  
+	if (missingKid) {
+	  payload.missingKid = "true";
+	}  
   
 	const postRequest: AxiosResponse = await axios.post(`${path}`, payload);
 	expect(postRequest.status).toBe(201);
