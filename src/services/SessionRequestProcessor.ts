@@ -181,7 +181,7 @@ export class SessionRequestProcessor {
 			return GenericServerError;
 		}
 
-		const journeyContext = jwtPayload.context ? jwtPayload.context : Constants.FACE_TO_FACE_JOURNEY;
+		const journeyContext = jwtPayload.context ?? Constants.FACE_TO_FACE_JOURNEY;
 
 		const session: ISessionItem = {
 			sessionId,
@@ -191,7 +191,7 @@ export class SessionRequestProcessor {
 			expiryDate: (Date.now() / 1000) + +this.authSessionTtlInSecs,
 			createdDate: Date.now() / 1000,
 			state: jwtPayload.state,
-			subject: jwtPayload.sub ? jwtPayload.sub : "",
+			subject: jwtPayload.sub ?? "",
 			persistentSessionId: jwtPayload.persistent_session_id, // Might not be used
 			clientIpAddress,
 			attemptCount: 0,

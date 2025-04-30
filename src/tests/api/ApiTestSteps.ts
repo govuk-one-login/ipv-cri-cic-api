@@ -36,19 +36,17 @@ interface JourneyOptions {
 	value: boolean;
 }
 interface StubPayload {
-	context: string;
+	context?: string;
 	journeyOptions?: JourneyOptions;
 }
 
 export async function stubStartPost(context: string, options?: JourneyOptions): Promise<AxiosResponse<any>> {
 	const path = constants.DEV_IPV_STUB_URL!;
 
-	const payload: StubPayload = {
-		context
-	};
+	const payload: StubPayload = {};
 
-	// I'm in favour of removing this but if we leave it in we should explain why
-	if (context !== 'f2f') {
+	// If no context is provided CIC CRI will default to "f2f"
+	if (context) {
 		payload.context = context;
 	}
 
