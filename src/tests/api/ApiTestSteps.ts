@@ -31,27 +31,33 @@ export async function startStubServiceAndReturnSessionId(journeyType: string): P
 	return sessionResponse.data.session_id;
 }
 
+interface JourneyOptions {
+	journeyOptions: 'invalidKid' | 'missingKid';
+}
 interface StubPayload {
 	context?: string;
-	invalidKid?: string;
+	invalidKid?: boolean;
+	missingKid?: boolean;
 }
 
-export async function stubStartPost(journeyType: string, invalidKid?: boolean): Promise<any> {
-	const path = constants.DEV_IPV_STUB_URL;
-  
-	let payload: StubPayload = {};
-	if (journeyType !== 'f2f') {
-	  payload.context = journeyType;
+export async function stubStartPost(context: string, options?: JourneyOptions): Promise<AxiosResponse<any>> {
+	const path = constants.DEV_IPV_STUB_URL!;
+
+	const payload: StubPayload = {};
+
+	// Core do not pass "f2f" as a context, if context is omitted CIC CRI will default to "f2f"
+	if (context !== 'f2f') {
+		payload.context = context;
 	}
-  
-	if (invalidKid) {
-	  payload.invalidKid = "true";
+
+	if (options) {
+		payload[options.journeyOptions] = true;
 	}
-  
-	const postRequest: AxiosResponse = await axios.post(`${path}`, payload);
+
+	const postRequest: AxiosResponse<any> = await axios.post(path, payload);
 	expect(postRequest.status).toBe(201);
 	return postRequest;
-  }
+}
 
 export async function sessionPost(clientId?: string, request?: string): Promise<any> {
 	const path = "/session";

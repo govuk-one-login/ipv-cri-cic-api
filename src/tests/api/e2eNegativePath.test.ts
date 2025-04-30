@@ -38,10 +38,22 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 		{ journeyType: "f2f" },
 		{ journeyType: "bank_account" },
 		{ journeyType: "hmrc_check" },
-	])("JWT signature not verified using Core's signing key", async ({ journeyType }: { journeyType: string }) => {
-		const stubResponse = await stubStartPost(journeyType, true);
+	])("JWT signature not verified using Core's signing key - Invalid kid", async ({ journeyType }: { journeyType: string }) => {
+		const stubResponse = await stubStartPost(journeyType, { journeyOptions: 'invalidKid'});
 		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 		expect(sessionResponse.status).toBe(401);
+		expect(sessionResponse.data.message).toBe('Unauthorized'); 
+	});
+
+	it.each([
+		{ journeyType: "f2f" },
+		{ journeyType: "bank_account" },
+		{ journeyType: "hmrc_check" },
+	])("JWT signature not verified using Core's signing key - Missing kid", async ({ journeyType }: { journeyType: string }) => {
+		const stubResponse = await stubStartPost(journeyType, { journeyOptions: 'missingKid'});
+		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+		expect(sessionResponse.status).toBe(401);
+		expect(sessionResponse.data.message).toBe('Unauthorized'); 
 	});
 
 });
