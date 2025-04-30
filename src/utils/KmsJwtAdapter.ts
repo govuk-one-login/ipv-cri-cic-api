@@ -15,9 +15,9 @@ export class KmsJwtAdapter {
 
     readonly kms: AWS.KMS;
 
-	cachedJwks: any;
+	private cachedJwks: any;
 
-	cachedTime: Date | undefined;
+	private cachedTime: Date | undefined;
 
 	private readonly logger: Logger;
 
