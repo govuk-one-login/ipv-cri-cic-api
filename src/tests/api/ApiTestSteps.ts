@@ -32,8 +32,7 @@ export async function startStubServiceAndReturnSessionId(journeyType: string): P
 }
 
 interface JourneyOptions {
-	journeyType: 'invalidKid' | 'missingKid';
-	value: boolean;
+	journeyOptions: 'invalidKid' | 'missingKid';
 }
 interface StubPayload {
 	context?: string;
@@ -52,7 +51,7 @@ export async function stubStartPost(context: string, options?: JourneyOptions): 
 	}
 
 	if (options) {
-		payload[options.journeyType] = true;
+		payload[options.journeyOptions] = true;
 	}
 
 	const postRequest: AxiosResponse<any> = await axios.post(path, payload);
