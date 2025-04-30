@@ -6,6 +6,7 @@ import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { JarPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
+import { getHashedKid } from "../utils/hashing";
 
 export const v3KmsClient = new KMSClient({
   region: process.env.REGION ?? "eu-west-2",
@@ -167,8 +168,9 @@ async function sign(payload: JarPayload, keyId: string, invalidKeyId: string | u
   const invalidKid = invalidKeyId?.split("/").pop() ?? "";
   // If an additional kid is provided to the function, return it in the header to create a mismatch - enable unhappy path testing
   const kid = invalidKeyId ? invalidKid : signingKid;
+  const hashedKid = getHashedKid(kid);
   const alg = "ECDSA_SHA_256";
-  const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid };
+  const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid: hashedKid };
   const tokenComponents = {
     header: util.base64url.encode(
       Buffer.from(JSON.stringify(jwtHeader)),
