@@ -31,27 +31,29 @@ export async function startStubServiceAndReturnSessionId(journeyType: string): P
 	return sessionResponse.data.session_id;
 }
 
+interface JourneyOptions {
+	journeyType: 'invalidKid' | 'missingKid';
+	value: boolean;
+}
 interface StubPayload {
-	context?: string;
-	[key: string]: any;
+	context: string;
+	journeyOptions?: JourneyOptions;
 }
 
-interface KidOptions {
-	kidType?: 'invalidKid' | 'missingKid';
-	value?: boolean;
-}
-
-export async function stubStartPost(journeyType: string, options?: KidOptions): Promise<AxiosResponse<any>> {
+export async function stubStartPost(context: string, options?: JourneyOptions): Promise<AxiosResponse<any>> {
 	const path = constants.DEV_IPV_STUB_URL!;
 
-	const payload: StubPayload = {};
+	const payload: StubPayload = {
+		context
+	};
 
-	if (journeyType !== 'f2f') {
-		payload.context = journeyType;
+	// I'm in favour of removing this but if we leave it in we should explain why
+	if (context !== 'f2f') {
+		payload.context = context;
 	}
 
-	if (options && options.kidType) {
-		payload[options.kidType] = options.value ?? false;
+	if (options) {
+		payload.journeyOptions = options
 	}
 
 	const postRequest: AxiosResponse<any> = await axios.post(path, payload);
