@@ -73,9 +73,9 @@ export class KmsJwtAdapter {
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid?: string): Promise<JWTPayload | null> {
 		if (!this.cachedJwks || (this.cachedTime && new Date() > this.cachedTime)) {
 			this.logger.info("No cached keys found or cache time has expired");
-    		const wellKnownJwksResult = (await axios.get(publicKeyEndpoint));
-			this.cachedJwks = wellKnownJwksResult.data.keys;
-			const cacheControl = wellKnownJwksResult.headers['cache-control'];
+    		const oidcProviderJwks = (await axios.get(publicKeyEndpoint));
+			this.cachedJwks = oidcProviderJwks.data.keys;
+			const cacheControl = oidcProviderJwks.headers['cache-control'];
 
 			// If header is missing or doesn't match the expected format, maxAgeMatch will be null, and we set cache time to default value of 300 (5 minutes)
 			const maxAge = cacheControl ? parseInt(cacheControl.match(/max-age=(\d+)/)?.[1], 10) || 300 : 300;

@@ -7,7 +7,6 @@ import { jwtUtils } from "../../../utils/JwtUtils";
 import { MessageType } from "@aws-sdk/client-kms";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
-
 import axios from "axios";
 
 jest.mock('axios');
@@ -49,8 +48,6 @@ describe("KmsJwtAdapter utils", () => {
 
 	beforeEach(() => {
 		kmsJwtAdapter = new KmsJwtAdapter(process.env.KMS_KEY_ARN!, logger);
-		kmsJwtAdapter.cachedJwks = undefined;
-   		kmsJwtAdapter.cachedTime = undefined;
 	});
 
 	describe("#sign", () => {
@@ -223,7 +220,5 @@ describe("KmsJwtAdapter utils", () => {
 			expect(kmsJwtAdapter.cachedJwks).toEqual(mockJwksResponse.data.keys);
 			expect(kmsJwtAdapter.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
 		});
-
-		
 	});
 });

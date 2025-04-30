@@ -149,7 +149,7 @@ export class SessionRequestProcessor {
 				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 			}
 		} catch (error) {
-			this.logger.error("Invalid request: Could not verify jwt", {
+			this.logger.error("Invalid request: Could not verify JWT", {
 				error,
 				messageCode: MessageCodes.CIC_FAILED_VERIFYING_JWT,
 			});
