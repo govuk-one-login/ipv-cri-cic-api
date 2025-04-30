@@ -36,19 +36,16 @@ interface JourneyOptions {
 	value: boolean;
 }
 interface StubPayload {
-	context?: string;
+	context: string;
 	journeyOptions?: JourneyOptions;
 }
 
 export async function stubStartPost(context: string, options?: JourneyOptions): Promise<AxiosResponse<any>> {
 	const path = constants.DEV_IPV_STUB_URL!;
 
-	const payload: StubPayload = {};
-
-	// If no context is provided CIC CRI will default to "f2f"
-	if (context) {
-		payload.context = context;
-	}
+	const payload: StubPayload = {
+		context
+	};
 
 	if (options) {
 		payload.journeyOptions = options
