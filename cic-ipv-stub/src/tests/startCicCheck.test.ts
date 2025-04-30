@@ -95,6 +95,19 @@ describe("Start CIC Check Endpoint", () => {
     expect(body.clientId).toBeDefined();
     expect(body.AuthorizeLocation).toBeDefined();
   });
+
+  it("returns JAR data and target uri with custom payload", async () => {
+    const response = await handler(testData.startCustom);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toBeDefined();
+
+    const body = JSON.parse(response.body);
+
+    expect(body.request).toBeDefined();
+    expect(body.responseType).toBeDefined();
+    expect(body.clientId).toBeDefined();
+    expect(body.AuthorizeLocation).toBeDefined();
+  });
   
   describe("Sign function", () => {
     it("should sign the JWT using the correct key", async () => {
