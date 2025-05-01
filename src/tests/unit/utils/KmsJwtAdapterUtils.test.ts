@@ -168,10 +168,6 @@ describe("KmsJwtAdapter utils", () => {
 		}
 
 		beforeEach(() => {
-			// @ts-expect-error private class properties accessed for testing purposes
-			kmsJwtAdapter.cachedJwks = undefined;
-			// @ts-expect-error private class properties accessed for testing purposes
-			kmsJwtAdapter.cachedTime = undefined;
 			(axios.get as jest.Mock).mockResolvedValue(mockJwksResponse);
 		});
 
@@ -198,38 +194,30 @@ describe("KmsJwtAdapter utils", () => {
 		it('should fetch and cache JWKS data when no cached data exists', async () => {
 			const mockTargetKid = "1234";
 			await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, mockTargetKid);
-			// @ts-expect-error private class properties accessed for testing purposes
-			expect(kmsJwtAdapter.cachedJwks).toEqual(mockJwksResponse.data.keys);
-			// @ts-expect-error private class properties accessed for testing purposes
-			expect(kmsJwtAdapter.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
+			const cacheData = kmsJwtAdapter.getCachedDataForTest()
+			expect(cacheData.cachedJwks).toEqual(mockJwksResponse.data.keys);
+			expect(cacheData.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
 		});
 
 		it('should use cached JWKS data when cache is valid', async () => {
 			const mockTargetKid = "1234";
 			const validCacheTime = new Date(Date.now() + 60000); // 1 minute in the future
-			// @ts-expect-error private class properties accessed for testing purposes
-			kmsJwtAdapter.cachedJwks = mockJwksResponse.data.keys;
-			// @ts-expect-error private class properties accessed for testing purposes
-    		kmsJwtAdapter.cachedTime = validCacheTime;
+			kmsJwtAdapter.setCachedDataForTest( mockJwksResponse.data.keys, validCacheTime);
 			await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, mockTargetKid);
+			const cacheData = kmsJwtAdapter.getCachedDataForTest()
 			expect(axios.get).not.toHaveBeenCalled();
-			// @ts-expect-error private class properties accessed for testing purposes
-			expect(kmsJwtAdapter.cachedJwks).toEqual(mockJwksResponse.data.keys);
+			expect(cacheData.cachedJwks).toEqual(mockJwksResponse.data.keys);
 		});
 
 		it('should refresh JWKS data when cache is expired', async () => {
 			const mockTargetKid = "1234";
 			const expiredCacheTime = new Date(Date.now() - 60000); // 1 minute in the past
-			// @ts-expect-error private class properties accessed for testing purposes
-			kmsJwtAdapter.cachedJwks = mockJwksResponse.data.keys;
-			// @ts-expect-error private class properties accessed for testing purposes
-    		kmsJwtAdapter.cachedTime = expiredCacheTime;
+			kmsJwtAdapter.setCachedDataForTest( mockJwksResponse.data.keys, expiredCacheTime);
 			await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, mockTargetKid);
 			expect(axios.get).toHaveBeenCalledWith(mockPublicKeyEndpoint);
-			// @ts-expect-error private class properties accessed for testing purposes
-			expect(kmsJwtAdapter.cachedJwks).toEqual(mockJwksResponse.data.keys);
-			// @ts-expect-error private class properties accessed for testing purposes
-			expect(kmsJwtAdapter.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
+			const cacheData = kmsJwtAdapter.getCachedDataForTest()
+			expect(cacheData.cachedJwks).toEqual(mockJwksResponse.data.keys);
+			expect(cacheData.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
 		});
 	});
 });

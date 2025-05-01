@@ -26,6 +26,18 @@ export class KmsJwtAdapter {
     	this.kms = createKmsClient();
 		this.logger = logger;
     }
+
+	getCachedDataForTest() {
+        return {
+            cachedJwks: this.cachedJwks,
+            cachedTime: this.cachedTime,
+        };
+    }
+
+	setCachedDataForTest(cachedJwks: any, cachedTime: Date) {
+        this.cachedJwks = cachedJwks
+		this.cachedTime = cachedTime
+    }
 	
     async sign(jwtPayload: JwtPayload, dnsSuffix: string): Promise<string> {
     	const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT" };
