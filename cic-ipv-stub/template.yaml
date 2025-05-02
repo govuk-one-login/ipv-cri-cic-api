@@ -42,8 +42,10 @@ Mappings:
   Configuration:
     dev:
       IPVStubID: "5C584572"
+      AUD: "https://review-c.dev.account.gov.uk"
     build:
       IPVStubID: "BD7B2A5D"
+      AUD: "https://review-c.dev.account.gov.uk"
     staging:
       IPVStubID: "9CDA6F61"
     integration:
@@ -302,9 +304,9 @@ Resources:
     Properties:
       RestApiId: !Ref IPVStubApiGw
       ParentId: !GetAtt IPVStubApiGw.RootResourceId
-      PathPart: start-token
+      PathPart: generate-token-request
 
-  GenerateTokenRequestCICMethodGet:
+  GenerateTokenRequestCICMethodPost:
     DependsOn:
       - GenerateTokenRequestCICPath
       - GenerateTokenRequestCICFunction
@@ -339,6 +341,7 @@ Resources:
       - RedirectMethodGet
       - JwksMethodGet
       - StartCICMethodGet
+      - GenerateTokenRequestCICMethodPost
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref IPVStubApiGw
