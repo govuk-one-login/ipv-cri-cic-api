@@ -10,11 +10,11 @@ import {
 } from "@jest/globals";
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
-import startDefault from "../events/startDefault.json";
-import startCustomInvalidSigningKey from "../events/startCustomInvalidSigningKey.json";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
+
+const testData = require("../events/startEvents.js")
 
 jest.setTimeout(30000);
 
@@ -84,7 +84,20 @@ describe("Start CIC Check Endpoint", () => {
   });
 
   it("returns JAR data and target uri", async () => {
-    const response = await handler(startDefault);
+    const response = await handler(testData.startDefault);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toBeDefined();
+
+    const body = JSON.parse(response.body);
+
+    expect(body.request).toBeDefined();
+    expect(body.responseType).toBeDefined();
+    expect(body.clientId).toBeDefined();
+    expect(body.AuthorizeLocation).toBeDefined();
+  });
+
+  it("returns JAR data and target uri with custom payload", async () => {
+    const response = await handler(testData.startCustom);
     expect(response.statusCode).toBe(201);
     expect(response.body).toBeDefined();
 
@@ -96,20 +109,28 @@ describe("Start CIC Check Endpoint", () => {
     expect(body.AuthorizeLocation).toBeDefined();
   });
   
+  describe("Sign function", () => {
+    it("should sign the JWT using the correct key", async () => {
+      const response = await handler(testData.startDefault);
+      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      expect(signCommandInput.KeyId).toBe("key-id");
+      expect(response.statusCode).toBe(201);
+    });
 
-  it("should sign the JWT using the correct key", async () => {
-    const response = await handler(startDefault);
-    const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
-    expect(signCommandInput.KeyId).toBe("key-id");
-    expect(response.statusCode).toBe(201);
-  });
+    it("should sign a JWT using the correct key when provided with a custom payload for 'invalidKid'", async () => {
+      const response = await handler(testData.startCustomInvalidSigningKey);
+      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      expect(signCommandInput.KeyId).toBe("key-id");
+      expect(response.statusCode).toBe(201);
+    });
 
-  it("should sign a JWT using the correct key when provided with a custom payload", async () => {
-    const response = await handler(startCustomInvalidSigningKey);
-    const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
-    expect(signCommandInput.KeyId).toBe("key-id");
-    expect(response.statusCode).toBe(201);
-  });
+    it("should sign a JWT using the correct key when provided with a custom payload for 'missingKid'", async () => {
+      const response = await handler(testData.startCustomMissingSigningKey);
+      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      expect(signCommandInput.KeyId).toBe("key-id");
+      expect(response.statusCode).toBe(201);
+    });
+  })
 });
 
 

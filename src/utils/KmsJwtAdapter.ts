@@ -17,7 +17,7 @@ export class KmsJwtAdapter {
 
 	private cachedJwks: any;
 
-	private cachedTime: any;
+	private cachedTime: Date | undefined;
 
 	private readonly logger: Logger;
 
@@ -25,6 +25,18 @@ export class KmsJwtAdapter {
     	this.kid = kid;
     	this.kms = createKmsClient();
 		this.logger = logger;
+    }
+
+	getCachedDataForTest() {
+        return {
+            cachedJwks: this.cachedJwks,
+            cachedTime: this.cachedTime,
+        };
+    }
+
+	setCachedDataForTest(cachedJwks: any, cachedTime: Date) {
+        this.cachedJwks = cachedJwks
+		this.cachedTime = cachedTime
     }
 	
     async sign(jwtPayload: JwtPayload, dnsSuffix: string): Promise<string> {
@@ -71,24 +83,17 @@ export class KmsJwtAdapter {
     }
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid?: string): Promise<JWTPayload | null> {
-		if (!this.cachedJwks || new Date() > this.cachedTime) {
-
+		if (!this.cachedJwks || (this.cachedTime && new Date() > this.cachedTime)) {
 			this.logger.info("No cached keys found or cache time has expired");
-    		const wellKnownJwksResult = (await axios.get(publicKeyEndpoint));
-			this.cachedJwks = wellKnownJwksResult.data.keys;
-			const cacheControl = wellKnownJwksResult.headers['cache-control'];
+    		const oidcProviderJwks = (await axios.get(publicKeyEndpoint));
+			this.cachedJwks = oidcProviderJwks.data.keys;
+			const cacheControl = oidcProviderJwks.headers['cache-control'];
 
 			// If header is missing or doesn't match the expected format, maxAgeMatch will be null, and we set cache time to default value of 300 (5 minutes)
 			const maxAge = cacheControl ? parseInt(cacheControl.match(/max-age=(\d+)/)?.[1], 10) || 300 : 300;
 			this.cachedTime = new Date(Date.now() + (maxAge * 1000));
 		}
-		this.logger.info("JWKS cache expiry time: " + this.cachedTime);
     	let signingKey = this.cachedJwks.find((key: Jwk)=> key.kid === targetKid);
-
-    	if (!signingKey) {
-			// Temporary fix in place to account for IPV Core not providing KID in higher environments
-			signingKey = this.cachedJwks.find((key: Jwk)=> key.use === "sig");
-		}
 
 		if (!signingKey) {
 			throw new Error(`No key found with kid '${targetKid}'`);
