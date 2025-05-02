@@ -1,4 +1,4 @@
-import { handler } from "../handlers/startTokenCic";
+import { handler } from "../handlers/generateTokenRequest";
 import {
   expect,
   jest,
