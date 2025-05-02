@@ -296,6 +296,43 @@ Resources:
         - StatusCode: 400
         - StatusCode: 500
 
+  # Start token-----------------------------------------
+  StartTokenCICPath:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref IPVStubApiGw
+      ParentId: !GetAtt IPVStubApiGw.RootResourceId
+      PathPart: start-token
+
+  StartTokenCICMethodGet:
+    DependsOn:
+      - StartTokenCICPath
+      - StartTokenCICFunction
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref IPVStubApiGw
+      ResourceId: !Ref StartTokenCICPath
+      HttpMethod: POST
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ""
+          - - "arn:"
+            - !Ref "AWS::Partition"
+            - ":apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
+            - !GetAtt StartTokenCICFunction.Arn
+            - /invocations
+        IntegrationResponses:
+          - StatusCode: 200
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+
   # -----------------------------------------
   IPVStubApiGwDeployment:
     DependsOn:
@@ -383,6 +420,55 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt StartCICCheckFunction.Arn
+      Principal: apigateway.amazonaws.com
+
+  # ------------------------------------
+  StartTokenCICFunction:
+    DependsOn:
+      - StartTokenCICFunctionLogGroup
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "StartTokenCICFunction-${AWS::StackName}"
+      Handler: startTokenCic.handler
+      CodeUri: src/handlers/
+      Environment:
+        Variables:
+          SIGNING_KEY: !Ref IPVStubKMSSigningKey
+          ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
+          JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
+      Policies:
+        - Statement:
+            - Sid: KMSSignPolicy
+              Effect: Allow
+              Action:
+                - kms:Sign
+              Resource:
+                - !GetAtt IPVStubKMSSigningKey.Arn
+      Role: !GetAtt IPVStubLambdaRole.Arn
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - startTokenCic.ts
+
+  StartTokenCICFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/StartTokenCICFunction-${AWS::StackName}"
+
+  StartTokenCICFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt StartTokenCICFunction.Arn
       Principal: apigateway.amazonaws.com
 
   #----------------------------
