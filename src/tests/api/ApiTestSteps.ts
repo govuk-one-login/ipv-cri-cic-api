@@ -55,7 +55,7 @@ export async function stubStartPost(context: string, options?: JourneyOptions): 
 	}
 
 	const postRequest: AxiosResponse<any> = await axios.post(path, payload);
-	expect(postRequest.status).toBe(201);
+	expect(postRequest.status).toBe(200);
 	return postRequest;
 }
 
