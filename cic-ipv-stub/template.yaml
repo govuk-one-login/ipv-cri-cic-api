@@ -459,7 +459,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - generateTokenRequest.ts
+          - handlers/generateTokenRequest.ts
 
   GenerateTokenRequestCICFunctionLogGroup:
     Type: AWS::Logs::LogGroup
