@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
-import { JarPayload, Jwks, JwtHeader } from "../auth.types";
+import { JWTPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
 import { getHashedKid } from "../utils/hashing";
 
@@ -17,7 +17,7 @@ export const v3KmsClient = new KMSClient({
   maxAttempts: 2,
 });
 
-let frontendURL: string; 
+let frontendURL: string;
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -32,7 +32,8 @@ export const handler = async (
     addSharedClaims = overrides.addSharedClaims;
   }
 
-	frontendURL = overrides?.frontendURL != null ? overrides.frontendURL : config.frontUri
+  frontendURL =
+    overrides?.frontendURL != null ? overrides.frontendURL : config.frontUri;
 
   const defaultClaims = {
     name: [
@@ -62,7 +63,7 @@ export const handler = async (
   };
 
   const iat = Math.floor(Date.now() / 1000);
-  let payload: JarPayload = {
+  let payload: JWTPayload = {
     sub: crypto.randomUUID(),
     redirect_uri: config.redirectUri,
     response_type: "code",
@@ -74,20 +75,22 @@ export const handler = async (
     iat,
     nbf: iat - 1,
     exp: iat + 3 * 60,
+    jti: crypto.randomBytes(16).toString("hex"),
   };
 
-  if (overrides?.context != null){
+  if (overrides?.context != null) {
     payload = {
       ...payload,
       context: overrides.context,
-    }
+    };
   }
 
   if (addSharedClaims) {
     payload.shared_claims =
       overrides?.shared_claims != null
-        ? overrides.shared_claims : defaultClaims;
-  }  
+        ? overrides.shared_claims
+        : defaultClaims;
+  }
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidKey;
@@ -103,7 +106,7 @@ export const handler = async (
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
   return {
-    statusCode: 201,
+    statusCode: 200,
     body: JSON.stringify({
       request,
       responseType: "code",
@@ -163,7 +166,11 @@ async function getPublicEncryptionKey(config: {
   return publicEncryptionKey;
 }
 
-async function sign(payload: JarPayload, keyId: string, invalidKeyId: string | undefined): Promise<string> {
+async function sign(
+  payload: JWTPayload,
+  keyId: string,
+  invalidKeyId: string | undefined
+): Promise<string> {
   const signingKid = keyId.split("/").pop() ?? "";
   const invalidKid = invalidKeyId?.split("/").pop() ?? "";
   // If an additional kid is provided to the function, return it in the header to create a mismatch - enable unhappy path testing
