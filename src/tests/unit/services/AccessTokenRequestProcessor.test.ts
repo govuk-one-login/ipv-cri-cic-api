@@ -7,7 +7,7 @@ import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
 import {
-	MockFailingKmsSigningJwtAdapter,
+	//MockFailingKmsSigningJwtAdapter,
 	MockKmsSigningTokenJwtAdapter,
 } from "../utils/MockJwtVerifierSigner";
 import { AccessTokenRequestProcessor } from "../../../services/AccessTokenRequestProcessor";
