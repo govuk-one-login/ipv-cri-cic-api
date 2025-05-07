@@ -138,7 +138,7 @@ export class SessionRequestProcessor {
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint, jwtTargetKid);
 				if (!payload) {
 					this.logger.error("Failed to verify JWT", {
-						messageCode: MessageCodes.CIC_FAILED_VERIFYING_JWT,
+						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 					});
 					return unauthorizedResponse;
 				}
@@ -151,7 +151,7 @@ export class SessionRequestProcessor {
 		} catch (error) {
 			this.logger.error("Invalid request: Could not verify JWT", {
 				error,
-				messageCode: MessageCodes.CIC_FAILED_VERIFYING_JWT,
+				messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 			});
 			return unauthorizedResponse;
 		}

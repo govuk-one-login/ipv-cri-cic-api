@@ -67,7 +67,12 @@ export class Constants {
     static readonly X_FORWARDED_FOR = "x-forwarded-for";
 
     static readonly ENCODED_AUDIT_HEADER = "txma-audit-encoded";
-    
+
+    static readonly CLIENT_ASSERTION = "client_assertion";
+
+	static readonly CLIENT_ASSERTION_TYPE = "client_assertion_type";
+
+	static readonly CLIENT_ASSERTION_TYPE_JWT_BEARER = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";   
 }
 
 export const EnvironmentVariables = {

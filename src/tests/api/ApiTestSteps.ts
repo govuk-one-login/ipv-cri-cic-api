@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { ISessionItem } from "../../models/ISessionItem";
 import { constants } from "./ApiConstants";
+import { Constants } from "../../utils/Constants";
 import { jwtUtils } from "../../utils/JwtUtils";
 import crypto from "node:crypto";
 
@@ -41,7 +42,7 @@ interface StubPayload {
 }
 
 export async function stubStartPost(context: string, options?: JourneyOptions): Promise<AxiosResponse<any>> {
-	const path = constants.DEV_IPV_STUB_URL!;
+	const path = constants.DEV_IPV_STUB_URL! + "/start";;
 
 	const payload: StubPayload = {};
 
@@ -55,6 +56,32 @@ export async function stubStartPost(context: string, options?: JourneyOptions): 
 	}
 
 	const postRequest: AxiosResponse<any> = await axios.post(path, payload);
+	expect(postRequest.status).toBe(200);
+	return postRequest;
+}
+
+export async function startTokenPost(options?: JourneyOptions): Promise<AxiosResponse<string>> {
+	const path = constants.DEV_IPV_STUB_URL! + "/generate-token-request";
+	let postRequest: AxiosResponse<string>;
+
+	if (options) {
+		const payload = { [options.journeyOptions]: true };
+
+		try {
+			postRequest = await axios.post(path, payload);
+		} catch (error: any) {
+			console.error(`Error response from ${path} endpoint: ${error}`);
+			return error.response;
+		}
+	} else {
+		try {
+			postRequest = await axios.post(path);
+		} catch (error: any) {
+			console.error(`Error response from ${path} endpoint: ${error}`);
+			return error.response;
+		}
+	}
+
 	expect(postRequest.status).toBe(200);
 	return postRequest;
 }
@@ -107,10 +134,11 @@ export async function authorizationGet(sessionId: any): Promise<any> {
 	}
 }
 
-export async function tokenPost(authCode?: any, redirectUri?: any): Promise<any> {
+export async function tokenPost(authCode: string, redirectUri: string, clientAssertionJwt: string, clientAssertionType?: string): Promise<any> {
 	const path = "/token";
+	const assertionType = clientAssertionType || Constants.CLIENT_ASSERTION_TYPE_JWT_BEARER;
 	try {
-		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(redirectUri)}`, { headers: { "Content-Type": "text/plain" } });
+		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}&client_assertion_type=${assertionType}&client_assertion=${clientAssertionJwt}`, { headers: { "Content-Type": "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
