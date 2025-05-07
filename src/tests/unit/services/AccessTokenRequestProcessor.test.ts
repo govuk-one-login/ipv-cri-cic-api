@@ -12,7 +12,8 @@ import {
 } from "../utils/MockJwtVerifierSigner";
 import { AccessTokenRequestProcessor } from "../../../services/AccessTokenRequestProcessor";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
-//import { MISSING_BODY_ACCESSTOKEN, VALID_ACCESSTOKEN } from "../data/accessToken-events";
+//import { MISSING_BODY_ACCESSTOKEN } from "../data/accessToken-events";
+import { VALID_ACCESSTOKEN } from "../data/accessToken-events";
 //import { Constants } from "../../../utils/Constants";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { randomUUID } from "crypto";
