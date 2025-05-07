@@ -3,7 +3,7 @@
  
 import userData from "../data/happyPathSlim.json";
 import { constants } from "./ApiConstants";
-import { abortPost, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost, authorizationGet, tokenPost, userInfoPost } from "./ApiTestSteps";
+import { abortPost, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost, authorizationGet, tokenPost, userInfoPost, startTokenPost } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
 describe("Happy path tests", () => {
@@ -68,7 +68,8 @@ describe("Happy path tests", () => {
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
 			const authResponse = await authorizationGet(sessionId);
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+			const startTokenResponse = await startTokenPost();
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 			expect(tokenResponse.status).toBe(200);
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_CIC_SESSION_TABLE_NAME, "authSessionState", "CIC_ACCESS_TOKEN_ISSUED");
@@ -85,7 +86,8 @@ describe("Happy path tests", () => {
 
 			await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
 			const authResponse = await authorizationGet(sessionId);
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+			const startTokenResponse = await startTokenPost();
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 			const userInfoResponse = await userInfoPost(tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(200);
 
