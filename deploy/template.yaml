@@ -3680,7 +3680,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref SessionFunctionLogGroup
-      FilterPattern: '{ $.messageCode = "CIC_FAILED_VERIFYING_JWT" }'
+      FilterPattern: '{ $.messageCode = "FAILED_VERIFYING_JWT" }'
       MetricTransformations:
         - 
           MetricValue: "1"
@@ -3694,7 +3694,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtAlarm"
-      AlarmDescription: !Sub "CIC_FAILED_VERIFYING_JWT warning ${SupportManualURL}"
+      AlarmDescription: !Sub "FAILED_VERIFYING_JWT warning ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3719,7 +3719,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm"
-      AlarmDescription: !Sub "CIC_FAILED_VERIFYING_JWT critical ${SupportManualURL}"
+      AlarmDescription: !Sub "FAILED_VERIFYING_JWT critical ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic

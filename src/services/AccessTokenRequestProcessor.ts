@@ -47,7 +47,7 @@ export class AccessTokenRequestProcessor {
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
     	this.metrics = metrics;
     	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, logger);
     }
 
     static getInstance(logger: Logger, metrics: Metrics): AccessTokenRequestProcessor {
@@ -105,8 +105,6 @@ export class AccessTokenRequestProcessor {
 
 			if (session.authSessionState === AuthSessionState.CIC_AUTH_CODE_ISSUED) {
 				const jwt: string = requestPayload.client_assertion;
-				console.log("JWT", jwt);
-
 				let parsedJwt: Jwt;
 				try {
 					parsedJwt = this.kmsJwtAdapter.decode(jwt);
@@ -117,8 +115,6 @@ export class AccessTokenRequestProcessor {
 					});
 					return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 				}
-
-				console.log("ParsedJWT", parsedJwt);
 
 				try {
 					if (configClient.jwksEndpoint) {
