@@ -12,18 +12,18 @@ import {
 } from "../utils/MockJwtVerifierSigner";
 import { AccessTokenRequestProcessor } from "../../../services/AccessTokenRequestProcessor";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
-import { MISSING_BODY_ACCESSTOKEN, VALID_ACCESSTOKEN } from "../data/accessToken-events";
-import { Constants } from "../../../utils/Constants";
+//import { MISSING_BODY_ACCESSTOKEN, VALID_ACCESSTOKEN } from "../data/accessToken-events";
+//import { Constants } from "../../../utils/Constants";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { randomUUID } from "crypto";
-import { AppError } from "../../../utils/AppError";
+//import { AppError } from "../../../utils/AppError";
 
 let accessTokenRequestProcessorTest: AccessTokenRequestProcessor;
 const mockCicService = mock<CicService>();
 let mockSession: ISessionItem;
 jest.mock("../../../utils/KmsJwtAdapter");
 const passingKmsJwtAdapterFactory = () => new MockKmsSigningTokenJwtAdapter();
-const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAdapter();
+//const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAdapter();
 
 
 const logger = mock<Logger>();
