@@ -11,7 +11,7 @@ declare error_code
 #The CFN variables seem to include quotes when used in tests these must be removed before assigning them.
 CFN_CICBackendURL_NoQuotes=$(remove_quotes "$CFN_CICBackendURL")
 export DEV_CRI_CIC_API_URL=$(echo ${CFN_CICBackendURL_NoQuotes%/})
-export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)/start
+export DEV_IPV_STUB_URL=$(remove_quotes $CFN_CICIPVStubExecuteURL)
 export DEV_CIC_TEST_HARNESS_URL=$(remove_quotes "$CFN_CICTestHarnessURL")
 export VC_SIGNING_KEY_ID=$(remove_quotes "$CFN_VcSigningKeyId")
 export DNS_SUFFIX=$(remove_quotes "$CFN_DNSSuffix")

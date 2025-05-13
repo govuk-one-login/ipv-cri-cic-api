@@ -12,6 +12,7 @@ import {
 	validateJwtToken,
 	sessionConfigGet,
 	startStubServiceAndReturnSessionId,
+	startTokenPost,
 } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
@@ -37,7 +38,8 @@ describe("E2E Happy Path Tests", () => {
 		expect(authResponse.status).toBe(200);
 
 		// Post Token
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		const startTokenResponse = await startTokenPost();
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 		expect(tokenResponse.status).toBe(200);
 
 		// Post User Info
@@ -74,7 +76,8 @@ describe("E2E Happy Path Tests", () => {
 		expect(authResponse.status).toBe(200);
 
 		// Post Token
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		const startTokenResponse = await startTokenPost();
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 		expect(tokenResponse.status).toBe(200);
 
 		// Post User Info
@@ -110,7 +113,8 @@ describe("E2E Happy Path Tests", () => {
 		expect(authResponse.status).toBe(200);
 
 		// Post Token
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		const startTokenResponse = await startTokenPost();
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 		expect(tokenResponse.status).toBe(200);
 
 		// Post User Info

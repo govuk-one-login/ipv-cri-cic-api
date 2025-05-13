@@ -1,4 +1,4 @@
-import { stubStartPost, sessionPost, claimedIdentityPost, startStubServiceAndReturnSessionId } from "./ApiTestSteps";
+import { stubStartPost, sessionPost, claimedIdentityPost, startStubServiceAndReturnSessionId, authorizationGet, startTokenPost, tokenPost } from "./ApiTestSteps";
 import dataSlim from "../data/happyPathSlim.json";
 import dataNumeric from "../data/dataNumeric.json";
 import dataInvalidChar from "../data/dataInvalidChar.json";
@@ -84,6 +84,66 @@ describe("E2E Negative Path Tests - Claimed Identity Endpoint", () => {
 		const claimedIdentityResponse = await claimedIdentityPost(dataSlim.firstName, dataSlim.lastName, null, sessionId);
 		expect(claimedIdentityResponse.status).toBe(400);
 	});
+});
+
+describe("E2E Negative Path Tests - Token Endpoint", () => {
+	let sessionId: any;
+	beforeAll(async () => {
+		sessionId = await startStubServiceAndReturnSessionId("f2f");
+	});
+
+	it("E2E Negative Path Journey - Token: Invalid Kid in /token JWT", async () => {
+		console.log(sessionId);
+	  
+		const userData = dataSlim;
+	  
+		await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		const authResponse = await authorizationGet(sessionId);
+		const startTokenResponse = await startTokenPost({ journeyOptions: 'invalidKid' });
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
+		expect(tokenResponse.status).toBe(401);
+		expect(tokenResponse.data).toBe("Unauthorized");
+	  });
+	  
+
+	it("E2E Negative Path Journey - Token: Missing Kid in /token JWT", async () => {
+		console.log(sessionId);
+	  
+		const userData = dataSlim;
+	  
+		await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		const authResponse = await authorizationGet(sessionId);
+		const startTokenResponse = await startTokenPost({ journeyOptions: 'missingKid' });
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
+		expect(tokenResponse.status).toBe(401);
+		expect(tokenResponse.data).toBe("Unauthorized");
+	  });
+
+	  it("E2E Negative Path Journey - Token: Request does not include client_assertion", async () => {
+		console.log(sessionId);
+	  
+		const userData = dataSlim;
+	  
+		await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		const authResponse = await authorizationGet(sessionId);
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, "");
+		expect(tokenResponse.status).toBe(401);
+		expect(tokenResponse.data).toBe("Invalid request: Missing client_assertion parameter");
+	  });
+
+	  it("E2E Negative Path Journey - Token: Request does not include client_assertion_type", async () => {
+		console.log(sessionId);
+	  
+		const userData = dataSlim;
+	  
+		await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
+		const authResponse = await authorizationGet(sessionId);
+		const startTokenResponse = await startTokenPost();
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data, " ");
+		expect(tokenResponse.status).toBe(401);
+		expect(tokenResponse.data).toBe("Invalid client_assertion_type parameter");
+	  });
+	  
 });
 
 describe("Claimed Identity Negative Path Tests", () => {
