@@ -25,7 +25,7 @@
         "dotenv-cli": "^7.3.0",
         "ecdsa-sig-formatter": "^1.0.11",
         "esbuild": "0.17.12",
-        "express": "^4.18.2",
+        "express": "^5.1.0",
         "express-asyncify": "^2.1.2",
         "jose": "^4.11.2",
         "node-jose": "^2.1.1",
@@ -54,7 +54,7 @@
     "devDependencies": {
         "aws-cdk-lib": "^2.147.3",
         "@types/aws-lambda": "^8.10.131",
-        "@types/express": "^4.17.21",
+        "@types/express": "^5.0.1",
         "@types/jest": "^29.4.0",
         "@types/js-yaml": "^4.0.9",
         "@types/node": "20.14.8",
