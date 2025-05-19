@@ -155,7 +155,14 @@ async function getPublicEncryptionKey(config: {
   const oidcProviderJwks = (
     await axios.get(`${config.backendUri}/.well-known/jwks.json`)
   ).data as Jwks;
+  console.log("GCD KEYS", oidcProviderJwks);
   const publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
+  // hash the kid
+  const kid = publicKey?.kid;
+  if (kid) {
+    const hashedKid = getHashedKid(kid);
+    publicKey.kid = hashedKid;
+  }
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
     publicKey,
