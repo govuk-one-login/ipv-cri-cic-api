@@ -1,26 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import {
-  GetPublicKeyCommand,
-  KMSClient,
-  SignCommand,
-} from "@aws-sdk/client-kms";
+import { SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { JWTPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
 import { getHashedKid } from "../utils/hashing";
-import { createPublicKey } from "node:crypto";
-
-export const v3KmsClient = new KMSClient({
-  region: process.env.REGION ?? "eu-west-2",
-  requestHandler: new NodeHttpHandler({
-    connectionTimeout: 29000,
-    socketTimeout: 29000,
-  }),
-  maxAttempts: 2,
-});
+import { getAsJwk, v3KmsClient } from "../utils/jwkUtils";
 
 let frontendURL: string;
 
@@ -183,10 +169,13 @@ async function getPublicEncryptionKey(
     publicKey = await getAsJwk(uniqueEncryptionKeyId);
   } else {
     publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
-    const kid = publicKey!.kid;
-    const hashedKid = getHashedKid(kid);
-    publicKey!.kid = hashedKid;
   }
+  if (!publicKey) {
+    throw new Error("No encryption key found");
+  }
+  const kid = publicKey.kid;
+  const hashedKid = getHashedKid(kid);
+  publicKey.kid = hashedKid;
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
     publicKey,
@@ -196,57 +185,6 @@ async function getPublicEncryptionKey(
   );
   return publicEncryptionKey;
 }
-
-const getAsJwk = async (keyId: string): Promise<JsonWebKey | null> => {
-  let publicSigningKey;
-  try {
-    publicSigningKey = await v3KmsClient.send(
-      new GetPublicKeyCommand({ KeyId: keyId })
-    );
-  } catch (error) {
-    console.warn("Failed to fetch key from KMS", { error });
-  }
-  const map = getKeySpecMap(publicSigningKey?.KeySpec);
-  if (
-    publicSigningKey != null &&
-    map != null &&
-    publicSigningKey.KeyId != null &&
-    publicSigningKey.PublicKey != null
-  ) {
-    const use = publicSigningKey.KeyUsage === "ENCRYPT_DECRYPT" ? "enc" : "sig";
-    const publicKey = createPublicKey({
-      key: Buffer.from(publicSigningKey.PublicKey),
-      type: "spki",
-      format: "der",
-    }).export({ format: "jwk" });
-    const kid = keyId.split("/").pop()!;
-    const hashedKid = getHashedKid(kid);
-    return {
-      ...publicKey,
-      use,
-      kid: hashedKid,
-      alg: map.algorithm,
-    } as unknown as JsonWebKey;
-  }
-  return null;
-};
-
-const getKeySpecMap = (
-  spec?: string
-): { keySpec: string; algorithm: string } | undefined => {
-  if (spec == null) return undefined;
-  const conversions = [
-    {
-      keySpec: "ECC_NIST_P256",
-      algorithm: "ES256",
-    },
-    {
-      keySpec: "RSA_2048",
-      algorithm: "RS256",
-    },
-  ];
-  return conversions.find((x) => x.keySpec === spec);
-};
 
 async function sign(
   payload: JWTPayload,
