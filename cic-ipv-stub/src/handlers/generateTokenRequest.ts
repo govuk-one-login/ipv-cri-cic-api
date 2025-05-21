@@ -1,20 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
+import { SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
-import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JWTPayload, JwtHeader } from "../auth.types";
 import { getHashedKid } from "../utils/hashing";
-
-export const v3KmsClient = new KMSClient({
-  region: process.env.REGION ?? "eu-west-2",
-  requestHandler: new NodeHttpHandler({
-    connectionTimeout: 29000,
-    socketTimeout: 29000,
-  }),
-  maxAttempts: 2,
-});
+import { v3KmsClient } from "../utils/jwkUtils";
 
 export const handler = async (
   event: APIGatewayProxyEvent

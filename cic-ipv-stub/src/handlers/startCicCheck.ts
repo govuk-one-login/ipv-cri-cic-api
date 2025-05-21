@@ -1,21 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
+import { SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { JWTPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
 import { getHashedKid } from "../utils/hashing";
-
-export const v3KmsClient = new KMSClient({
-  region: process.env.REGION ?? "eu-west-2",
-  requestHandler: new NodeHttpHandler({
-    connectionTimeout: 29000,
-    socketTimeout: 29000,
-  }),
-  maxAttempts: 2,
-});
+import { getAsJwk, v3KmsClient } from "../utils/jwkUtils";
 
 let frontendURL: string;
 
@@ -94,15 +85,24 @@ export const handler = async (
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidKey;
+  let missingEncryptionKey;
   if (overrides?.missingKid != null) {
     invalidKey = crypto.randomUUID();
   }
   if (overrides?.invalidKid != null) {
     invalidKey = config.additionalKey;
   }
+  if (overrides?.missingEncryptionKey) {
+    missingEncryptionKey = true;
+  } else {
+    missingEncryptionKey = false;
+  }
 
   const signedJwt = await sign(payload, config.signingKey, invalidKey);
-  const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
+  const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(
+    config,
+    missingEncryptionKey
+  );
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
   return {
@@ -122,6 +122,7 @@ export function getConfig(): {
   clientId: string;
   signingKey: string;
   additionalKey: string;
+  uniqueEncryptionKey: string;
   frontUri: string;
   backendUri: string;
 } {
@@ -132,6 +133,7 @@ export function getConfig(): {
     process.env.SIGNING_KEY == null ||
     process.env.OIDC_API_BASE_URI == null ||
     process.env.ADDITIONAL_KEY == null ||
+    process.env.UNIQUE_ENCRYPTION_KEY == null ||
     process.env.OIDC_FRONT_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
@@ -143,19 +145,37 @@ export function getConfig(): {
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
     additionalKey: process.env.ADDITIONAL_KEY,
+    uniqueEncryptionKey: process.env.UNIQUE_ENCRYPTION_KEY,
     frontUri: process.env.OIDC_FRONT_BASE_URI,
     backendUri: process.env.OIDC_API_BASE_URI,
   };
 }
 
-async function getPublicEncryptionKey(config: {
-  backendUri: string;
-}): Promise<CryptoKey> {
+async function getPublicEncryptionKey(
+  config: {
+    backendUri: string;
+    uniqueEncryptionKey: string;
+  },
+  missingEncryptionKey: boolean
+): Promise<CryptoKey> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
   const oidcProviderJwks = (
     await axios.get(`${config.backendUri}/.well-known/jwks.json`)
   ).data as Jwks;
-  const publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
+  let publicKey;
+  if (missingEncryptionKey) {
+    const uniqueEncryptionKeyId =
+      config.uniqueEncryptionKey.split("/").pop() ?? "";
+    publicKey = await getAsJwk(uniqueEncryptionKeyId);
+  } else {
+    publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
+  }
+  if (!publicKey) {
+    throw new Error("No encryption key found");
+  }
+  const kid = publicKey.kid;
+  const hashedKid = getHashedKid(kid);
+  publicKey.kid = hashedKid;
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
     publicKey,
