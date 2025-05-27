@@ -12,7 +12,9 @@ import "aws-sdk-client-mock-jest";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
 
-const testData = require("../events/startEvents.js")
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import testData from "../events/startEvents.js";
 
 jest.setTimeout(30000);
 
@@ -54,21 +56,24 @@ describe("Start BAV Check Endpoint", () => {
   describe("Sign function", () => {
     it("should sign the JWT using the correct key", async () => {
       const response = await handler(testData.startDefault);
-      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      const signCommandInput =
+        kmsClient.commandCalls(SignCommand)[0].args[0].input;
       expect(signCommandInput.KeyId).toBe("key-id");
       expect(response.statusCode).toBe(200);
     });
 
     it("should sign a JWT using the correct key when provided with a custom payload for 'invalidKid'", async () => {
       const response = await handler(testData.startCustomInvalidSigningKey);
-      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      const signCommandInput =
+        kmsClient.commandCalls(SignCommand)[0].args[0].input;
       expect(signCommandInput.KeyId).toBe("key-id");
       expect(response.statusCode).toBe(200);
     });
 
     it("should sign a JWT using the correct key when provided with a custom payload for 'missingKid'", async () => {
       const response = await handler(testData.startCustomMissingSigningKey);
-      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      const signCommandInput =
+        kmsClient.commandCalls(SignCommand)[0].args[0].input;
       expect(signCommandInput.KeyId).toBe("key-id");
       expect(response.statusCode).toBe(200);
     });

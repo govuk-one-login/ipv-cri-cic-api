@@ -5,12 +5,8 @@
 
 export default {
   transform: {
-    "^.+\\.ts?$": [
-      "esbuild-jest",
-      {
-        sourcemap: true,
-      },
-    ],
+    "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.m?[tj]sx?$": ["babel-jest", { presets: ["@babel/preset-env"] }],
   },
   clearMocks: true,
   reporters: ["default"],
@@ -20,9 +16,11 @@ export default {
     "!./tests/**/*.ts",
     "!./jest.config.ts",
   ],
+  transformIgnorePatterns: ["node_modules"],
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  testMatch: ["**/*.test.ts"],
+  testMatch: ["**/tests/**/*.test.ts"],
   testEnvironment: "node",
+  moduleDirectories: ["node_modules"],
 };

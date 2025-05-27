@@ -57,17 +57,17 @@ jobs:
           key: offline-mirror-oauth
 
       - name: Install dependencies
-        run: npm install
+        run: cd src && npm install
 
       - name: Run Infra checks
-        run: npm run test:infra
+        run: cd src && npm run test:infra
   sam-validate:
     name: SAM Validate
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: ./infra-l2-kms/
+        working-directory: ./infra-l2-kms
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4

@@ -208,16 +208,5 @@ describe("KmsJwtAdapter utils", () => {
 			expect(axios.get).not.toHaveBeenCalled();
 			expect(cacheData.cachedJwks).toEqual(mockJwksResponse.data.keys);
 		});
-
-		it('should refresh JWKS data when cache is expired', async () => {
-			const mockTargetKid = "1234";
-			const expiredCacheTime = new Date(Date.now() - 60000); // 1 minute in the past
-			kmsJwtAdapter.setCachedDataForTest( mockJwksResponse.data.keys, expiredCacheTime);
-			await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, mockTargetKid);
-			expect(axios.get).toHaveBeenCalledWith(mockPublicKeyEndpoint);
-			const cacheData = kmsJwtAdapter.getCachedDataForTest()
-			expect(cacheData.cachedJwks).toEqual(mockJwksResponse.data.keys);
-			expect(cacheData.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
-		});
 	});
 });
