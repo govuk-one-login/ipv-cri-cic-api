@@ -3,7 +3,12 @@ import { SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
-import { JWTPayload, Jwks, JwtHeader } from "../auth.types";
+import {
+  JWTPayload,
+  Jwks,
+  JwtHeader,
+  PublicEncryptionKey,
+} from "../auth.types";
 import axios from "axios";
 import { getHashedKid } from "../utils/hashing";
 import { getAsJwk, v3KmsClient } from "../utils/jwkUtils";
@@ -85,7 +90,8 @@ export const handler = async (
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidKey;
-  let publicEncryptionKey: CryptoKey;
+  let hashedKid;
+  let publicEncryptionCryptoKey: CryptoKey;
 
   // These overrides will generate a JWT error
   if (overrides?.missingSigningKid != null) {
@@ -102,10 +108,10 @@ export const handler = async (
     const uniqueEncryptionKey = await getAsJwk(uniqueEncryptionKeyId);
     const kid = uniqueEncryptionKey?.kid;
     if (kid) {
-      const hashedKid = getHashedKid(kid);
+      hashedKid = getHashedKid(kid);
       uniqueEncryptionKey.kid = hashedKid;
     }
-    publicEncryptionKey = await webcrypto.subtle.importKey(
+    publicEncryptionCryptoKey = await webcrypto.subtle.importKey(
       "jwk",
       uniqueEncryptionKey,
       { name: "RSA-OAEP", hash: "SHA-256" },
@@ -113,11 +119,17 @@ export const handler = async (
       ["encrypt"]
     );
   } else {
-    publicEncryptionKey = await getPublicEncryptionKey(config);
+    const publicEncryptionKey = await getPublicEncryptionKey(config);
+    hashedKid = publicEncryptionKey.publicKey.kid;
+    publicEncryptionCryptoKey = publicEncryptionKey.publicEncryptionCryptoKey;
   }
 
   const signedJwt = await sign(payload, config.signingKey, invalidKey);
-  const request = await encrypt(signedJwt, publicEncryptionKey);
+  const request = await encrypt(
+    signedJwt,
+    publicEncryptionCryptoKey,
+    hashedKid
+  );
 
   return {
     statusCode: 200,
@@ -167,7 +179,7 @@ export function getConfig(): {
 
 async function getPublicEncryptionKey(config: {
   backendUri: string;
-}): Promise<CryptoKey> {
+}): Promise<PublicEncryptionKey> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
   const oidcProviderJwks = (
     await axios.get(`${config.backendUri}/.well-known/jwks.json`)
@@ -179,14 +191,15 @@ async function getPublicEncryptionKey(config: {
   const kid = publicKey.kid;
   const hashedKid = getHashedKid(kid);
   publicKey.kid = hashedKid;
-  const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
+  const publicEncryptionCryptoKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
     publicKey,
     { name: "RSA-OAEP", hash: "SHA-256" },
     true,
     ["encrypt"]
   );
-  return publicEncryptionKey;
+  const keys = { publicEncryptionCryptoKey, publicKey };
+  return keys;
 }
 
 async function sign(
@@ -235,13 +248,15 @@ async function sign(
 
 async function encrypt(
   plaintext: string,
-  publicEncryptionKey: CryptoKey
+  publicEncryptionKey: CryptoKey,
+  kid?: string
 ): Promise<string> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
   const initialisationVector = webcrypto.getRandomValues(new Uint8Array(12));
   const header = {
     alg: "RSA-OAEP-256",
     enc: "A256GCM",
+    kid: kid,
   };
   const protectedHeader: string = util.base64url.encode(
     Buffer.from(JSON.stringify(header)),
