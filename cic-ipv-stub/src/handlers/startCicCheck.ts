@@ -85,24 +85,38 @@ export const handler = async (
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidKey;
-  let missingEncryptionKey;
-  if (overrides?.missingKid != null) {
+  let publicEncryptionKey: CryptoKey;
+
+  // These overrides will generate a JWT error
+  if (overrides?.missingSigningKid != null) {
     invalidKey = crypto.randomUUID();
   }
-  if (overrides?.invalidKid != null) {
+  if (overrides?.invalidSigningKid != null) {
     invalidKey = config.additionalKey;
   }
+
+  // This override wil generate a JWE error
   if (overrides?.missingEncryptionKey) {
-    missingEncryptionKey = true;
+    const webcrypto = crypto.webcrypto as unknown as Crypto;
+    const uniqueEncryptionKeyId = config.uniqueEncryptionKey.split("/").pop() ?? "";
+    const uniqueEncryptionKey = await getAsJwk(uniqueEncryptionKeyId);
+    const kid = uniqueEncryptionKey?.kid;
+    if (kid) {
+      const hashedKid = getHashedKid(kid);
+      uniqueEncryptionKey.kid = hashedKid;
+    }
+    publicEncryptionKey = await webcrypto.subtle.importKey(
+      "jwk",
+      uniqueEncryptionKey,
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      true,
+      ["encrypt"]
+    );
   } else {
-    missingEncryptionKey = false;
+    publicEncryptionKey = await getPublicEncryptionKey(config);
   }
 
   const signedJwt = await sign(payload, config.signingKey, invalidKey);
-  const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(
-    config,
-    missingEncryptionKey
-  );
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
   return {
@@ -151,25 +165,14 @@ export function getConfig(): {
   };
 }
 
-async function getPublicEncryptionKey(
-  config: {
-    backendUri: string;
-    uniqueEncryptionKey: string;
-  },
-  missingEncryptionKey: boolean
-): Promise<CryptoKey> {
+async function getPublicEncryptionKey(config: {
+  backendUri: string;
+}): Promise<CryptoKey> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
   const oidcProviderJwks = (
     await axios.get(`${config.backendUri}/.well-known/jwks.json`)
   ).data as Jwks;
-  let publicKey;
-  if (missingEncryptionKey) {
-    const uniqueEncryptionKeyId =
-      config.uniqueEncryptionKey.split("/").pop() ?? "";
-    publicKey = await getAsJwk(uniqueEncryptionKeyId);
-  } else {
-    publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
-  }
+  const publicKey = oidcProviderJwks.keys.find((key) => key.use === "enc");
   if (!publicKey) {
     throw new Error("No encryption key found");
   }
@@ -192,9 +195,9 @@ async function sign(
   invalidKeyId: string | undefined
 ): Promise<string> {
   const signingKid = keyId.split("/").pop() ?? "";
-  const invalidKid = invalidKeyId?.split("/").pop() ?? "";
+  const invalidSigningKid = invalidKeyId?.split("/").pop() ?? "";
   // If an additional kid is provided to the function, return it in the header to create a mismatch - enable unhappy path testing
-  const kid = invalidKeyId ? invalidKid : signingKid;
+  const kid = invalidKeyId ? invalidSigningKid : signingKid;
   const hashedKid = getHashedKid(kid);
   const alg = "ECDSA_SHA_256";
   const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid: hashedKid };
