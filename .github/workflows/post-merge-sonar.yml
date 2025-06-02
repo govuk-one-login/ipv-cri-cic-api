@@ -1,7 +1,6 @@
 name: Scan repository
 
 on:
-  pull_request:
   push:
     branches: [main]
   schedule:
@@ -9,24 +8,24 @@ on:
     - cron: "0 9 * * 1"
 
 concurrency:
-  group: scan-repo-${{ github.head_ref || github.ref_name }}
+  group: post-merge-sonar-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions: read-all
 
 jobs:         
     unit-tests:
-      name: Test coverage
       uses: ./.github/workflows/run-unit-tests.yml
       with:
         coverage-report: true
 
-    sonarcloud:
-        name: SonarCloud
+    run-sonar-main:
+        name: run-sonar-main
         needs: unit-tests
         runs-on: ubuntu-latest
         steps:
         - name: Run SonarCloud scan
+          if: ${{ github.actor != 'dependabot[bot]' }}
           uses: govuk-one-login/github-actions/code-quality/sonarcloud@5480cced560e896dea12c47ea33e548a4d093e65
           with:
             coverage-artifact: ${{ needs.unit-tests.outputs.coverage-artifact }}
