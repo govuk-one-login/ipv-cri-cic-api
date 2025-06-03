@@ -94,6 +94,6 @@ export class ClaimedIdRequestProcessor {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
-		} return new Response(HttpCodesEnum.OK, "" );
+		}
 	}
 }

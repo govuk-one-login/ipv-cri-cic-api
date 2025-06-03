@@ -4,9 +4,8 @@ import { mockClient } from "aws-sdk-client-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 
 describe("JWKS Endpoint", () => {
-
   const mockKmsClient = mockClient(KMSClient);
-  
+
   beforeEach(() => {
     process.env.SIGNING_KEY = "test";
     process.env.ADDITIONAL_KEY = "test2";
@@ -44,8 +43,10 @@ describe("JWKS Endpoint", () => {
   });
 
   it("should return a 200 response with an empty JWK array if the key retrieval fails", async () => {
-    mockKmsClient.on(GetPublicKeyCommand).rejects(new Error("Failed to fetch key")); 
-    const response = await handler() as APIGatewayProxyResult;
+    mockKmsClient
+      .on(GetPublicKeyCommand)
+      .rejects(new Error("Failed to fetch key"));
+    const response = (await handler()) as APIGatewayProxyResult;
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body ?? "{}");
     expect(body.keys).toHaveLength(0);

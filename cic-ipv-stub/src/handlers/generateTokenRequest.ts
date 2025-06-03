@@ -6,6 +6,7 @@ import format from "ecdsa-sig-formatter";
 import { JWTPayload, JwtHeader } from "../auth.types";
 import { getHashedKid } from "../utils/hashing";
 import { v3KmsClient } from "../utils/jwkUtils";
+import { __ServiceException } from "@aws-sdk/client-kms/dist-types/models/KMSServiceException";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -95,7 +96,7 @@ async function sign(
     })
   );
   if (res?.Signature == null) {
-    throw res as unknown as AWS.AWSError;
+    throw res as unknown as __ServiceException;
   }
   tokenComponents.signature = format.derToJose(
     Buffer.from(res.Signature),

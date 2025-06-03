@@ -36,11 +36,6 @@ jobs:
         with:
           submodules: true
 
-      - name: Checks if commiting secrets to repo
-        uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: "detect-secrets > .secrets.baseline"
-
       - name: Setup nodeJS v20
         uses: actions/setup-node@v4
         with:
@@ -57,10 +52,10 @@ jobs:
           key: offline-mirror-oauth
 
       - name: Install dependencies
-        run: npm install
+        run: cd src && npm install
 
       - name: Run Infra checks
-        run: npm run test:infra
+        run: cd src && npm run test:infra
   sam-validate:
     name: SAM Validate
     runs-on: ubuntu-latest

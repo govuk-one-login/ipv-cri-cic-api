@@ -213,7 +213,7 @@ async function getPublicEncryptionKey(config: {
   publicKey.kid = hashedKid;
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
-    publicKey,
+    publicKey as JsonWebKey,
     { name: "RSA-OAEP", hash: "SHA-256" },
     true,
     ["encrypt"]
@@ -257,7 +257,7 @@ async function sign(
     })
   );
   if (res?.Signature == null) {
-    throw res as unknown as AWS.AWSError;
+    throw res as unknown as __ServiceException;
   }
   tokenComponents.signature = format.derToJose(
     Buffer.from(res.Signature),

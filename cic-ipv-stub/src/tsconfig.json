@@ -4,7 +4,7 @@
     "target": "es2020",
     "strict": true,
     "preserveConstEnums": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
@@ -13,5 +13,5 @@
     "outDir": "./build/",
     "module": "commonjs"
   },
-  "exclude": ["node_modules", "tests/**/**"]
+  "exclude": ["node_modules"]
 }

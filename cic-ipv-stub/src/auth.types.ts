@@ -14,7 +14,7 @@ export interface JWTPayload {
   iat?: number;
   scope?: string;
   nonce?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 export interface Jwks {
   keys: JsonWebKey[];
