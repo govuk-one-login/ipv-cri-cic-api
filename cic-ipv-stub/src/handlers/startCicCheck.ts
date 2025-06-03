@@ -90,11 +90,8 @@ export const handler = async (
 
   // Unhappy path testing enabled by optional flag provided in stub payload
   let invalidSigningKey;
-  let hashedKid;
-  let publicEncryptionKey: CryptoKey;
-
-  let invalidHashedKid;
-  let invalidPublicEncryptionKey: CryptoKey;
+  let kid;
+  let encryptionKey: CryptoKey;
 
   // This override will generate a JWT error where no key with a kid matching the value generated below will be found at the public key endpoint
   if (overrides?.missingSigningKid != null) {
@@ -109,57 +106,35 @@ export const handler = async (
   // This override will generate a JWE error where the private encryption key's corresponding private decryption key cannot be found and decryption fails
   if (overrides?.invalidEncryptionKid) {
     const webcrypto = crypto.webcrypto as unknown as Crypto;
-    const invalidEncryptionKeyId =
-      config.invalidEncryptionKey.split("/").pop() ?? "";
+    const invalidEncryptionKeyId = config.invalidEncryptionKey.split("/").pop() ?? "";
     const invalidEncryptionKey = await getAsJwk(invalidEncryptionKeyId);
-    const kid = invalidEncryptionKey?.kid;
-    if (kid) {
-      invalidHashedKid = getHashedKid(kid);
-      invalidEncryptionKey.kid = invalidHashedKid;
-    }
-    invalidPublicEncryptionKey = await webcrypto.subtle.importKey(
+    kid = invalidEncryptionKey?.kid;
+    encryptionKey = await webcrypto.subtle.importKey(
       "jwk",
       invalidEncryptionKey,
       { name: "RSA-OAEP", hash: "SHA-256" },
       true,
       ["encrypt"]
     );
-    const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
-    const request = await encrypt(
-      signedJwt,
-      invalidPublicEncryptionKey,
-      invalidHashedKid
-    );
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        request,
-        responseType: "code",
-        clientId: config.clientId,
-        AuthorizeLocation: `${frontendURL}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
-      }),
-    };
-
     // Happy path enclosed within else block below
   } else {
-    const res = await getPublicEncryptionKey(config);
-    hashedKid = res.kid;
-    publicEncryptionKey = res.publicEncryptionKey;
-
-    const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
-    const request = await encrypt(signedJwt, publicEncryptionKey, hashedKid);
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        request,
-        responseType: "code",
-        clientId: config.clientId,
-        AuthorizeLocation: `${frontendURL}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
-      }),
-    };
+    const res = await getPublicEncryptionKeyAndKid(config);
+    encryptionKey = res.publicEncryptionKey;
+    kid = res.kid;
   }
+
+  const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
+  const request = await encrypt(signedJwt, encryptionKey, kid);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      request,
+      responseType: "code",
+      clientId: config.clientId,
+      AuthorizeLocation: `${frontendURL}/oauth2/authorize?request=${request}&response_type=code&client_id=${config.clientId}`,
+    }),
+  };
 };
 
 export function getConfig(): {
@@ -197,7 +172,7 @@ export function getConfig(): {
   };
 }
 
-async function getPublicEncryptionKey(config: {
+async function getPublicEncryptionKeyAndKid(config: {
   backendUri: string;
 }): Promise<PublicEncryptionKeyAndKid> {
   const webcrypto = crypto.webcrypto as unknown as Crypto;
