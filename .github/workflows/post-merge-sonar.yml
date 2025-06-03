@@ -3,9 +3,6 @@ name: Scan repository
 on:
   push:
     branches: [main]
-  schedule:
-    # Every Monday at 9am
-    - cron: "0 9 * * 1"
 
 concurrency:
   group: post-merge-sonar-${{ github.head_ref || github.ref_name }}
@@ -31,6 +28,7 @@ jobs:
             coverage-artifact: ${{ needs.unit-tests.outputs.coverage-artifact }}
             github-token: ${{ secrets.GITHUB_TOKEN }}
             sonar-token: ${{ secrets.SONAR_TOKEN }}
+            coverage-run-id: ${{ github.event_name != 'pull_request' && github.run_id || null }}
 
     codeql:
         name: CodeQL

@@ -149,7 +149,7 @@ Resources:
 
   ### Stub Custom Domain ---------------------------------------
 
-  StubApiCustomDomainName:
+  StubApiPrettyDomainName:
     Type: AWS::ApiGatewayV2::DomainName
     Properties:
       DomainName: !If
@@ -168,18 +168,18 @@ Resources:
   StubApiRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      Name: !Ref StubApiCustomDomainName
+      Name: !Ref StubApiPrettyDomainName
       Type: A
       HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
       AliasTarget:
-        DNSName: !GetAtt StubApiCustomDomainName.RegionalDomainName
-        HostedZoneId: !GetAtt StubApiCustomDomainName.RegionalHostedZoneId
+        DNSName: !GetAtt StubApiPrettyDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt StubApiPrettyDomainName.RegionalHostedZoneId
         EvaluateTargetHealth: false
 
   IPVStubExternalApiMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
     Properties:
-      DomainName: !Ref StubApiCustomDomainName
+      DomainName: !Ref StubApiPrettyDomainName
       ApiId: !Ref IPVStubApiGw
       Stage: !Ref Environment
     DependsOn:
@@ -689,4 +689,4 @@ Outputs:
       Name: !Sub "${AWS::StackName}-IPvStubApiGatewayPrettyUrl"
     Value: !Sub
       - "https://${URL}/"
-      - URL: !Ref StubApiCustomDomainName
+      - URL: !Ref StubApiPrettyDomainName
