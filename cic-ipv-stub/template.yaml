@@ -386,7 +386,7 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
-          UNIQUE_ENCRYPTION_KEY: !Ref IPVStubKMSUniqueEncryptionKey
+          INVALID_ENCRYPTION_KEY: !Ref IPVStubKMSUniqueEncryptionKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
           JWKS_URI: !Sub "https://api.review-c.${Environment}.account.gov.uk/.well-known/jwks.json"
@@ -489,7 +489,7 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
-          UNIQUE_ENCRYPTION_KEY: !Ref IPVStubKMSUniqueEncryptionKey
+          INVALID_ENCRYPTION_KEY: !Ref IPVStubKMSUniqueEncryptionKey
       Policies:
         - Statement:
             - Sid: KMSSignPolicy

@@ -45,7 +45,7 @@ process.env.JWKS_URI = "test.com/.well-known/jwks.json";
 process.env.CLIENT_ID = "test-id";
 process.env.SIGNING_KEY = "key-id";
 process.env.ADDITIONAL_KEY = "additional-key-id";
-process.env.UNIQUE_ENCRYPTION_KEY = "unique-encryption-key-id";
+process.env.INVALID_ENCRYPTION_KEY = "invalid-encryption-key-id";
 process.env.OIDC_API_BASE_URI = "api-target.com";
 process.env.OIDC_FRONT_BASE_URI = "test-target.com";
 
