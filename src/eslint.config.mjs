@@ -8,7 +8,8 @@ export default [
       ".aws-sam",
       "dist",
       "reports/",
-      "/tests/infra/**"
+      "/tests/infra/**",
+      "build"
   ]
 },{
     files: ['**/*.ts'],

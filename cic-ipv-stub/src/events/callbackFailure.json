@@ -1,11 +1,48 @@
 {
     "resource": "/",
-    "path": "/",
+    "path": "/callback",
     "httpMethod": "POST",
     "requestContext": {
+        "accountId": "123456789012",
+        "apiId": "id",
+        "authorizer": {
+            "claims": null,
+            "scopes": null
+        },
         "resourcePath": "/",
         "httpMethod": "POST",
-        "path": "/callback"
+        "path": "/callback",
+        "protocol": "https",
+        "stage": "dev",
+        "requestId": "123456789",
+        "requestTimeEpoch": 1744035666,
+        "resourceId": "123456789",
+        "identity": {
+            "accessKey": null,
+            "accountId": null,
+            "caller": null,
+            "cognitoAuthenticationProvider": null,
+            "cognitoAuthenticationType": null,
+            "cognitoIdentityId": null,
+            "cognitoIdentityPoolId": null,
+            "principalOrgId": null,
+            "sourceIp": "IP",
+            "user": null,
+            "userAgent": "user-agent",
+            "userArn": null,
+            "clientCert": {
+                "clientCertPem": "CERT_CONTENT",
+                "subjectDN": "www.example.com",
+                "issuerDN": "Example issuer",
+                "serialNumber": "a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1",
+                "validity": {
+                    "notBefore": "May 28 12:30:02 2019 GMT",
+                    "notAfter": "Aug  5 09:36:04 2021 GMT"
+                }
+            },
+            "apiKey": "key123",
+            "apiKeyId": "apiKeyId123"
+        }
     },
     "headers": {
         "accept": "application/x-www-form-urlencoded;charset=UTF-8",
@@ -14,11 +51,11 @@
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
         "X-Amzn-Trace-Id": "Root=1-5e66d96f-7491f09xmpl79d18acf3d050"
     },
+    "multiValueHeaders": {},
     "queryStringParameters": {
         "error": "access_denied",
         "error_description": "duplicate session"
     },
-    "multiValueHeaders": {},
     "multiValueQueryStringParameters": null,
     "pathParameters": null,
     "stageVariables": null,

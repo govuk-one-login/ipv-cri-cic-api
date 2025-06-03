@@ -43,11 +43,14 @@ Mappings:
     dev:
       IPVStubID: "5C584572"
       AUD: "https://review-c.dev.account.gov.uk"
+      IPVSTUBURL: "ipvstub.review-c.dev.account.gov.uk"
     build:
       IPVStubID: "BD7B2A5D"
-      AUD: "https://review-c.dev.account.gov.uk"
+      AUD: "https://review-c.build.account.gov.uk"
+      IPVSTUBURL: "ipvstub.review-c.build.account.gov.uk"
     staging:
       IPVStubID: "9CDA6F61"
+      IPVSTUBURL: "ipvstub.review-c.staging.account.gov.uk"
     integration:
       IPVStubID: "AE140E43"
     production:
@@ -147,17 +150,20 @@ Resources:
   ### Stub Custom Domain ---------------------------------------
 
   StubApiCustomDomainName:
-    Type: AWS::ApiGateway::DomainName
+    Type: AWS::ApiGatewayV2::DomainName
     Properties:
-      DomainName: !Sub
-        - "ipvstub.${DNSSUFFIX}"
-        - DNSSUFFIX:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
-      SecurityPolicy: TLS_1_2
+      DomainName: !If
+        - CreateDevResources
+        - !Sub
+          - "${AWS::StackName}-${IPVSTUBURL}"
+          - IPVSTUBURL:
+              !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+        - !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+
+      DomainNameConfigurations:
+        - CertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
 
   StubApiRecord:
     Type: AWS::Route53::RecordSet
@@ -170,13 +176,14 @@ Resources:
         HostedZoneId: !GetAtt StubApiCustomDomainName.RegionalHostedZoneId
         EvaluateTargetHealth: false
 
-  StubApiMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    DependsOn: "StubApiCustomDomainName"
+  IPVStubExternalApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
     Properties:
       DomainName: !Ref StubApiCustomDomainName
-      RestApiId: !Ref IPVStubApiGw
+      ApiId: !Ref IPVStubApiGw
       Stage: !Ref Environment
+    DependsOn:
+      - IPVStubApiGwDeployment
 
   # Redirect ---------------------------------------
   RedirectPath:
@@ -380,14 +387,16 @@ Resources:
     Properties:
       FunctionName: !Sub "StartCICCheckFunction-${AWS::StackName}"
       Handler: startCicCheck.handler
-      CodeUri: src/handlers/
+      CodeUri: src/
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
-          JWKS_URI: !Sub "https://api.review-c.${Environment}.account.gov.uk/.well-known/jwks.json"
+          JWKS_URI: !Sub 
+            - "https://${BASEAPIURL}/.well-known/jwks.json"
+            - BASEAPIURL: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEAPIURL ]
           OIDC_API_BASE_URI: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEAPIURL ]
           OIDC_FRONT_BASE_URI: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEFRONTURL ]
       Policies:
@@ -410,7 +419,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - startCicCheck.ts
+          - handlers/startCicCheck.ts
 
   StartCICCheckFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -433,7 +442,7 @@ Resources:
     Properties:
       FunctionName: !Sub "GenerateTokenRequestCICFunction-${AWS::StackName}"
       Handler: generateTokenRequest.handler
-      CodeUri: src/handlers/
+      CodeUri: src/
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
@@ -459,7 +468,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - generateTokenRequest.ts
+          - handlers/generateTokenRequest.ts
 
   GenerateTokenRequestCICFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -482,7 +491,7 @@ Resources:
     Properties:
       FunctionName: !Sub "IPVStubJWKS-${AWS::StackName}"
       Handler: jsonWebKeys.handler
-      CodeUri: src/handlers/
+      CodeUri: src/
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
@@ -508,7 +517,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - jsonWebKeys.ts
+          - handlers/jsonWebKeys.ts
 
   JwksFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -531,7 +540,7 @@ Resources:
     Properties:
       FunctionName: !Sub "IPVStubRedirect-${AWS::StackName}"
       Handler: callback.handler
-      CodeUri: src/handlers/
+      CodeUri: src/
       Role: !GetAtt IPVStubLambdaRole.Arn
     Metadata:
       BuildMethod: esbuild
@@ -540,7 +549,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - callback.ts
+          - handlers/callback.ts
 
   IPVStubRedirectFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -673,4 +682,11 @@ Outputs:
     Description: "The ID of the API Gateway"
     Value: !Ref IPVStubApiGw
     Export:
-      Name: "cic-cri-IPVStubApiGw"
+      Name: !Sub "${AWS::StackName}-cic-cri-IPVStubApiGw"
+  IPVStubPrettyApiUrl:
+    Description: Pretty URL for IPV Stub
+    Export:
+      Name: !Sub "${AWS::StackName}-IPvStubApiGatewayPrettyUrl"
+    Value: !Sub
+      - "https://${URL}/"
+      - URL: !Ref StubApiCustomDomainName

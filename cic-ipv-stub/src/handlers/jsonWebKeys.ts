@@ -2,7 +2,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { createPublicKey } from "node:crypto";
 import { JsonWebKey, Jwks } from "../auth.types";
 import { GetPublicKeyCommand, KMSClient } from "@aws-sdk/client-kms";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { getHashedKid } from "../utils/hashing";
 
 export const handler = async (): Promise<APIGatewayProxyResult> => {
@@ -28,8 +28,8 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
   }
   return {
     statusCode: 200,
-    headers:{
-      'cache-control':'max-age=300'
+    headers: {
+      "cache-control": "max-age=300",
     },
     body: JSON.stringify(jwks),
   };
@@ -44,8 +44,14 @@ const v3KmsClient = new KMSClient({
   maxAttempts: 2,
 });
 
-function getConfig(): { signingKey: string | null , additionalKey: string | null} {
-  return { signingKey: process.env.SIGNING_KEY ?? null, additionalKey: process.env.ADDITIONAL_KEY ?? null };
+function getConfig(): {
+  signingKey: string | null;
+  additionalKey: string | null;
+} {
+  return {
+    signingKey: process.env.SIGNING_KEY ?? null,
+    additionalKey: process.env.ADDITIONAL_KEY ?? null,
+  };
 }
 
 const getAsJwk = async (keyId: string): Promise<JsonWebKey | null> => {

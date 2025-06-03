@@ -5,12 +5,7 @@
 
 export default {
   transform: {
-    "^.+\\.ts?$": [
-      "esbuild-jest",
-      {
-        sourcemap: true,
-      },
-    ],
+    "^.+\\.tsx?$": "ts-jest",
   },
   clearMocks: true,
   reporters: ["default"],
@@ -23,6 +18,6 @@ export default {
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  testMatch: ["**/*.test.ts"],
+  testMatch: ["**/tests/**/*.test.ts"],
   testEnvironment: "node",
 };

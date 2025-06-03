@@ -5,12 +5,7 @@
 
 export default {
   transform: {
-    '^.+\\.ts?$': [
-      'esbuild-jest',
-      {
-        sourcemap: true
-      }
-    ]
+    "^.+\\.tsx?$": "ts-jest",
   },
   clearMocks: true,
   reporters: [
