@@ -19,7 +19,7 @@ import testData from "../events/startEvents.js";
 jest.setTimeout(30000);
 
 process.env.SIGNING_KEY = "key-id";
-process.env.ADDITIONAL_KEY = "additional-key-id";
+process.env.ADDITIONAL_SIGNING_KEY = "additional-key-id";
 process.env.JWT_AUDIENCE = "aud";
 
 const kmsClient = mockClient(KMSClient);

@@ -48,14 +48,14 @@ export function getConfig(): {
 } {
   if (
     process.env.SIGNING_KEY == null ||
-    process.env.ADDITIONAL_KEY == null ||
+    process.env.ADDITIONAL_SIGNING_KEY == null ||
     process.env.JWT_AUDIENCE == null
   ) {
     throw new Error("Missing configuration");
   }
   return {
     signingKey: process.env.SIGNING_KEY,
-    additionalKey: process.env.ADDITIONAL_KEY,
+    additionalKey: process.env.ADDITIONAL_SIGNING_KEY,
     aud: process.env.JWT_AUDIENCE,
   };
 }

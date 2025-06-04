@@ -12,6 +12,7 @@ import {
 import axios from "axios";
 import { getHashedKid } from "../utils/hashing";
 import { getAsJwk, v3KmsClient } from "../utils/jwkUtils";
+import { __ServiceException } from "@aws-sdk/client-kms/dist-types/models/KMSServiceException";
 
 let frontendURL: string;
 
@@ -90,7 +91,7 @@ export const handler = async (
 
   // Unhappy path testing enabled by optional flag provided in stub payload
   let invalidSigningKey;
-  let kid;
+  let encryptionKeyKid;
   let encryptionKey: CryptoKey;
 
   // This override will generate a JWT error where no key with a kid matching the value generated below will be found at the public key endpoint
@@ -108,10 +109,10 @@ export const handler = async (
     const webcrypto = crypto.webcrypto as unknown as Crypto;
     const invalidEncryptionKeyId = config.invalidEncryptionKey.split("/").pop() ?? "";
     const invalidEncryptionKey = await getAsJwk(invalidEncryptionKeyId);
-    kid = invalidEncryptionKey?.kid;
+    encryptionKeyKid = invalidEncryptionKey?.kid;
     encryptionKey = await webcrypto.subtle.importKey(
       "jwk",
-      invalidEncryptionKey,
+      invalidEncryptionKey as JsonWebKey,
       { name: "RSA-OAEP", hash: "SHA-256" },
       true,
       ["encrypt"]
@@ -120,11 +121,11 @@ export const handler = async (
   } else {
     const res = await getPublicEncryptionKeyAndKid(config);
     encryptionKey = res.publicEncryptionKey;
-    kid = res.kid;
+    encryptionKeyKid = res.kid;
   }
 
   const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
-  const request = await encrypt(signedJwt, encryptionKey, kid);
+  const request = await encrypt(signedJwt, encryptionKey, encryptionKeyKid);
 
   return {
     statusCode: 200,
@@ -153,7 +154,7 @@ export function getConfig(): {
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
     process.env.OIDC_API_BASE_URI == null ||
-    process.env.ADDITIONAL_KEY == null ||
+    process.env.ADDITIONAL_SIGNING_KEY == null ||
     process.env.INVALID_ENCRYPTION_KEY == null ||
     process.env.OIDC_FRONT_BASE_URI == null
   ) {
@@ -165,7 +166,7 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
-    additionalKey: process.env.ADDITIONAL_KEY,
+    additionalKey: process.env.ADDITIONAL_SIGNING_KEY,
     invalidEncryptionKey: process.env.INVALID_ENCRYPTION_KEY,
     frontUri: process.env.OIDC_FRONT_BASE_URI,
     backendUri: process.env.OIDC_API_BASE_URI,

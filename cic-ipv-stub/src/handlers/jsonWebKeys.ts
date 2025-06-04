@@ -33,5 +33,5 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
 };
 
 function getConfig(): { signingKey: string | null , additionalKey: string | null} {
-  return { signingKey: process.env.SIGNING_KEY ?? null, additionalKey: process.env.ADDITIONAL_KEY ?? null };
+  return { signingKey: process.env.SIGNING_KEY ?? null, additionalKey: process.env.ADDITIONAL_SIGNING_KEY ?? null };
 }

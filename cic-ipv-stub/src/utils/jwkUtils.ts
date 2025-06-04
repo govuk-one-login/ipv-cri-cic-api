@@ -1,7 +1,7 @@
 import { GetPublicKeyCommand, KMSClient } from "@aws-sdk/client-kms";
 import { getHashedKid } from "./hashing";
 import { createPublicKey } from "node:crypto";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JsonWebKey } from "../auth.types";
 
 export const v3KmsClient = new KMSClient({
