@@ -3764,6 +3764,47 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
+# Key alias unavailable alarms
+
+  KeyAliasUnavailableMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Condition: DeployAlarms
+    Properties:
+      LogGroupName: !Ref SessionFunctionLogGroup
+      FilterPattern: '{ $.messageCode = "KEY_ALIAS_UNAVAILABLE" }'
+      MetricTransformations:
+        - 
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "KeyAliasUnavailable"
+
+  KeyAliasUnavailableAlarm:
+    DependsOn:
+      - "KeyAliasUnavailableMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: DeployAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-KeyAliasUnavailable"
+      AlarmDescription: !Sub "KEY_ALIAS_UNAVAILABLE critical ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue platform-alarm-pagerduty-alert-topic
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue platform-alarm-pagerduty-alert-topic
+      InsufficientDataActions: [ ]
+      MetricName: KeyAliasUnavailable
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
 # Alarm Dashboards
 
   ConcurrencyAlarmDashboard:
