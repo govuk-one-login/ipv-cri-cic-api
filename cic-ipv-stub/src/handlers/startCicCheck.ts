@@ -89,22 +89,25 @@ export const handler = async (
         : defaultClaims;
   }
 
-  // Unhappy path testing enabled by optional flag provided in stub payload
   let invalidSigningKey;
   let encryptionKeyKid;
   let encryptionKey: CryptoKey;
 
-  // This override will generate a JWT error where no key with a kid matching the value generated below will be found at the public key endpoint
+  // JWT unhappy path options
+  // Generate a key retrieval error as KID provided does not match any keys at the well-known e/p
   if (overrides?.missingSigningKid != null) {
     invalidSigningKey = crypto.randomUUID();
   }
 
-  // This override will generate a JWT error where the key found using the provided kid was not the one used to sign the request
+  // Generate a signature verification error as KID provided does not match key used to sign JWT
   if (overrides?.invalidSigningKid != null) {
     invalidSigningKey = config.additionalSigningKey;
   }
 
-  // This override will generate a JWE error where the private encryption key's corresponding private decryption key cannot be found and decryption fails
+  const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
+
+  // JWE unhappy path options
+  // Generate a decryption error as payload is encrypted using a key not available to the CRI
   if (overrides?.invalidEncryptionKid) {
     const webcrypto = crypto.webcrypto as unknown as Crypto;
     const invalidEncryptionKeyId = config.additionalEncryptionKey.split("/").pop() ?? "";
@@ -117,14 +120,13 @@ export const handler = async (
       true,
       ["encrypt"]
     );
-    // Happy path enclosed within else block below
+  // Happy path
   } else {
     const res = await getPublicEncryptionKeyAndKid(config);
     encryptionKey = res.publicEncryptionKey;
     encryptionKeyKid = res.kid;
   }
 
-  const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
   const request = await encrypt(signedJwt, encryptionKey, encryptionKeyKid);
 
   return {
