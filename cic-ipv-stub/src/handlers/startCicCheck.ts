@@ -184,9 +184,8 @@ async function getPublicEncryptionKeyAndKid(config: {
   if (!publicKey) {
     throw new Error("No encryption key found");
   }
-  const kid = publicKey.kid;
-  const hashedKid = getHashedKid(kid);
-  publicKey.kid = hashedKid;
+  const kid = getHashedKid(publicKey.kid);
+  publicKey.kid = kid;
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
     publicKey as JsonWebKey,
