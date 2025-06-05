@@ -114,13 +114,13 @@ Mappings:
       DNSSUFFIX: review-c.dev.account.gov.uk
       CLIENTS: 
         '[{
-          "jwksEndpoint": "https://ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json",
+          "jwksEndpoint": "https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json",
           "clientId": "5C584572",
-          "redirectUri": "https://ipvstub.review-c.dev.account.gov.uk/redirect"
+          "redirectUri": "https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/redirect"
         }]'
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "86400" # 1 day in seconds
-      TESTHARNESSURL: "https://jb-cic-test-harness-testharness.review-c.dev.account.gov.uk/"
+      TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.dev.account.gov.uk/"
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk

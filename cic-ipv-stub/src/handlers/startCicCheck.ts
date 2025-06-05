@@ -101,13 +101,13 @@ export const handler = async (
 
   // This override will generate a JWT error where the key found using the provided kid was not the one used to sign the request
   if (overrides?.invalidSigningKid != null) {
-    invalidSigningKey = config.additionalKey;
+    invalidSigningKey = config.additionalSigningKey;
   }
 
   // This override will generate a JWE error where the private encryption key's corresponding private decryption key cannot be found and decryption fails
   if (overrides?.invalidEncryptionKid) {
     const webcrypto = crypto.webcrypto as unknown as Crypto;
-    const invalidEncryptionKeyId = config.invalidEncryptionKey.split("/").pop() ?? "";
+    const invalidEncryptionKeyId = config.additionalEncryptionKey.split("/").pop() ?? "";
     const invalidEncryptionKey = await getAsJwk(invalidEncryptionKeyId);
     encryptionKeyKid = invalidEncryptionKey?.kid;
     encryptionKey = await webcrypto.subtle.importKey(
@@ -143,8 +143,8 @@ export function getConfig(): {
   jwksUri: string;
   clientId: string;
   signingKey: string;
-  additionalKey: string;
-  invalidEncryptionKey: string;
+  additionalSigningKey: string;
+  additionalEncryptionKey: string;
   frontUri: string;
   backendUri: string;
 } {
@@ -155,7 +155,7 @@ export function getConfig(): {
     process.env.SIGNING_KEY == null ||
     process.env.OIDC_API_BASE_URI == null ||
     process.env.ADDITIONAL_SIGNING_KEY == null ||
-    process.env.INVALID_ENCRYPTION_KEY == null ||
+    process.env.ADDITIONAL_ENCRYPTION_KEY == null ||
     process.env.OIDC_FRONT_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
@@ -166,8 +166,8 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
-    additionalKey: process.env.ADDITIONAL_SIGNING_KEY,
-    invalidEncryptionKey: process.env.INVALID_ENCRYPTION_KEY,
+    additionalSigningKey: process.env.ADDITIONAL_SIGNING_KEY,
+    additionalEncryptionKey: process.env.ADDITIONAL_ENCRYPTION_KEY,
     frontUri: process.env.OIDC_FRONT_BASE_URI,
     backendUri: process.env.OIDC_API_BASE_URI,
   };

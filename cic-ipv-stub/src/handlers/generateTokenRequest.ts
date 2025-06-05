@@ -25,15 +25,15 @@ export const handler = async (
   };
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
-  let invalidKey;
-  if (overrides?.missingKid != null) {
-    invalidKey = crypto.randomUUID();
+  let invalidSigningKey;
+  if (overrides?.missingSigningKid != null) {
+    invalidSigningKey = crypto.randomUUID();
   }
-  if (overrides?.invalidKid != null) {
-    invalidKey = config.additionalKey;
+  if (overrides?.invalidSigningKid != null) {
+    invalidSigningKey = config.additionalKey;
   }
 
-  const signedJwt = await sign(payload, config.signingKey, invalidKey);
+  const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
 
   return {
     statusCode: 200,

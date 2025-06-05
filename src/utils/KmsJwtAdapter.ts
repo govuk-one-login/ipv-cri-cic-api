@@ -84,6 +84,7 @@ export class KmsJwtAdapter {
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid?: string): Promise<JWTPayload | null> {
 		if (!this.cachedJwks || (this.cachedTime && new Date() > this.cachedTime)) {
+			console.log("PUBLIC KEY ENDPOINT!!", publicKeyEndpoint)
 			this.logger.info("No cached keys found or cache time has expired");
     		const oidcProviderJwks = (await axios.get(publicKeyEndpoint));
 			this.cachedJwks = oidcProviderJwks.data.keys;

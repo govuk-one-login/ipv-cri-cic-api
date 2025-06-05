@@ -116,7 +116,7 @@ Resources:
                 Resource:
                   - !GetAtt IPVStubKMSSigningKey.Arn
                   - !GetAtt IPVStubKMSAdditionalKey.Arn
-                  - !GetAtt IPVStubKMSUniqueEncryptionKey.Arn
+                  - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
               - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
@@ -393,9 +393,9 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
-          INVALID_ENCRYPTION_KEY: !Ref IPVStubKMSUniqueEncryptionKey
+          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-          REDIRECT_URI: !Sub "https://ipvstub.review-c.${Environment}.account.gov.uk/redirect"
+          REDIRECT_URI: !Sub "https://cic-ipv-stub-ipvstub.review-c.${Environment}.account.gov.uk/redirect"
           JWKS_URI: !Sub 
             - "https://${BASEAPIURL}/.well-known/jwks.json"
             - BASEAPIURL: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEAPIURL ]
@@ -498,7 +498,7 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
-          INVALID_ENCRYPTION_KEY: !Ref IPVStubKMSUniqueEncryptionKey
+          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -508,7 +508,7 @@ Resources:
               Resource:
                 - !GetAtt IPVStubKMSSigningKey.Arn
                 - !GetAtt IPVStubKMSAdditionalKey.Arn
-                - !GetAtt IPVStubKMSUniqueEncryptionKey.Arn
+                - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -620,7 +620,7 @@ Resources:
         - Key: Environment
           Value: !Sub ${Environment}
 
-  IPVStubKMSUniqueEncryptionKey:
+  IPVStubKMSAdditionalEncryptionKey:
     Type: AWS::KMS::Key
     Properties:
       Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails

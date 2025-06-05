@@ -64,7 +64,6 @@ export class SessionRequestProcessor {
 		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger);
 		this.validationHelper = new ValidationHelper();
 	}
-
 	static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
 		if (!SessionRequestProcessor.instance) {
 			SessionRequestProcessor.instance = new SessionRequestProcessor(logger, metrics);
@@ -74,14 +73,14 @@ export class SessionRequestProcessor {
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		let encodedHeader, clientIpAddress;
-
+		this.logger.info("CLIENT CONFIG!!", this.clientConfig)
+		console.log("CLIENT CONFIG!!", this.clientConfig)
 		if (event.headers) {
 			encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
 			clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 		} else {
 			clientIpAddress = event.requestContext.identity?.sourceIp;
 		}
-		
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
 		const sessionId: string = randomUUID();
@@ -89,7 +88,9 @@ export class SessionRequestProcessor {
 		let configClient: ClientConfig | undefined = undefined;
 		try {
 			const config = JSON.parse(this.clientConfig) as ClientConfig[];
+			console.log("CONFIG!!", config)
 			configClient = config.find(c => c.clientId === requestBodyClientId);
+			console.log("CONFIG CLIENT!!", configClient)
 		} catch (error) {
 			this.logger.error("Invalid or missing client configuration table", {
 				error,
@@ -135,6 +136,8 @@ export class SessionRequestProcessor {
 		});
 		try {
 			if (configClient?.jwksEndpoint) {
+				console.log("PRE VERIFY WITH JWKS CONFIG CLIENT!!", configClient)
+				console.log("PRE VERIFY WITH JWKS CONFIG CLIENT JWKS E/P!!", configClient.jwksEndpoint)
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint, jwtTargetKid);
 				if (!payload) {
 					this.logger.error("Failed to verify JWT", {

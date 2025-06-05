@@ -44,8 +44,8 @@ process.env.REDIRECT_URI = "test.com/callback";
 process.env.JWKS_URI = "test.com/.well-known/jwks.json";
 process.env.CLIENT_ID = "test-id";
 process.env.SIGNING_KEY = "key-id";
-process.env.ADDITIONAL_SIGNING_KEY = "additional-key-id";
-process.env.INVALID_ENCRYPTION_KEY = "invalid-encryption-key-id";
+process.env.ADDITIONAL_SIGNING_KEY = "additional-signing-key-id";
+process.env.ADDITIONAL_ENCRYPTION_KEY = "additional-encryption-key-id";
 process.env.OIDC_API_BASE_URI = "api-target.com";
 process.env.OIDC_FRONT_BASE_URI = "test-target.com";
 
@@ -119,7 +119,7 @@ describe("Start CIC Check Endpoint", () => {
       expect(response.statusCode).toBe(200);
     });
 
-    it("should sign a JWT using the correct key when provided with a custom payload for 'invalidKid'", async () => {
+    it("should sign a JWT using the correct key when provided with a custom payload for 'invalidSigningKid'", async () => {
       const response = await handler(testData.startCustomInvalidSigningKey);
       const signCommandInput =
         kmsClient.commandCalls(SignCommand)[0].args[0].input;
@@ -127,7 +127,7 @@ describe("Start CIC Check Endpoint", () => {
       expect(response.statusCode).toBe(200);
     });
 
-    it("should sign a JWT using the correct key when provided with a custom payload for 'missingKid'", async () => {
+    it("should sign a JWT using the correct key when provided with a custom payload for 'missingSigningKid'", async () => {
       const response = await handler(testData.startCustomMissingSigningKey);
       const signCommandInput =
         kmsClient.commandCalls(SignCommand)[0].args[0].input;
