@@ -33,12 +33,12 @@ export async function startStubServiceAndReturnSessionId(journeyType: string): P
 }
 
 interface JourneyOptions {
-	journeyOptions: 'invalidKid' | 'missingKid';
+	journeyOptions: 'invalidSigningKid' | 'missingSigningKid';
 }
 interface StubPayload {
 	context?: string;
-	invalidKid?: boolean;
-	missingKid?: boolean;
+	invalidSigningKid?: boolean;
+	missingSigningKid?: boolean;
 }
 
 export async function stubStartPost(context: string, options?: JourneyOptions): Promise<AxiosResponse<any>> {

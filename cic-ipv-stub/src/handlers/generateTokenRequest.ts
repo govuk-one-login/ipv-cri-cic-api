@@ -1,21 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
+import { SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
-import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JWTPayload, JwtHeader } from "../auth.types";
 import { getHashedKid } from "../utils/hashing";
+import { v3KmsClient } from "../utils/jwkUtils";
 import { __ServiceException } from "@aws-sdk/client-kms/dist-types/models/KMSServiceException";
-
-export const v3KmsClient = new KMSClient({
-  region: process.env.REGION ?? "eu-west-2",
-  requestHandler: new NodeHttpHandler({
-    connectionTimeout: 29000,
-    socketTimeout: 29000,
-  }),
-  maxAttempts: 2,
-});
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -34,15 +25,15 @@ export const handler = async (
   };
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
-  let invalidKey;
-  if (overrides?.missingKid != null) {
-    invalidKey = crypto.randomUUID();
+  let invalidSigningKey;
+  if (overrides?.missingSigningKid != null) {
+    invalidSigningKey = crypto.randomUUID();
   }
-  if (overrides?.invalidKid != null) {
-    invalidKey = config.additionalKey;
+  if (overrides?.invalidSigningKid != null) {
+    invalidSigningKey = config.additionalKey;
   }
 
-  const signedJwt = await sign(payload, config.signingKey, invalidKey);
+  const signedJwt = await sign(payload, config.signingKey, invalidSigningKey);
 
   return {
     statusCode: 200,
@@ -57,14 +48,14 @@ export function getConfig(): {
 } {
   if (
     process.env.SIGNING_KEY == null ||
-    process.env.ADDITIONAL_KEY == null ||
+    process.env.ADDITIONAL_SIGNING_KEY == null ||
     process.env.JWT_AUDIENCE == null
   ) {
     throw new Error("Missing configuration");
   }
   return {
     signingKey: process.env.SIGNING_KEY,
-    additionalKey: process.env.ADDITIONAL_KEY,
+    additionalKey: process.env.ADDITIONAL_SIGNING_KEY,
     aud: process.env.JWT_AUDIENCE,
   };
 }

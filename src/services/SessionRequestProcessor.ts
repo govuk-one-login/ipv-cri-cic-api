@@ -64,7 +64,6 @@ export class SessionRequestProcessor {
 		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger);
 		this.validationHelper = new ValidationHelper();
 	}
-
 	static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
 		if (!SessionRequestProcessor.instance) {
 			SessionRequestProcessor.instance = new SessionRequestProcessor(logger, metrics);
@@ -74,14 +73,12 @@ export class SessionRequestProcessor {
 
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		let encodedHeader, clientIpAddress;
-
 		if (event.headers) {
 			encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
 			clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 		} else {
 			clientIpAddress = event.requestContext.identity?.sourceIp;
 		}
-		
 		const deserialisedRequestBody = JSON.parse(event.body as string);
 		const requestBodyClientId = deserialisedRequestBody.client_id;
 		const sessionId: string = randomUUID();
