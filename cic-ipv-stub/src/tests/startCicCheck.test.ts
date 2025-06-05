@@ -13,6 +13,7 @@ import "aws-sdk-client-mock-jest";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
+import base64url from "base64url";
 
 import testData from "../events/startEvents.js";
 
@@ -90,11 +91,16 @@ describe("Start CIC Check Endpoint", () => {
     expect(response.body).toBeDefined();
 
     const body = JSON.parse(response.body);
+    const [protectedHeaderBase64] = body.request.split(".");
+    const protectedHeader = JSON.parse(base64url.decode(protectedHeaderBase64));
 
     expect(body.request).toBeDefined();
     expect(body.responseType).toBeDefined();
     expect(body.clientId).toBeDefined();
     expect(body.AuthorizeLocation).toBeDefined();
+    expect(protectedHeader).toHaveProperty("alg");
+    expect(protectedHeader).toHaveProperty("enc");
+    expect(protectedHeader).toHaveProperty("kid");
   });
 
   it("returns JAR data and target uri with custom payload", async () => {
@@ -103,11 +109,16 @@ describe("Start CIC Check Endpoint", () => {
     expect(response.body).toBeDefined();
 
     const body = JSON.parse(response.body);
+    const [protectedHeaderBase64] = body.request.split(".");
+    const protectedHeader = JSON.parse(base64url.decode(protectedHeaderBase64));
 
     expect(body.request).toBeDefined();
     expect(body.responseType).toBeDefined();
     expect(body.clientId).toBeDefined();
     expect(body.AuthorizeLocation).toBeDefined();
+    expect(protectedHeader).toHaveProperty("alg");
+    expect(protectedHeader).toHaveProperty("enc");
+    expect(protectedHeader).toHaveProperty("kid");
   });
 
   describe("Sign function", () => {
