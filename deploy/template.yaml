@@ -1447,12 +1447,18 @@ Resources:
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
+      Tags:
+        key_consumer_type: manage
       Policies:
         - AWSXRayDaemonWriteAccess
+        - S3ReadPolicy:
+            BucketName: !Ref JsonWebKeysBucket
         - S3WritePolicy:
             BucketName: !Ref JsonWebKeysBucket
         - S3ReadPolicy:
-            BucketName: !Ref JsonWebKeysBucket
+            BucketName: !Sub "govuk-one-login-cic-published-keys-${Environment}"
+        - S3WritePolicy:
+            BucketName: !Sub "govuk-one-login-cic-published-keys-${Environment}"
         - Statement:
             - Sid: KMSSignPolicy
               Effect: Allow
@@ -1470,6 +1476,8 @@ Resources:
       Environment:
         Variables:
           JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
+          PUBLISHED_KEYS_BUCKET_NAME: !Sub "govuk-one-login-cic-published-keys-${Environment}"
+          BACKEND_URL: !Sub "https://api-${AWS::StackName}.review-c.${Environment}.account.gov.uk"
           SIGNING_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:

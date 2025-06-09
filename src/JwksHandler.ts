@@ -3,11 +3,12 @@ import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants } from "./utils/Constants";
-import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
+import { Jwk, JWKSBody, Algorithm, Jwks } from "./utils/IVeriCredential";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import crypto from "crypto";
 import * as AWS from "@aws-sdk/client-kms";
+import axios from "axios";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
@@ -63,13 +64,41 @@ class JwksHandler implements LambdaInterface {
 		};
 
 		try {
-			await this.s3Client.send(new PutObjectCommand(uploadParams));
+			logger.info({ message: "Uploading keys to S3" });
+			await this.s3Client.send(new PutObjectCommand(uploadParams))
+			logger.info({ message: "Keys uploaded to S3. Copying keys to published keys bucket" });
+			await this.copyKeys();
 		} catch (err) {
 			logger.error({ message: "Error writing keys to S3 bucket" + err });
 			throw new Error("Error writing keys to S3 bucket");
 		}
 		return JSON.stringify(body);
 
+	}
+
+	async copyKeys(): Promise<any> {
+		const PUBLISHED_KEYS_BUCKET_NAME = process.env.PUBLISHED_KEYS_BUCKET_NAME;
+		const BACKEND_URL = process.env.BACKEND_URL;
+		
+		const jwks = (
+		await axios.get(`${BACKEND_URL}/.well-known/jwks.json`)
+		).data as Jwks;
+
+		const uploadParams = {
+			Bucket: PUBLISHED_KEYS_BUCKET_NAME,
+			Key: ".well-known/jwks.json",
+			Body: JSON.stringify(jwks),
+			ContentType: "application/json",
+		};
+
+		try {
+			logger.info({ message: "Copying keys to published key rotation bucket" });
+			await this.s3Client.send(new PutObjectCommand(uploadParams));
+		} catch (err) {
+			logger.error({ message: "Error copying keys to S3 bucket" + err });
+			throw new Error("Error copying keys to S3 bucket");
+		}
+		return JSON.stringify(jwks);
 	}
 
 	async getAsJwk(keyId: string): Promise<Jwk | null> {
