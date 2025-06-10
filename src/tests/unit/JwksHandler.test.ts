@@ -1,4 +1,5 @@
  
+import { CopyObjectCommand } from "@aws-sdk/client-s3";
 import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
@@ -31,6 +32,7 @@ jest.mock("@aws-sdk/client-s3", () => ({
 		send: jest.fn(),
 	})),
 	PutObjectCommand: jest.fn().mockImplementation((args) => args),
+	CopyObjectCommand: jest.fn().mockImplementation((args) => args),
 }));
 
 describe("JwksHandler", () => {

@@ -3,12 +3,11 @@ import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants } from "./utils/Constants";
-import { Jwk, JWKSBody, Algorithm, Jwks } from "./utils/IVeriCredential";
+import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
 import { PutObjectCommand, CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import crypto from "crypto";
 import * as AWS from "@aws-sdk/client-kms";
-import axios from "axios";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
