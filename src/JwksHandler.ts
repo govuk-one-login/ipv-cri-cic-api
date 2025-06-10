@@ -4,7 +4,7 @@ import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants } from "./utils/Constants";
 import { Jwk, JWKSBody, Algorithm, Jwks } from "./utils/IVeriCredential";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand, CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import crypto from "crypto";
 import * as AWS from "@aws-sdk/client-kms";
@@ -12,6 +12,8 @@ import axios from "axios";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
+const JWKS_BUCKET_NAME = process.env.JWKS_BUCKET_NAME;
+
 export const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
@@ -32,73 +34,63 @@ class JwksHandler implements LambdaInterface {
 	});
 
 	async handler(): Promise<string> {
-		const SIGNING_KEY_IDS = process.env.SIGNING_KEY_IDS;
-		const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
-		const JWKS_BUCKET_NAME = process.env.JWKS_BUCKET_NAME;
+        const SIGNING_KEY_IDS = process.env.SIGNING_KEY_IDS;
+        const ENCRYPTION_KEY_IDS = process.env.ENCRYPTION_KEY_IDS;
 
-		if (!SIGNING_KEY_IDS || !ENCRYPTION_KEY_IDS || !JWKS_BUCKET_NAME) {
-			logger.error({ message:"Environment variable SIGNING_KEY_IDS or ENCRYPTION_KEY_IDS or JWKS_BUCKET_NAME is not configured" });
-			throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
-		}
-		const body: JWKSBody = { keys: [] };
-		const kmsKeyIds = [
-			...SIGNING_KEY_IDS.split(","),
-			...ENCRYPTION_KEY_IDS.split(","),
-		];
-		logger.info({ message:"Building wellknown JWK endpoint with keys" + kmsKeyIds });
+        if (!SIGNING_KEY_IDS || !ENCRYPTION_KEY_IDS || !JWKS_BUCKET_NAME) {
+            logger.error({ message:"Environment variable SIGNING_KEY_IDS or ENCRYPTION_KEY_IDS or JWKS_BUCKET_NAME is not configured" });
+            throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR );
+        }
+        const body: JWKSBody = { keys: [] };
+        const kmsKeyIds = [
+            ...SIGNING_KEY_IDS.split(","),
+            ...ENCRYPTION_KEY_IDS.split(","),
+        ];
+        logger.info({ message:"Building wellknown JWK endpoint with keys" + kmsKeyIds });
 
-		const jwks = await Promise.all(
-			kmsKeyIds.map(async id => this.getAsJwk(id)),
-		);
-		jwks.forEach(jwk => {
-			if (jwk != null) {
-				body.keys.push(jwk);
-			} else logger.warn({ message:"Environment contains missing keys" });
-		});
+        const jwks = await Promise.all(
+            kmsKeyIds.map(async id => this.getAsJwk(id)),
+        );
+        jwks.forEach(jwk => {
+            if (jwk != null) {
+                body.keys.push(jwk);
+            } else logger.warn({ message:"Environment contains missing keys" });
+        });
 
-		const uploadParams = {
-			Bucket: JWKS_BUCKET_NAME,
-			Key: ".well-known/jwks.json",
-			Body: JSON.stringify(body),
-			ContentType: "application/json",
-		};
+        const uploadParams = {
+            Bucket: JWKS_BUCKET_NAME,
+            Key: ".well-known/jwks.json",
+            Body: JSON.stringify(body),
+            ContentType: "application/json",
+        };
 
-		try {
-			logger.info({ message: "Uploading keys to S3" });
-			await this.s3Client.send(new PutObjectCommand(uploadParams))
-			logger.info({ message: "Keys uploaded to S3. Copying keys to published keys bucket" });
-			await this.copyKeys();
-		} catch (err) {
-			logger.error({ message: "Error writing keys to S3 bucket" + err });
-			throw new Error("Error writing keys to S3 bucket");
-		}
-		return JSON.stringify(body);
+        try {
+            logger.info({ message: "Uploading keys to S3" });
+            await this.s3Client.send(new PutObjectCommand(uploadParams))
+            logger.info({ message: "Keys uploaded to S3. Copying keys to published keys bucket" });
+            await this.copyKeys();
+        } catch (err) {
+            logger.error({ message: "Error writing keys to S3 bucket" + err });
+            throw new Error("Error writing keys to S3 bucket");
+        }
+        return JSON.stringify(body);
+    }
 
-	}
-
-	async copyKeys(): Promise<string> {
+	async copyKeys() {
 		const PUBLISHED_KEYS_BUCKET_NAME = process.env.PUBLISHED_KEYS_BUCKET_NAME;
-		const BACKEND_URL = process.env.BACKEND_URL;
-		
-		const jwks = (
-		await axios.get(`${BACKEND_URL}/.well-known/jwks.json`)
-		).data as Jwks;
-
-		const uploadParams = {
-			Bucket: PUBLISHED_KEYS_BUCKET_NAME,
-			Key: "jwks.json",
-			Body: JSON.stringify(jwks),
-			ContentType: "application/json",
-		};
 
 		try {
-			logger.info({ message: "Copying keys to published key rotation bucket" });
-			await this.s3Client.send(new PutObjectCommand(uploadParams));
+			logger.info({ message: "Copying keys to published keys bucket" });
+			await this.s3Client.send(new CopyObjectCommand({
+				Bucket: PUBLISHED_KEYS_BUCKET_NAME,
+				Key: "jwks.json",
+				CopySource: `${JWKS_BUCKET_NAME}/.well-known/jwks.json`,
+			}));
+			logger.info({ message: "Keys copied to published keys bucket" });
 		} catch (err) {
 			logger.error({ message: "Error copying keys to S3 bucket" + err });
-			throw new Error("Error copying keys to S3 bucket");
-		}
-		return JSON.stringify(jwks);
+            throw new Error("Error writing keys to S3 bucket");
+        }
 	}
 
 	async getAsJwk(keyId: string): Promise<Jwk | null> {
