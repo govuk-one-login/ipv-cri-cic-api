@@ -512,6 +512,11 @@ Resources:
                   - "s3:Get*"
                 Resource:
                   - !Sub "arn:aws:s3:::${JsonWebKeysBucket}/.well-known/jwks.json"
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - !Sub "arn:aws:s3:::govuk-one-login-cic-published-keys-${Environment}/.well-known/jwks.json"
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
