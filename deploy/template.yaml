@@ -514,13 +514,16 @@ Resources:
                   - !Sub "arn:aws:s3:::${JsonWebKeysBucket}/.well-known/jwks.json"
               - Effect: Allow
                 Action:
-                  - "s3:GetObject"
+                  - "s3:Get*"
                 Resource:
-                  - !Sub "arn:aws:s3:::govuk-one-login-cic-published-keys-${Environment}/.well-known/jwks.json"
+                  - !Sub "arn:aws:s3:::govuk-one-login-cic-published-keys-${Environment}/jwks.json"
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+      Tags:
+        - Key: "key_consumer_type"
+          Value: "manage"
 
   LambdaDeployRole:
     Type: AWS::IAM::Role
@@ -1452,8 +1455,6 @@ Resources:
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
-      Tags:
-        key_consumer_type: manage
       Policies:
         - AWSXRayDaemonWriteAccess
         - S3ReadPolicy:
@@ -1472,6 +1473,9 @@ Resources:
               Resource:
                 - Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
                 - Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+      Tags:
+          Key: "key_consumer_type"
+          Value: "manage"
       Events:
         InvocationLevel:
           Type: Schedule

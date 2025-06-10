@@ -76,7 +76,7 @@ class JwksHandler implements LambdaInterface {
 
 	}
 
-	async copyKeys(): Promise<any> {
+	async copyKeys(): Promise<string> {
 		const PUBLISHED_KEYS_BUCKET_NAME = process.env.PUBLISHED_KEYS_BUCKET_NAME;
 		const BACKEND_URL = process.env.BACKEND_URL;
 		
@@ -86,7 +86,7 @@ class JwksHandler implements LambdaInterface {
 
 		const uploadParams = {
 			Bucket: PUBLISHED_KEYS_BUCKET_NAME,
-			Key: ".well-known/jwks.json",
+			Key: "jwks.json",
 			Body: JSON.stringify(jwks),
 			ContentType: "application/json",
 		};
