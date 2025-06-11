@@ -1,6 +1,4 @@
- 
-import { CopyObjectCommand } from "@aws-sdk/client-s3";
-import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
+ import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
