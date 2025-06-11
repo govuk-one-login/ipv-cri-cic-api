@@ -39,7 +39,7 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 		{ journeyType: "bank_account" },
 		{ journeyType: "hmrc_check" },
 	])("JWT signature not verified using Core's signing key - Invalid kid", async ({ journeyType }: { journeyType: string }) => {
-		const stubResponse = await stubStartPost(journeyType, { journeyOptions: 'invalidKid'});
+		const stubResponse = await stubStartPost(journeyType, { journeyOptions: 'invalidSigningKid'});
 		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 		expect(sessionResponse.status).toBe(401);
 		expect(sessionResponse.data.message).toBe('Unauthorized'); 
@@ -50,7 +50,7 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 		{ journeyType: "bank_account" },
 		{ journeyType: "hmrc_check" },
 	])("JWT signature not verified using Core's signing key - Missing kid", async ({ journeyType }: { journeyType: string }) => {
-		const stubResponse = await stubStartPost(journeyType, { journeyOptions: 'missingKid'});
+		const stubResponse = await stubStartPost(journeyType, { journeyOptions: 'missingSigningKid'});
 		const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 		expect(sessionResponse.status).toBe(401);
 		expect(sessionResponse.data.message).toBe('Unauthorized'); 
@@ -99,7 +99,7 @@ describe("E2E Negative Path Tests - Token Endpoint", () => {
 	  
 		await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
 		const authResponse = await authorizationGet(sessionId);
-		const startTokenResponse = await startTokenPost({ journeyOptions: 'invalidKid' });
+		const startTokenResponse = await startTokenPost({ journeyOptions: 'invalidSigningKid' });
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 		expect(tokenResponse.status).toBe(401);
 		expect(tokenResponse.data).toBe("Unauthorized");
@@ -113,7 +113,7 @@ describe("E2E Negative Path Tests - Token Endpoint", () => {
 	  
 		await claimedIdentityPost(userData.firstName, userData.lastName, userData.dateOfBirth, sessionId);
 		const authResponse = await authorizationGet(sessionId);
-		const startTokenResponse = await startTokenPost({ journeyOptions: 'missingKid' });
+		const startTokenResponse = await startTokenPost({ journeyOptions: 'missingSigningKid' });
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 		expect(tokenResponse.status).toBe(401);
 		expect(tokenResponse.data).toBe("Unauthorized");
