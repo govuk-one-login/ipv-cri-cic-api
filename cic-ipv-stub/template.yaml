@@ -398,7 +398,7 @@ Resources:
           REDIRECT_URI: !If
             - CreateDevResources
             - !Sub
-              - "${AWS::StackName}-${IPVSTUBURL}/redirect"
+              - "https://${AWS::StackName}-${IPVSTUBURL}/redirect"
               - IPVSTUBURL:
                   !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
             - !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
