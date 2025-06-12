@@ -395,7 +395,16 @@ Resources:
           ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
           ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-          REDIRECT_URI: !Sub "https://cic-ipv-stub-ipvstub.review-c.${Environment}.account.gov.uk/redirect"
+          REDIRECT_URI: !If
+            - CreateDevResources
+            - !Sub
+              - "https://${AWS::StackName}-${IPVSTUBURL}/redirect"
+              - IPVSTUBURL:
+                  !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+            - !Sub
+              - "https://${IPVSTUBURL}/redirect"
+              - IPVSTUBURL:
+                  !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
           JWKS_URI: !Sub 
             - "https://${BASEAPIURL}/.well-known/jwks.json"
             - BASEAPIURL: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEAPIURL ]
