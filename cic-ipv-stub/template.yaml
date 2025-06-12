@@ -401,7 +401,10 @@ Resources:
               - "https://${AWS::StackName}-${IPVSTUBURL}/redirect"
               - IPVSTUBURL:
                   !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
-            - !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+            - !Sub
+              - "https://${IPVSTUBURL}/redirect"
+              - IPVSTUBURL:
+                  !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
           JWKS_URI: !Sub 
             - "https://${BASEAPIURL}/.well-known/jwks.json"
             - BASEAPIURL: !FindInMap [ EnvironmentVariables, !Ref Environment, BASEAPIURL ]
