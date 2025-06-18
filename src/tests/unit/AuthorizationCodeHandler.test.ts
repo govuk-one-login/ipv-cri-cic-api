@@ -38,7 +38,7 @@ describe("AuthorizationCodeHandler", () => {
 	it("returns bad request when sessionId is missing", async () => {
 		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
-		await expect(lambdaHandler(MISSING_SESSION_ID, "AUTH_CODE")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required"));
+		await expect(lambdaHandler(MISSING_SESSION_ID, "AUTH_CODE")).resolves.toEqual(Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required"));
 		expect(logger.error).toHaveBeenCalledWith("Missing header: session-id is required", expect.objectContaining({
 			messageCode: MessageCodes.MISSING_HEADER,
 		}));
@@ -47,7 +47,7 @@ describe("AuthorizationCodeHandler", () => {
 	it("returns bad request when sessionId is not valid", async () => {
 		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
-		await expect(lambdaHandler(INVALID_SESSION_ID, "AUTH_CODE")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid"));
+		await expect(lambdaHandler(INVALID_SESSION_ID, "AUTH_CODE")).resolves.toEqual(Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid"));
 		expect(logger.error).toHaveBeenCalledWith("Session id not not a valid uuid", expect.objectContaining({
 			messageCode: MessageCodes.FAILED_VALIDATING_SESSION_ID,
 		}));
@@ -58,7 +58,7 @@ describe("AuthorizationCodeHandler", () => {
 		const instance  = AuthorizationRequestProcessor.getInstance(logger, metrics);
 		instance.processRequest = jest.fn().mockRejectedValueOnce({});
 
-		await expect(lambdaHandler(VALID_AUTHCODE, "AUTH_CODE")).resolves.toEqual(new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred"));
+		await expect(lambdaHandler(VALID_AUTHCODE, "AUTH_CODE")).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred"));
 		expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
 			message: "An error has occurred.",
 			error: {},

@@ -42,31 +42,31 @@ class ClaimedIdentity implements LambdaInterface {
 
 					if (!Constants.REGEX_UUID.test(sessionId)) {
 						logger.error("Session id not not a valid uuid", { messageCode: MessageCodes.FAILED_VALIDATING_SESSION_ID });
-						return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
+						return Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
 					}
 				} else {
 					logger.error("Missing header: x-govuk-signin-session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
-					return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required");
+					return Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required");
 				}
 			} else {
 				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+				return Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 			}
 
 			if (event.body) {
 				return await ClaimedIdRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
 			} else {
 				logger.error("Empty payload", { messageCode: MessageCodes.MISSING_PAYLOAD });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
+				return Response(HttpCodesEnum.BAD_REQUEST, "Empty payload");
 			}
 
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 
 			if (error instanceof AppError) {
-				return new Response(error.statusCode, error.message);
+				return Response(error.statusCode, error.message);
 			}
-			return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
+			return Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 		}								
 
 	}

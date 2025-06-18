@@ -2,7 +2,25 @@ import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { Jwt, JwtPayload } from "../../../utils/IVeriCredential";
 
 const ACCESS_TOKEN = "ACCESS_TOKEN";
-
+const testJwt = {
+		header: {
+			"alg": "ES256",
+			"typ": "JWT",
+			// pragma: allowlist nextline secret
+			"kid": "5d6ec7413ae8bf2ea7c416e766ba9b9299b67eaf9e14f984e2f798a48bf6c921"
+		},
+		payload: {
+			"iss": "https://ipv.core.account.gov.uk",
+			// pragma: allowlist nextline secret
+			"sub": "5ad58c01-3672-4e22-bd1b-9151f3d766c1",
+			"aud": "https://review-c.dev.account.gov.uk",
+			// pragma: allowlist nextline secret
+			"jti": "fd1414e5-d7e5-4832-89b4-39ab5e94049c",
+			"iat": 1749636899,
+			exp: absoluteTimeNow() + 1000,
+		},
+		signature: "testSignature",
+	};
 export class MockKmsJwtAdapter {
     result: boolean;
 
@@ -27,21 +45,34 @@ export class MockKmsJwtAdapter {
     	this.mockJwt = mockJwT;
     }
 
-    verify(): boolean { return this.result; }
+	// ignored so as not log PII
+	/* eslint-disable @typescript-eslint/no-unused-vars */
+    verify(_urlEncodedJwt: string): boolean { return this.result; }
+	
+	// ignored so as not log PII
+	/* eslint-disable @typescript-eslint/no-unused-vars */
+    decode(_urlEncodedJwt: string): Jwt { return this.mockJwt; }
 
-    decode(): Jwt { return this.mockJwt; }
-
-    sign(): string { return "signedJwt-test"; }
+	// ignored so as not log PII
+	/* eslint-disable @typescript-eslint/no-unused-vars */
+    sign(_jwtPayload: JwtPayload): string { return "signedJwt-test"; }
 }
 
 export class MockFailingKmsSigningJwtAdapter {
 
-	sign(): string { throw new Error("Failed to sign Jwt"); }
+	sign(_jwtPayload: JwtPayload): string { throw new Error("Failed to sign Jwt"); }
+	decode(_urlEncodedJwt: string): Jwt { return testJwt }
+	verifyWithJwks(jwt: Jwt, jwksEndpoint: string, kid: string) {
+		return jwt;
+	}
 }
 
 export class MockKmsSigningTokenJwtAdapter {
-
-	sign(): string { return ACCESS_TOKEN; }
+	sign(_jwtPayload: JwtPayload): string { return ACCESS_TOKEN; }
+	decode(_urlEncodedJwt: string): Jwt { return testJwt }
+	verifyWithJwks(jwt: Jwt, jwksEndpoint: string, kid: string) {
+		return jwt;
+	}
 }
 
 export class MockKmsJwtAdapterForVc {
@@ -51,22 +82,9 @@ export class MockKmsJwtAdapterForVc {
     	this.result = result;
     }
 
-    verify(): boolean { return this.result; }
-
+    verify(_urlEncodedJwt: string): boolean { return this.result; }
+	decode(_urlEncodedJwt: string): Jwt { return testJwt }
     sign(jwtPayload: JwtPayload): string {
     	return JSON.stringify(jwtPayload);
-    }
-
-    decode(): Jwt {
-    	return {
-    		header: {
-    			alg: "MOCK",
-    		},
-    		payload: {
-    			exp: absoluteTimeNow() + 300,
-    			sub: "1234",
-    		},
-    		signature: "ABCDE",
-    	};
     }
 }
