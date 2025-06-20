@@ -5,11 +5,11 @@ import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
 import { CicService } from "../../../services/CicService";
-import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 
@@ -90,7 +90,6 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		jest.clearAllMocks();
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date(1585695600000));
 	});
@@ -105,11 +104,11 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
 			event_name: "CIC_CRI_END",
 			component_id: process.env.ISSUER,
 			timestamp: 1585695600,
@@ -123,7 +122,7 @@ describe("UserInfoRequestProcessor", () => {
 				user_id: mockSession.subject,
 			},
 		});
-		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
 			event_name: "CIC_CRI_VC_ISSUED",
 			component_id: process.env.ISSUER,
 			timestamp: 1585695600,
@@ -159,7 +158,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when Authorization header is missing in the request", async () => {
-		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -175,7 +174,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when access_token JWT validation fails", async () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = failingKmsJwtAdapterFactory();
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -191,7 +190,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when sub is missing from JWT access_token", async () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.sub = null;
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -207,7 +206,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when we receive expired JWT access_token", async () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = 1585695600 - 500;
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(out.body).toBe("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -223,7 +222,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when session (based upon sub) was not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("Unauthorized");
@@ -241,7 +240,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(undefined);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("Unauthorized");
@@ -260,7 +259,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockPerson.personNames[0].nameParts = [];
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 
@@ -286,7 +285,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockPerson.birthDates[0].value = "";
 		mockCicService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 
@@ -310,7 +309,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when AuthSessionState is not CIC_ACCESS_TOKEN_ISSUED", async () => {
 		mockCicService.getSessionById.mockResolvedValue(mockSession);
 		mockSession.authSessionState = "CIC_AUTH_CODE_ISSUED";
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("Unauthorized");
@@ -336,7 +335,7 @@ describe("UserInfoRequestProcessor", () => {
 
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
@@ -365,7 +364,7 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(2);

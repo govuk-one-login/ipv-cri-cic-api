@@ -38,7 +38,7 @@ describe("SessionConfigHandler", () => {
 	it("returns bad request when sessionId is missing", async () => {
 		SessionConfigRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionConfigRequestProcessor);
 
-		await expect(lambdaHandler(MISSING_SESSION_ID, "SESSION_CONFIG")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required"));
+		await expect(lambdaHandler(MISSING_SESSION_ID, "SESSION_CONFIG")).resolves.toEqual(Response(HttpCodesEnum.BAD_REQUEST, "Missing header: x-govuk-signin-session-id is required"));
 		expect(logger.error).toHaveBeenCalledWith("Missing header: x-govuk-signin-session-id is required", expect.objectContaining({
 			messageCode: MessageCodes.MISSING_HEADER,
 		}));
@@ -47,7 +47,7 @@ describe("SessionConfigHandler", () => {
 	it("returns bad request when sessionId is not valid", async () => {
 		SessionConfigRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionConfigRequestProcessor);
 
-		await expect(lambdaHandler(INVALID_SESSION_ID, "SESSION_CONFIG")).resolves.toEqual(new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid"));
+		await expect(lambdaHandler(INVALID_SESSION_ID, "SESSION_CONFIG")).resolves.toEqual(Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid"));
 		expect(logger.error).toHaveBeenCalledWith("Session id not not a valid uuid", expect.objectContaining({
 			messageCode: MessageCodes.FAILED_VALIDATING_SESSION_ID,
 		}));
@@ -58,7 +58,7 @@ describe("SessionConfigHandler", () => {
 		const instance  = SessionConfigRequestProcessor.getInstance(logger, metrics);
 		instance.processRequest = jest.fn().mockRejectedValueOnce({});
 
-		await expect(lambdaHandler(VALID_SESSIONCONFIG, "SESSION_CONFIG")).resolves.toEqual(new Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
+		await expect(lambdaHandler(VALID_SESSIONCONFIG, "SESSION_CONFIG")).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
 		expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
 			message: "Error fetching journey type",
 			error: {},

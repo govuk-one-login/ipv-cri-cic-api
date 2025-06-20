@@ -2,7 +2,7 @@ import { CicSession } from "../models/CicSession";
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -43,7 +43,7 @@ export class ClaimedIdRequestProcessor {
 		return ClaimedIdRequestProcessor.instance;
 	}
 
-	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<Response> {
+	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<APIGatewayProxyResult> {
 		let cicSession;
 		try {
 			const bodyParsed = JSON.parse(event.body as string);
@@ -58,7 +58,7 @@ export class ClaimedIdRequestProcessor {
 				error,
 				messageCode: MessageCodes.PAYLOAD_VALIDATION_FAILED,
 			});
-			return new Response(HttpCodesEnum.BAD_REQUEST, "Missing mandatory fields in the request payload");
+			return Response(HttpCodesEnum.BAD_REQUEST, "Missing mandatory fields in the request payload");
 		}
 
 		const session = await this.cicService.getSessionById(sessionId);
@@ -68,7 +68,7 @@ export class ClaimedIdRequestProcessor {
 
 			if (session.expiryDate < absoluteTimeNow()) {
 				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
+				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
 			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
@@ -76,24 +76,24 @@ export class ClaimedIdRequestProcessor {
 			switch (session.authSessionState) {
 			  case AuthSessionState.CIC_SESSION_CREATED:
 					await this.cicService.saveCICData(sessionId, cicSession, session.expiryDate, this.personIdentityTableName);
-					return new Response(HttpCodesEnum.OK, "");
+					return Response(HttpCodesEnum.OK, "");
 			  case AuthSessionState.CIC_DATA_RECEIVED:
 			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
 			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
 					this.logger.info(`Duplicate request for session in state: ${session.authSessionState}`, sessionId);
-					return new Response(HttpCodesEnum.OK, "Request already processed");
+					return Response(HttpCodesEnum.OK, "Request already processed");
 				default:
 					this.logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_SESSION_CREATED}, ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
 						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 					});
-					return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+					return Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
 		} else {
 			this.logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+			return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
 	}
 }

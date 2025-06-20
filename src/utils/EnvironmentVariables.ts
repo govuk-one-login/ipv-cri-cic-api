@@ -12,6 +12,6 @@ export const checkEnvironmentVariable = (variableName: string, logger: Logger): 
 			message: `Missing ${variableName} environment variable`,
 			messageCode: MessageCodes.MISSING_CONFIGURATION,
 		});
-		throw new AppError("Service incorrectly configured", HttpCodesEnum.SERVER_ERROR);
+		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Service incorrectly configured",);
 	}
 };

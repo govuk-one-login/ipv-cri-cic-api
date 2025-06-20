@@ -1,5 +1,5 @@
- 
- 
+/* eslint-disable max-lines-per-function */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { mock } from "jest-mock-extended";
 import { lambdaHandler, logger } from "../../AbortHandler";
 import { AbortRequestProcessor } from "../../services/AbortRequestProcessor";
@@ -21,10 +21,8 @@ describe("AbortHandler", () => {
 		AbortRequestProcessor.getInstance = jest.fn().mockReturnValue(mockAbortRequestProcessor);
 		const response = await lambdaHandler(MISSING_SESSION_ID, "");
 
-		expect(response).toEqual({
-			statusCode: 401,
-			body: message,
-		});
+		expect(response.statusCode).toBe(401);
+		expect(response.body).toBe(message);
 		expect(loggerSpy).toHaveBeenCalledWith({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
 	});
 
@@ -33,10 +31,8 @@ describe("AbortHandler", () => {
 		AbortRequestProcessor.getInstance = jest.fn().mockReturnValue(mockAbortRequestProcessor);
 
 		const response = await lambdaHandler(INVALID_SESSION_ID, "");
-		expect(response).toEqual({
-			statusCode: 401,
-			body: message,
-		});
+		expect(response.statusCode).toBe(401);
+		expect(response.body).toBe(message);
 		expect(loggerSpy).toHaveBeenCalledWith({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
 	});
 

@@ -49,7 +49,7 @@ export class VerifiableCredentialService {
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDay)
 			.build();
 		let result;
-		if (process.env.USE_MOCKED) {
+		if (process.env.USE_MOCKED === "true") {
 			this.logger.info("VcService: USING MOCKED");
 			result = {
 				...mockVcClaims,
@@ -78,7 +78,7 @@ export class VerifiableCredentialService {
 			this.logger.error("Failed to sign Jwt", {
     			error,
     		});
-    		throw new AppError( "Server Error", HttpCodesEnum.SERVER_ERROR);
+    		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Server Error",);
 		}
 	}
 }

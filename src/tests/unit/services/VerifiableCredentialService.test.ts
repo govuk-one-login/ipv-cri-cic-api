@@ -3,7 +3,6 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
-import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
@@ -14,6 +13,7 @@ import {
 import { VALID_VC } from "../data/verified_credential";
 import { VALID_USERINFO } from "../data/userInfo-events";
 import { ValidationHelper } from "../../../utils/ValidationHelper";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -107,7 +107,7 @@ describe("Issuing verified credentials", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		const actualJwt = JSON.parse(JSON.parse(out.body)["https://vocab.account.gov.uk/v1/credentialJWT"]);
 		//Setting the actualJwt jti to mock value to pass test
@@ -122,7 +122,7 @@ describe("Issuing verified credentials", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		const actualJwt = JSON.parse(JSON.parse(out.body)["https://vocab.account.gov.uk/v1/credentialJWT"]);
 		expect(new ValidationHelper().isValidUUID(actualJwt.jti)).toBeTruthy();
@@ -149,7 +149,7 @@ describe("Issuing verified credentials", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 
 		const actualJwt = JSON.parse(JSON.parse(out.body)["https://vocab.account.gov.uk/v1/credentialJWT"]);

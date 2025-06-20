@@ -43,7 +43,7 @@ export class KmsJwtAdapter {
     	const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT" };
     	const kid = this.kid.split("/").pop();
     	if (kid != null) {
-    		jwtHeader.kid = process.env.USE_MOCKED ? kid : (`did:web:${dnsSuffix}#${jwtUtils.getHashedKid(kid)}`);
+    		jwtHeader.kid = process.env.USE_MOCKED === "true" ? kid : (`did:web:${dnsSuffix}#${jwtUtils.getHashedKid(kid)}`);
     	}
     	const tokenComponents = {
     		header: jwtUtils.base64Encode(JSON.stringify(jwtHeader)),
@@ -100,12 +100,20 @@ export class KmsJwtAdapter {
 		}
     	const publicKey = await importJWK(signingKey, signingKey.alg);
 
-    	try {
-    		const { payload } = await jwtVerify(urlEncodedJwt, publicKey);
-    		return payload;
-    	} catch (error) {
-    		throw new Error("Failed to verify signature: " + error);
-    	}
+		if (process.env.USE_MOCKED === "true") { //JWT verification is mocked for contract tests
+			return {
+				payload: { 
+					data: "mockPayloadClaims" 
+				}
+			}
+		} else { 
+			try {
+				const { payload } = await jwtVerify(urlEncodedJwt, publicKey);
+				return payload;
+			} catch (error) {
+				throw new Error("Failed to verify signature: " + error);
+			}
+		}
     }
 
     decode(urlEncodedJwt: string): Jwt {

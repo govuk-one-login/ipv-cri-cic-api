@@ -1,6 +1,6 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { AppError } from "../utils/AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -11,6 +11,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { EnvironmentVariables } from "../utils/Constants";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 
 export class AbortRequestProcessor {
@@ -49,7 +50,7 @@ export class AbortRequestProcessor {
   	return AbortRequestProcessor.instance;
   }
 
-  async processRequest(sessionId: string, encodedHeader: string): Promise<Response> {
+  async processRequest(sessionId: string, encodedHeader: string): Promise<APIGatewayProxyResult> {
   	const cicSessionInfo = await this.cicService.getSessionById(sessionId);
   	this.logger.appendKeys({
   		govuk_signin_journey_id: cicSessionInfo?.clientSessionId,
@@ -59,7 +60,7 @@ export class AbortRequestProcessor {
   		this.logger.error("Missing details in SESSION TABLE", {
   			messageCode: MessageCodes.SESSION_NOT_FOUND,
   		});
-  		throw new AppError("Missing details in SESSION table", HttpCodesEnum.BAD_REQUEST);
+  		throw new AppError(HttpCodesEnum.BAD_REQUEST, "Missing details in SESSION table");
   	}
 
   	const decodedRedirectUri = decodeURIComponent(cicSessionInfo.redirectUri);
@@ -68,25 +69,27 @@ export class AbortRequestProcessor {
 
   	if (cicSessionInfo.authSessionState === AuthSessionState.CIC_CRI_SESSION_ABORTED) {
   		this.logger.info("Session has already been aborted");
-  		return new Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
+  		return Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
   	}
 
   	try {
   	  await this.cicService.updateSessionAuthState(cicSessionInfo.sessionId, AuthSessionState.CIC_CRI_SESSION_ABORTED);
-  	} catch (error) {
+	  this.metrics.addMetric("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1);
+
+	} catch (error) {
   		this.logger.error("Error occurred while aborting the session", {
   			error,
   			messageCode: MessageCodes.SERVER_ERROR,
   		});
   		if (error instanceof AppError) {
-  			return new Response(HttpCodesEnum.SERVER_ERROR, error.message);
+  			return Response(HttpCodesEnum.SERVER_ERROR, error.message);
   		} else {
-  			return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
+  			return Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
   		}
   	}
 
   	try {
-  		await this.cicService.sendToTXMA(this.txmaQueueUrl, {
+  		await this.cicService.sendToTXMA({
   			event_name: TxmaEventNames.CIC_CRI_SESSION_ABORTED,
   			...buildCoreEventFields(cicSessionInfo, this.issuer, cicSessionInfo.clientIpAddress),
   		}, encodedHeader);
@@ -97,6 +100,6 @@ export class AbortRequestProcessor {
   		});
   	}
 
-  	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
+  	return Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
   }
 }

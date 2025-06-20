@@ -1,10 +1,10 @@
 import { Constants } from "../../../utils/Constants";
 
 export const VALID_VC = {
-	"iat": 1667385481,
+	"iat": 4070908800,
 	"iss": "https://XXX-c.env.account.gov.uk",
 	"sub": "sub",
-	"nbf": 1667385481,
+	"nbf": 4070908800,
 	"jti": "uuid",
 	"vc": {
 		"@context": [

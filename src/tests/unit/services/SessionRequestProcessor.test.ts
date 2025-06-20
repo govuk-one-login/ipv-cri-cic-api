@@ -277,7 +277,7 @@ describe("SessionRequestProcessor", () => {
 
 			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
 				event_name: "CIC_CRI_START",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				timestamp: 1684933200,
@@ -311,7 +311,7 @@ describe("SessionRequestProcessor", () => {
 
 			const job = await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { "txma-audit-encoded": "ABCDEFG" } });
 			console.log("job", job);
-			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
 				event_name: "CIC_CRI_START",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				timestamp: 1684933200,
@@ -345,7 +345,7 @@ describe("SessionRequestProcessor", () => {
 
 			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
 				event_name: "CIC_CRI_START",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				timestamp: 1684933200,
@@ -379,7 +379,7 @@ describe("SessionRequestProcessor", () => {
 
 			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			expect(mockCicService.sendToTXMA).toHaveBeenCalledWith({
 				event_name: "CIC_CRI_START",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				timestamp: 1684933200,

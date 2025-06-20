@@ -38,7 +38,7 @@ describe("SessionHandler", () => {
 		const instance  = SessionRequestProcessor.getInstance(logger, metrics);
 		instance.processRequest = jest.fn().mockRejectedValueOnce({});
 
-		await expect(lambdaHandler(VALID_SESSION, CONTEXT)).resolves.toEqual(new Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
+		await expect(lambdaHandler(VALID_SESSION, CONTEXT)).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
 		expect(logger.error).toHaveBeenCalledWith("An error has occurred.", {
 			error: {},
 			messageCode: MessageCodes.SERVER_ERROR,
