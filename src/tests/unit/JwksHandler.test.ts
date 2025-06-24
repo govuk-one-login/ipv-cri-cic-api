@@ -71,15 +71,7 @@ describe("JwksHandler", () => {
 	});
 
 	describe("#copyKeys", () => {
-		beforeEach(() => {
-			process.env.JWKS_BUCKET_NAME = "cic-cri-api-jwks-dev";
-			process.env.PUBLISHED_KEYS_BUCKET_NAME = "published-keys-bucket"
-		});
 		it("copies keys from jwks bucket to published keys bucket", async () => {
-			const body = {
-				keys: [],
-			};
-    
 			await lambdaHandler();
 
 			expect(logger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
