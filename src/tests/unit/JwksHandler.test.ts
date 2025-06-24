@@ -70,6 +70,28 @@ describe("JwksHandler", () => {
 		});
 	});
 
+	describe("#copyKeys", () => {
+		beforeEach(() => {
+			process.env.JWKS_BUCKET_NAME = "cic-cri-api-jwks-dev";
+			process.env.PUBLISHED_KEYS_BUCKET_NAME = "published-keys-bucket"
+		});
+		it("copies keys from jwks bucket to published keys bucket", async () => {
+			const body = {
+				keys: [],
+			};
+    
+			await lambdaHandler();
+
+			expect(logger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
+			expect(handlerClass.s3Client.send).toHaveBeenCalledWith({
+				Bucket: "published-keys-bucket",
+				Key: "jwks.json",
+				CopySource: "cic-cri-api-jwks-dev/.well-known/jwks.json",
+			});
+			expect(logger.info).toHaveBeenCalledWith({ message: "Keys copied to published keys bucket" });
+		});
+	});
+
 	describe("#getAsJwk", () => {
 		it("gets the kms key with the given KeyId and returns jwk with public key", async () => {
 			const keyId = "cic-cri-api-vc-signing-key";
