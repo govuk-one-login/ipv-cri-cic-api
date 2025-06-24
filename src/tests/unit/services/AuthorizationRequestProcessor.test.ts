@@ -5,12 +5,12 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
-import { Response } from "../../../utils/Response";
 import { CicResponse } from "../../../utils/CicResponse";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { AuthorizationRequestProcessor } from "../../../services/AuthorizationRequestProcessor";
 import { VALID_AUTHCODE } from "../data/auth-events";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 let authorizationRequestProcessorTest: AuthorizationRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -55,7 +55,7 @@ describe("AuthorizationRequestProcessor", () => {
 		const session = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+		const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		const cicResp = new CicResponse(JSON.parse(out.body));
 
@@ -84,7 +84,7 @@ describe("AuthorizationRequestProcessor", () => {
 			session.authSessionState = authSessionState;
 			mockCicService.getSessionById.mockResolvedValue(session);
 	
-			const out: Response = await authorizationRequestProcessorTest.processRequest(
+			const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(
 				VALID_AUTHCODE,
 				"1234",
 			);
@@ -115,7 +115,7 @@ describe("AuthorizationRequestProcessor", () => {
 		session.authSessionState = "CIC_SESSION_CREATED";
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+		const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe(`Session is in the wrong state: ${session.authSessionState}`);
@@ -131,7 +131,7 @@ describe("AuthorizationRequestProcessor", () => {
 		session.authSessionState = "UNKNOWN";
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+		const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe(`Session is in the wrong state: ${session.authSessionState}`);
@@ -147,7 +147,7 @@ describe("AuthorizationRequestProcessor", () => {
 		session.expiryDate = 1675458564;
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+		const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("Session with session id: 1234 has expired");
@@ -158,7 +158,7 @@ describe("AuthorizationRequestProcessor", () => {
 	it("Return 401 when session with that session id not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+		const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: 1234");
@@ -171,7 +171,7 @@ describe("AuthorizationRequestProcessor", () => {
 		mockCicService.getSessionById.mockResolvedValue(session);
 		mockCicService.sendToTXMA.mockRejectedValue({});
 
-		const out: Response = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
+		const out: APIGatewayProxyResult = await authorizationRequestProcessorTest.processRequest(VALID_AUTHCODE, "1234");
 
 		const cicResp = new CicResponse(JSON.parse(out.body));
 

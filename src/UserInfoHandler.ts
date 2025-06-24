@@ -36,7 +36,7 @@ class UserInfo implements LambdaInterface {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
-			return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
+			return Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
 		}
 				
 	}

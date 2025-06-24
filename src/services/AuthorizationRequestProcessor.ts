@@ -3,7 +3,7 @@ import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { randomUUID } from "crypto";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
@@ -45,7 +45,7 @@ export class AuthorizationRequestProcessor {
 		return AuthorizationRequestProcessor.instance;
 	}
 
-	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<Response> {
+	async processRequest(event: APIGatewayProxyEvent, sessionId: string): Promise<APIGatewayProxyResult> {
 
 		const session = await this.cicService.getSessionById(sessionId);
 		
@@ -54,7 +54,7 @@ export class AuthorizationRequestProcessor {
 
 			if (session.expiryDate < absoluteTimeNow()) {
 				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
+				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
@@ -65,7 +65,7 @@ export class AuthorizationRequestProcessor {
 			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
 			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
 					this.logger.info(`Duplicate request for session in state: ${session.authSessionState}, returning authCode from DB`, sessionId);
-					return new Response(HttpCodesEnum.OK, JSON.stringify({
+					return Response(HttpCodesEnum.OK, JSON.stringify({
 						authorizationCode: {
 							value: session.authorizationCode,
 						},
@@ -76,7 +76,7 @@ export class AuthorizationRequestProcessor {
 					this.logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
 						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 					});
-					return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+					return Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
 			// add govuk_signin_journey_id to all subsequent log messages
@@ -87,7 +87,7 @@ export class AuthorizationRequestProcessor {
 			this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
 
 			try {
-				await this.cicService.sendToTXMA(this.txmaQueueUrl, {
+				await this.cicService.sendToTXMA({
 					event_name: TxmaEventNames.CIC_CRI_AUTH_CODE_ISSUED,
 					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 
@@ -107,12 +107,12 @@ export class AuthorizationRequestProcessor {
 				state: session?.state,
 			};
 
-			return new Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
+			return Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
 		} else {
 			this.logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+			return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
 	}
 }

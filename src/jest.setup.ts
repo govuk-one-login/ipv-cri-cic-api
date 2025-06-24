@@ -3,7 +3,7 @@ process.env.PERSON_IDENTITY_TABLE_NAME = 'MYTABLE'
 process.env.KMS_KEY_ARN = 'MYKMSKEY'
 process.env.DNSSUFFIX = 'test.gov.uk'
 process.env.ISSUER = 'https://XXX-c.env.account.gov.uk'
-process.env.TXMA_QUEUE_URL = "MYQUEUE"
+process.env.TXMA_QUEUE_URL = "TXMA_QUEUE_URL"
 process.env.CLIENT_CONFIG = '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"ipv-core-stub","redirectUri":"http://localhost:8085/callback"}]'
 process.env.ENCRYPTION_KEY_IDS = 'EncryptionKeyArn'
 process.env.AUTH_SESSION_TTL = '950400'
@@ -11,4 +11,4 @@ process.env.REGION = 'eu-west-2'
 process.env.SIGNING_KEY_IDS = "cic-cri-api-vc-signing-key";
 process.env.JWKS_BUCKET_NAME = "cic-cri-api-jwks-dev";
 process.env.PUBLISHED_KEYS_BUCKET_NAME = "published-keys-bucket";
-
+process.env.USE_MOCKED = "false";

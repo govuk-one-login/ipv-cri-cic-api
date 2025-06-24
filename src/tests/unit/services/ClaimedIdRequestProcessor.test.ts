@@ -6,10 +6,10 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { VALID_CLAIMEDID } from "../data/cic-events";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
-import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 let claimedIdRequestProcessorTest: ClaimedIdRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -55,7 +55,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		const session = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: APIGatewayProxyResult = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("");
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
@@ -67,7 +67,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		session.expiryDate = 1675458564;
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: APIGatewayProxyResult = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("Session with session id: 1234 has expired");
@@ -79,7 +79,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		const session = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue({ ...session, authSessionState: AuthSessionState.CIC_ACCESS_TOKEN_ISSUED });
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: APIGatewayProxyResult = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
@@ -90,7 +90,7 @@ describe("ClaimedIdRequestProcessor", () => {
 		const session = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue({ ...session, authSessionState: "UNKNOWN" });
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: APIGatewayProxyResult = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -103,7 +103,7 @@ describe("ClaimedIdRequestProcessor", () => {
 	it("Return 401 when session with that session id not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
+		const out: APIGatewayProxyResult = await claimedIdRequestProcessorTest.processRequest(VALID_CLAIMEDID, "1234");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: 1234");

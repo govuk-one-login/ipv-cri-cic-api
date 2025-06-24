@@ -1,9 +1,9 @@
  
  
-import { Response, GenericServerError, unauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
+import { Response, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
@@ -71,7 +71,7 @@ export class SessionRequestProcessor {
 		return SessionRequestProcessor.instance;
 	}
 
-	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+	async processRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 		let encodedHeader, clientIpAddress;
 		if (event.headers) {
 			encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
@@ -92,13 +92,13 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.MISSING_CONFIGURATION,
 			});
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 		if (!configClient) {
 			this.logger.error("Unrecognised client in request", {
 				messageCode: MessageCodes.UNRECOGNISED_CLIENT,
 			});
-			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+			return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}
 
 		let urlEncodedJwt: string;
@@ -110,7 +110,7 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.FAILED_DECRYPTING_JWE,
 			});
-			return unauthorizedResponse;
+			return this.unauthorizedResponse();
 		}
 
 		let parsedJwt: Jwt;
@@ -121,7 +121,7 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.FAILED_DECODING_JWT,
 			});
-			return unauthorizedResponse;
+			return this.unauthorizedResponse();
 		}
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
@@ -137,20 +137,20 @@ export class SessionRequestProcessor {
 					this.logger.error("Failed to verify JWT", {
 						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 					});
-					return unauthorizedResponse;
+					return this.unauthorizedResponse();
 				}
 			} else {
 				this.logger.error("Incomplete Client Configuration", {
 					messageCode: MessageCodes.MISSING_CONFIGURATION,
 				});
-				return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+				return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 			}
 		} catch (error) {
 			this.logger.error("Invalid request: Could not verify JWT", {
 				error,
 				messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 			});
-			return unauthorizedResponse;
+			return this.unauthorizedResponse();
 		}
 
 		const JwtErrors = this.validationHelper.isJwtValid(
@@ -160,7 +160,7 @@ export class SessionRequestProcessor {
 			this.logger.error(JwtErrors, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
-			return unauthorizedResponse;		
+			return this.unauthorizedResponse();		
 		}
 
 		try {
@@ -168,14 +168,14 @@ export class SessionRequestProcessor {
 				this.logger.error("sessionId already exists in the database", {
 					messageCode: MessageCodes.SESSION_ALREADY_EXISTS,
 				});
-				return GenericServerError;
+				return this.genericErrorResponse();
 			}
 		} catch (error) {
 			this.logger.error("Unexpected error accessing session table", {
 				error,
 				messageCode: MessageCodes.UNEXPECTED_ERROR_SESSION_EXISTS,
 			});
-			return GenericServerError;
+			return this.genericErrorResponse()
 		}
 
 		const journeyContext = jwtPayload.context ?? Constants.FACE_TO_FACE_JOURNEY;
@@ -203,7 +203,7 @@ export class SessionRequestProcessor {
 				error,
 				messageCode: MessageCodes.FAILED_CREATING_SESSION,
 			});
-			return GenericServerError;
+			return this.genericErrorResponse();
 		}
 
 		if (jwtPayload.shared_claims) {
@@ -214,12 +214,12 @@ export class SessionRequestProcessor {
 					error,
 					messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
 				});
-				return GenericServerError;
+				return this.genericErrorResponse();
 			}
 		}
 
 		try {
-			await this.cicService.sendToTXMA(this.txmaQueueUrl, {
+			await this.cicService.sendToTXMA({
 				event_name: TxmaEventNames.CIC_CRI_START,
 				...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				...{ extensions: {
@@ -242,6 +242,25 @@ export class SessionRequestProcessor {
 				session_id: sessionId,
 				state: jwtPayload.state,
 				redirect_uri: jwtPayload.redirect_uri,
+			}),
+		};
+	}
+
+	private genericErrorResponse(): APIGatewayProxyResult | PromiseLike<APIGatewayProxyResult> {
+		return {
+			statusCode: HttpCodesEnum.SERVER_ERROR,
+			headers: SECURITY_HEADERS,
+			body: "Internal server error",
+		};
+	}
+
+	private unauthorizedResponse(): APIGatewayProxyResult | PromiseLike<APIGatewayProxyResult> {
+		return {
+			statusCode: HttpCodesEnum.UNAUTHORIZED,
+			headers: SECURITY_HEADERS,
+			body: JSON.stringify({
+				redirect: null,
+				message: "Unauthorized",
 			}),
 		};
 	}

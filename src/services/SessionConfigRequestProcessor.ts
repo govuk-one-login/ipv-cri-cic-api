@@ -7,6 +7,7 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 export class SessionConfigRequestProcessor {
 	private static instance: SessionConfigRequestProcessor;
@@ -32,7 +33,7 @@ export class SessionConfigRequestProcessor {
 		return SessionConfigRequestProcessor.instance;
 	}
 
-	async processRequest(sessionId: string): Promise<Response> {
+	async processRequest(sessionId: string): Promise<APIGatewayProxyResult> {
 
 		const session = await this.cicService.getSessionById(sessionId);
 
@@ -41,14 +42,14 @@ export class SessionConfigRequestProcessor {
 
 			this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
-			return new Response(HttpCodesEnum.OK, JSON.stringify({
+			return Response(HttpCodesEnum.OK, JSON.stringify({
 				journey_type: session?.journey ? session.journey : Constants.FACE_TO_FACE_JOURNEY,
 			}));
 		} else {
 			this.logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+			return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
 	}
 }

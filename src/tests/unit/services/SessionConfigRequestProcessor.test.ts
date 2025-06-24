@@ -5,11 +5,11 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
-import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { SessionConfigRequestProcessor } from "../../../services/SessionConfigRequestProcessor";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { Constants } from "../../../utils/Constants";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 let sessionConfigRequestProcessorTest: SessionConfigRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -55,7 +55,7 @@ describe("SessionConfigRequestProcessor", () => {
 		const session = getMockSessionItem();
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await sessionConfigRequestProcessorTest.processRequest("sdfsdg");
+		const out: APIGatewayProxyResult = await sessionConfigRequestProcessorTest.processRequest("sdfsdg");
 
 		expect(out.body).toEqual(JSON.stringify({
 			journey_type: session.journey,
@@ -70,7 +70,7 @@ describe("SessionConfigRequestProcessor", () => {
 		delete session.journey;
 		mockCicService.getSessionById.mockResolvedValue(session);
 
-		const out: Response = await sessionConfigRequestProcessorTest.processRequest("sdfsdg");
+		const out: APIGatewayProxyResult = await sessionConfigRequestProcessorTest.processRequest("sdfsdg");
 
 		expect(out.body).toEqual(JSON.stringify({
 			journey_type: Constants.FACE_TO_FACE_JOURNEY,
@@ -84,7 +84,7 @@ describe("SessionConfigRequestProcessor", () => {
 	it("Return 401 when session with that session id not found in the DB", async () => {
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await sessionConfigRequestProcessorTest.processRequest("invalid-session-id");
+		const out: APIGatewayProxyResult = await sessionConfigRequestProcessorTest.processRequest("invalid-session-id");
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toBe("No session found with the session id: invalid-session-id");

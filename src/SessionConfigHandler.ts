@@ -36,21 +36,21 @@ class SessionConfigHandler implements LambdaInterface {
 
 					if (!Constants.REGEX_UUID.test(sessionId)) {
 						logger.error("Session id not not a valid uuid", { messageCode: MessageCodes.FAILED_VALIDATING_SESSION_ID });
-						return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
+						return Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
 					}
 
 					return await SessionConfigRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 				} else {
 					logger.error(`Missing header: ${Constants.X_SESSION_ID} is required`, { messageCode: MessageCodes.MISSING_HEADER });
-					return new Response(HttpCodesEnum.BAD_REQUEST, `Missing header: ${Constants.X_SESSION_ID} is required`);
+					return Response(HttpCodesEnum.BAD_REQUEST, `Missing header: ${Constants.X_SESSION_ID} is required`);
 				}
 			} else {
 				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+				return Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 			}
 		} catch (error: any) {
 			logger.error({ message: "Error fetching journey type", error, messageCode: MessageCodes.SERVER_ERROR });
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");	
+			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");	
 		}	
 	}		
 					

@@ -74,16 +74,15 @@ export class CicService {
 				error,
 				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
 			});
-			throw new AppError(
-				"Error retrieving Session",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"Error retrieving Session"
 			);
 		}
 
 		if (session.Item) {
 			if (session.Item.expiryDate < absoluteTimeNow()) {
 				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
-				throw new AppError(`Session with session id: ${sessionId} has expired`, HttpCodesEnum.UNAUTHORIZED);
+				throw new AppError(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 			return session.Item as ISessionItem;
 		}
@@ -106,9 +105,8 @@ export class CicService {
 				message: "getPersonIdentityBySessionId - failed executing get from dynamodb:",
 				e,
 			});
-			throw new AppError(
-				"Error retrieving Session",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"Error retrieving Session"
 			);
 		}
 
@@ -155,9 +153,8 @@ export class CicService {
 			this.logger.info({ message: "updated CIC user info in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "got error saving CIC user data", error });
-			throw new AppError(
-				"Failed to set claimed identity data ",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"Failed to set claimed identity data "
 			);
 		}
 
@@ -166,9 +163,8 @@ export class CicService {
 			this.logger.info({ message: "Updated CIC data in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "Got error saving CIC data", error, messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY });
-			throw new AppError(
-				"Failed to set claimed identity data ",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"Failed to set claimed identity data "
 			);
 		}
 	}
@@ -196,14 +192,13 @@ export class CicService {
 			this.logger.info("Updated authorizationCode in dynamodb");
 		} catch (error) {
 			this.logger.error("Got error setting auth code", { error, messageCode: MessageCodes.FAILED_SAVING_AUTH_CODE });
-			throw new AppError(
-				"Failed to set authorization code ",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"Failed to set authorization code "
 			);
 		}
 	}
 
-	async sendToTXMA(QueueUrl: string, event: TxmaEvent, encodedHeader?: string): Promise<void> {
+	async sendToTXMA(event: TxmaEvent, encodedHeader?: string): Promise<void> {
 		
 		if (encodedHeader) {
 			event.restricted = event.restricted ?? { device_information: { encoded: "" } };
@@ -213,7 +208,7 @@ export class CicService {
 		const messageBody = JSON.stringify(event);
 		const params = {
 			MessageBody: messageBody,
-			QueueUrl,
+			QueueUrl: process.env.TXMA_QUEUE_URL,
 		};
 
 		this.logger.info("Sending message to TxMA", {
@@ -221,18 +216,13 @@ export class CicService {
 		});
 		try {
 			await createSqsClient().send(new SendMessageCommand(params));
-			this.logger.info("Sent message to TxMA", {
-				event_name: event.event_name,
-			});
+			this.logger.info("Sent message to TxMA");
 
 			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
 			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
 		} catch (error) {
-			this.logger.error("Error sending message to TxMA ", {
-				error,
-				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
-			});
-			throw new AppError("Sending event - failed ", HttpCodesEnum.SERVER_ERROR);
+			this.logger.error({ message: "Error when sending message to TXMA Queue", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Sending event - failed ");
 		}
 	}
 
@@ -251,14 +241,13 @@ export class CicService {
 		const sessionItem = await this.dynamo.query(params);
 
 		if (!sessionItem?.Items || sessionItem?.Items?.length !== 1) {
-			throw new AppError(
-				"Error retrieving Session by authorization code",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"Error retrieving Session by authorization code"
 			);
 		}
 		
 		if (sessionItem.Items[0].expiryDate < absoluteTimeNow()) {
-			throw new AppError(`Session with session id: ${sessionItem.Items[0].sessionId} has expired`, HttpCodesEnum.UNAUTHORIZED);
+			throw new AppError(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionItem.Items[0].sessionId} has expired`);
 		}
 
 		return sessionItem.Items[0] as ISessionItem;
@@ -291,9 +280,8 @@ export class CicService {
 				message: "got error saving Access token details",
 				error,
 			});
-			throw new AppError(
-				"updateItem - failed: got error saving Access token details",
-				HttpCodesEnum.SERVER_ERROR,
+			throw new AppError(HttpCodesEnum.SERVER_ERROR,
+				"updateItem - failed: got error saving Access token details"
 			);
 		}
 	}
@@ -314,7 +302,7 @@ export class CicService {
 			this.logger.info({ message: "Updated auth state details in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "Got error saving auth state details", error });
-			throw new AppError("updateItem - failed: got error saving auth state details", HttpCodesEnum.SERVER_ERROR);
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error saving auth state details");
 		}
 	}
 
@@ -334,7 +322,7 @@ export class CicService {
 			this.logger.info("Successfully created session in dynamodb");
 		} catch (error) {
 			this.logger.error("got error " + error);
-			throw new AppError("saveItem - failed ", 500);
+			throw new AppError(500, "saveItem - failed ");
 		}
 	}
 
@@ -344,7 +332,7 @@ export class CicService {
 		const validateName = (name: string) => {
 			if (!Constants.GIVEN_NAME_REGEX.test(name)) {
 				this.logger.error(`Name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, { messageCode: MessageCodes.INVALID_NAME_REGEX });
-				throw new AppError(`Name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`, HttpCodesEnum.BAD_REQUEST);
+				throw new AppError(HttpCodesEnum.BAD_REQUEST, `Name doesn't match regex expression: ${Constants.GIVEN_NAME_REGEX}`);
 			}
 		};
 	
