@@ -512,6 +512,11 @@ Resources:
                   - "s3:Get*"
                 Resource:
                   - !Sub "arn:aws:s3:::${JsonWebKeysBucket}/.well-known/jwks.json"
+              - Effect: Allow
+                Action:
+                  - "s3:Get*"
+                Resource:
+                  - !Sub "arn:aws:s3:::govuk-one-login-cic-published-keys-${Environment}/jwks.json"
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -1449,10 +1454,14 @@ Resources:
         - !Ref AWS::NoValue
       Policies:
         - AWSXRayDaemonWriteAccess
+        - S3ReadPolicy:
+            BucketName: !Ref JsonWebKeysBucket
         - S3WritePolicy:
             BucketName: !Ref JsonWebKeysBucket
         - S3ReadPolicy:
-            BucketName: !Ref JsonWebKeysBucket
+            BucketName: !Sub "govuk-one-login-cic-published-keys-${Environment}"
+        - S3WritePolicy:
+            BucketName: !Sub "govuk-one-login-cic-published-keys-${Environment}"
         - Statement:
             - Sid: KMSSignPolicy
               Effect: Allow
@@ -1461,6 +1470,9 @@ Resources:
               Resource:
                 - Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
                 - Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+      Tags:
+          Key: "key_consumer_type"
+          Value: "manage"
       Events:
         InvocationLevel:
           Type: Schedule
@@ -1470,6 +1482,8 @@ Resources:
       Environment:
         Variables:
           JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
+          PUBLISHED_KEYS_BUCKET_NAME: !Sub "govuk-one-login-cic-published-keys-${Environment}"
+          BACKEND_URL: !Sub "https://api-${AWS::StackName}.review-c.${Environment}.account.gov.uk"
           SIGNING_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:

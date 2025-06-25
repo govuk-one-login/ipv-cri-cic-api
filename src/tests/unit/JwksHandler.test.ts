@@ -1,5 +1,4 @@
- 
-import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
+ import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
@@ -31,6 +30,7 @@ jest.mock("@aws-sdk/client-s3", () => ({
 		send: jest.fn(),
 	})),
 	PutObjectCommand: jest.fn().mockImplementation((args) => args),
+	CopyObjectCommand: jest.fn().mockImplementation((args) => args),
 }));
 
 describe("JwksHandler", () => {
@@ -67,6 +67,20 @@ describe("JwksHandler", () => {
 				Body: JSON.stringify(body),
 				ContentType: "application/json",
 			});
+		});
+	});
+
+	describe("#copyKeys", () => {
+		it("copies keys from jwks bucket to published keys bucket", async () => {
+			await lambdaHandler();
+
+			expect(logger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
+			expect(handlerClass.s3Client.send).toHaveBeenCalledWith({
+				Bucket: "published-keys-bucket",
+				Key: "jwks.json",
+				CopySource: "cic-cri-api-jwks-dev/.well-known/jwks.json",
+			});
+			expect(logger.info).toHaveBeenCalledWith({ message: "Keys copied to published keys bucket" });
 		});
 	});
 
