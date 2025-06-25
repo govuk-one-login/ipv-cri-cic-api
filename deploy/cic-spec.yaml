@@ -4,7 +4,7 @@ info:
      Fn::Sub: "${AWS::StackName} - CIC Credential Issuer Private API"
   version: "1.0"
   description: >-
-    Claimed Identity CRI - Frontend and Backend API specification
+    Claimed Identity Collector CRI - Frontend and Backend API specification
   contact:
     name: Darren Dunford
     email: darren.dunford@digital.cabinet-office.gov.uk
@@ -13,7 +13,7 @@ servers:
 tags:
   - name: Backend - Common CRI Lambda
     description: Backend endpoints implemented by the Common CRI Lambda functions
-  - name: Backend - CI CRI specific
+  - name: Backend - CIC CRI specific
     description: Backend endpoints implementing functions specific to the Claimed Identity CRI
   - name: Frontend
     description: Frontend endpoints implementing rendering and routing
@@ -124,7 +124,7 @@ paths:
         Returns a JWT containing the user information and associated verified credentials as supplied by the
         biometrics vendor. Requires an access token as issued by `POST /token`, and can only be called once.
       tags:
-        - Backend - CI CRI specific
+        - Backend - CIC CRI specific
       parameters:
         - $ref: '#/components/parameters/Authorization'
       responses:
@@ -403,9 +403,9 @@ paths:
       operationId: postClaimedIdentity
       summary: submit claimed identity information
       description: >-
-        submit the claimed identity information gathered via the CI CRI UI
+        submit the claimed identity information gathered via the CIC CRI UI
       tags:
-        - Backend - CI CRI specific
+        - Backend - CIC CRI specific
       requestBody:
         required: true
         content:
@@ -508,7 +508,7 @@ paths:
       description: >-
         Return the current valid public keys used to sign JWTs issued by the service as a JSON Web Key Set
       tags:
-        - Backend - CI CRI specific
+        - Backend - CIC CRI specific
       responses:
         "200":
           description: >-
@@ -688,7 +688,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/AuditHeader'
       tags:
-        - Backend - CI CRI specific
+        - Backend - CIC CRI specific
       responses:
         "200":
           description: OK
@@ -809,7 +809,7 @@ paths:
 #      parameters:
 #        - $ref: '#/components/parameters/Authorization'
 #      tags:
-#        - Backend - CI CRI specific
+#        - Backend - CIC CRI specific
 #      responses:
 #        "200":
 #          description: OK
@@ -976,7 +976,7 @@ components:
           type: string
           example: https://www.example.com/receiveToken
           description: >-
-            the OAuth client identifier which has been registered with CI CRI
+            the OAuth client identifier which has been registered with CIC CRI
         client_assertion:
           type: string
           example: abcdefgh
@@ -1188,7 +1188,7 @@ components:
           type: string
           example: https://www.example.com/receiveToken
           description: >-
-            the OAuth client identifier which has been registered with CI CRI
+            the OAuth client identifier which has been registered with CIC CRI
     WriteTxmaRequest:
       type: object
       required:
@@ -1248,7 +1248,7 @@ components:
       name: client_id
       example: xxx
       required: true
-      description: the OAuth client identifier which has been registered with CI CRI
+      description: the OAuth client identifier which has been registered with CIC CRI
       schema:
         type: string
     Request:
