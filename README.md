@@ -1,4 +1,4 @@
-# F2F CRI 
+# CIC CRI 
 
 ## Installation
 
@@ -21,7 +21,7 @@ If you do find an outdated/vulnerable dependency, please
 - open a new branch against main,
 - run `npm audit --fix`
 - commit and push the changed package-lock.json file
-- open a PR and raise it with the Face2Face tech lead.
+- open a PR and raise it with the CIC tech lead.
 
 ## AWS SAM & CloudFormation
 
@@ -50,7 +50,7 @@ Test a function
 Invoking app.lambdaHandler (nodejs16.x)
 Skip pulling image and use local one: public.ecr.aws/sam/emulation-nodejs16.x:rapid-1.70.0-arm64.
 
-Mounting /Users/aloughran/Code/GDS/f2f/di-ipv-cri-cic-api/deploy/.aws-sam/build/HelloWorldFunction as /var/task:ro,delegated inside runtime container
+Mounting /Users/aloughran/Code/GDS/cic/di-ipv-cri-cic-api/deploy/.aws-sam/build/HelloWorldFunction as /var/task:ro,delegated inside runtime container
 START RequestId: 78d928d0-15a8-4054-93aa-0764268927e0 Version: $LATEST
 2023-02-01T18:16:37.994Z        78d928d0-15a8-4054-93aa-0764268927e0    INFO    Hello world!
 END RequestId: 78d928d0-15a8-4054-93aa-0764268927e0
