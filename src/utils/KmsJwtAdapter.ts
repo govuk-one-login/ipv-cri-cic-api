@@ -9,6 +9,7 @@ import axios from "axios";
 import { createKmsClient } from "./KMSClient";
 import * as AWS from "@aws-sdk/client-kms";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { Constants } from "../utils/Constants";
 
 export class KmsJwtAdapter {
     readonly kid: string;
@@ -21,10 +22,13 @@ export class KmsJwtAdapter {
 
 	private readonly logger: Logger;
 
-    constructor(kid: string, logger: Logger) {
+	private readonly keyRotationEnabledFlag: string;
+
+    constructor(kid: string, logger: Logger, keyRotationEnabledFlag: string) {
     	this.kid = kid;
     	this.kms = createKmsClient();
 		this.logger = logger;
+		this.keyRotationEnabledFlag = keyRotationEnabledFlag
     }
 
 	getCachedDataForTest() {
@@ -142,27 +146,33 @@ export class KmsJwtAdapter {
     		tag,
     	] = jweComponents;
 
-    	let cek: Uint8Array;
-    	try {
-    		const inputs: DecryptCommandInput = {
-    			CiphertextBlob: jwtUtils.base64DecodeToUint8Array(encryptedKey),
-    			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
-    			KeyId: process.env.ENCRYPTION_KEY_IDS,
-    		};
+    	let cek: Uint8Array | undefined;
+		try {
+			if (this.keyRotationEnabledFlag) {
+				for (const alias of Constants.ENCRYPTION_KEY_ALIASES) {
+					const decryptCommand = new DecryptCommand(this.buildDecryptRequest(`alias/${alias}`, encryptedKey));
+					const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
+					if (output.Plaintext) {
+						cek = output.Plaintext;
+						break; 
+					}
+				}
+			} else {
+				const encryptionKeyId = process.env.ENCRYPTION_KEY_IDS;
+				if (!encryptionKeyId) {
+					throw new Error("Missing environment variable: ENCRYPTION_KEY_IDS");
+				}
+				const decryptCommand = new DecryptCommand(this.buildDecryptRequest(encryptionKeyId, encryptedKey));
+				const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
+				cek = output.Plaintext;
+			}
 
-    		const output: DecryptCommandOutput = await this.kms.send(
-    			new DecryptCommand(inputs),
-    		);
-			
-    		const plaintext = output.Plaintext ?? null;
-			
-    		if (plaintext === null) {
-    			throw new Error("No Plaintext received when calling KMS to decrypt the Encryption Key");
-    		}
-    		cek = plaintext;
-    	} catch (err) {
-    		throw new JsonWebTokenError("Error decrypting JWE: Unable to decrypt encryption key via KMS", err);
-    	}
+		if (cek === undefined) {
+			throw new Error("No Plaintext received when calling KMS to decrypt the Encryption Key");
+		}
+		} catch (err) {
+			throw new JsonWebTokenError("Error decrypting JWE: Unable to decrypt encryption key via KMS", err);
+		}
 
     	let payload: Uint8Array;
     	try {
@@ -193,4 +203,14 @@ export class KmsJwtAdapter {
     		throw new JsonWebTokenError("Error decrypting JWE: Unable to decode the decrypted payload", err);
     	}
   	}
+
+	buildDecryptRequest(keyIdentifier: string, encryptedKey: string): DecryptCommandInput {
+		const inputs: DecryptCommandInput = {
+			CiphertextBlob: jwtUtils.base64DecodeToUint8Array(encryptedKey),
+			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
+			KeyId: keyIdentifier,
+		}
+		console.log("INFORMATION", inputs);
+		return inputs;
+	}
 }

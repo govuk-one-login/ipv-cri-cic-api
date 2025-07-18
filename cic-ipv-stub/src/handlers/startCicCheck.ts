@@ -188,6 +188,7 @@ async function getPublicEncryptionKeyAndKid(config: {
   }
   const kid = getHashedKid(publicKey.kid);
   publicKey.kid = kid;
+  publicKey.alg = "RS256"; // SubtleCrypto.importKey() throws error with {"alg": "RSA_OAEP_256"}
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
     publicKey as JsonWebKey,
