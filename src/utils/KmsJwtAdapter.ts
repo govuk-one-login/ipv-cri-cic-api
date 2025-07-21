@@ -148,7 +148,7 @@ export class KmsJwtAdapter {
 
     	let cek: Uint8Array | undefined;
 		try {
-			if (this.keyRotationEnabledFlag) {
+			if (process.env.KEYROTATIONENABLED) {
 				for (const alias of Constants.ENCRYPTION_KEY_ALIASES) {
 					const decryptCommand = new DecryptCommand(this.buildDecryptRequest(`alias/${alias}`, encryptedKey));
 					const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
