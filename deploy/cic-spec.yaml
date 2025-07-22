@@ -575,7 +575,7 @@ paths:
         credentials:
           Fn::GetAtt: [ "JWKSBucketRole", "Arn" ]
         uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:s3:path/govuk-one-login-cic-published-keys-${Environment}/.well-known/jwks.json"
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:s3:path/govuk-one-login-cic-published-keys-${Environment}/jwks.json"
         responses:
           default:
             statusCode: "200"
