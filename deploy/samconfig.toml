@@ -2,7 +2,7 @@ version = 0.1
 [dev]
 [dev.deploy]
 [dev.deploy.parameters]
-stack_name = "cic-cri-api-krs"
+stack_name = "cic-cri-api"
 s3_prefix = "cic-cri-api"
 region = "eu-west-2"
 confirm_changeset = false

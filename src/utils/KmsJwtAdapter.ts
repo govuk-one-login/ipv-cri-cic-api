@@ -22,13 +22,10 @@ export class KmsJwtAdapter {
 
 	private readonly logger: Logger;
 
-	private readonly keyRotationEnabledFlag: string;
-
-    constructor(kid: string, logger: Logger, keyRotationEnabledFlag: string) {
+    constructor(kid: string, logger: Logger) {
     	this.kid = kid;
     	this.kms = createKmsClient();
 		this.logger = logger;
-		this.keyRotationEnabledFlag = keyRotationEnabledFlag
     }
 
 	getCachedDataForTest() {
@@ -148,11 +145,13 @@ export class KmsJwtAdapter {
 
     	let cek: Uint8Array | undefined;
 		try {
-			if (process.env.KEYROTATIONENABLED) {
+			if (process.env.KEY_ROTATION_ENABLED === "true") {
 				for (const alias of Constants.ENCRYPTION_KEY_ALIASES) {
 					const decryptCommand = new DecryptCommand(this.buildDecryptRequest(`alias/${alias}`, encryptedKey));
+					this.logger.info(`Attempting decryption with key alias: ${alias}`)
 					const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
 					if (output.Plaintext) {
+						this.logger.info(`Key rotation succesfull with key alias: ${alias}`)
 						cek = output.Plaintext;
 						break; 
 					}
@@ -167,9 +166,9 @@ export class KmsJwtAdapter {
 				cek = output.Plaintext;
 			}
 
-		if (cek === undefined) {
-			throw new Error("No Plaintext received when calling KMS to decrypt the Encryption Key");
-		}
+			if (cek === undefined) {
+				throw new Error("No Plaintext received when calling KMS to decrypt the Encryption Key");
+			}
 		} catch (err) {
 			throw new JsonWebTokenError("Error decrypting JWE: Unable to decrypt encryption key via KMS", err);
 		}
@@ -210,7 +209,6 @@ export class KmsJwtAdapter {
 			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
 			KeyId: keyIdentifier,
 		}
-		console.log("INFORMATION", inputs);
 		return inputs;
 	}
 }

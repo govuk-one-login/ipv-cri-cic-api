@@ -46,8 +46,6 @@ export class SessionRequestProcessor {
 
 	private readonly txmaQueueUrl: string;
 
-	private readonly keyRotationEnabledFlag: string;
-
 	constructor(logger: Logger, metrics: Metrics) {
 
 		this.logger = logger;
@@ -61,10 +59,9 @@ export class SessionRequestProcessor {
 		this.authSessionTtlInSecs = checkEnvironmentVariable(EnvironmentVariables.AUTH_SESSION_TTL, this.logger);
 		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, this.logger);
 		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
-		this.keyRotationEnabledFlag = checkEnvironmentVariable(EnvironmentVariables.KEY_ROTATION_ENABLED, this.logger);
   		
 		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger, this.keyRotationEnabledFlag);
+		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger);
 		this.validationHelper = new ValidationHelper();
 	}
 	static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
