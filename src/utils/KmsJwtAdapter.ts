@@ -147,14 +147,19 @@ export class KmsJwtAdapter {
 		try {
 			if (process.env.KEY_ROTATION_ENABLED === "true") {
 				for (const alias of Constants.ENCRYPTION_KEY_ALIASES) {
-					const decryptCommand = new DecryptCommand(this.buildDecryptRequest(`alias/${alias}`, encryptedKey));
-					this.logger.info(`Attempting decryption with key alias: ${alias}`)
-					const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
-					if (output.Plaintext) {
-						this.logger.info(`Key rotation succesfull with key alias: ${alias}`)
-						cek = output.Plaintext;
-						break; 
-					}
+					try {
+						const decryptCommand = new DecryptCommand(this.buildDecryptRequest(`alias/${alias}`, encryptedKey));
+						this.logger.info(`Attempting decryption with key alias: ${alias}`)
+						const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
+						if (output.Plaintext) {
+							this.logger.info(`Key rotation succesfull with key alias: ${alias}`)
+							cek = output.Plaintext;
+							break; 
+						}
+					} catch (error) {
+						console.error(`Decryption failed for alias ${alias} with error:`, error);
+						// Continue to the next alias; don't throw error
+      				}
 				}
 			} else {
 				const encryptionKeyId = process.env.ENCRYPTION_KEY_IDS;
