@@ -157,7 +157,6 @@ export class KmsJwtAdapter {
 							break; 
 						}
 					} catch (error) {
-						console.error(`Decryption failed for alias ${alias} with error:`, error);
 						// Continue to the next alias; don't throw error
       				}
 				}
