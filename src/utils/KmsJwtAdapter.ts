@@ -156,6 +156,7 @@ export class KmsJwtAdapter {
 							cek = output.Plaintext;
 							break; 
 						}
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					} catch (error) {
 						// Continue to the next alias; don't throw error
       				}
