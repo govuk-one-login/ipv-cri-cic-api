@@ -152,7 +152,7 @@ export class KmsJwtAdapter {
 						this.logger.info(`Attempting decryption with key alias: ${alias}`)
 						const output: DecryptCommandOutput = await this.kms.send(decryptCommand);
 						if (output.Plaintext) {
-							this.logger.info(`Key rotation succesfull with key alias: ${alias}`)
+							this.logger.info(`Decryption succesfull with key alias: ${alias}`)
 							cek = output.Plaintext;
 							break; 
 						}
