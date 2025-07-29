@@ -7,6 +7,8 @@ import { jwtUtils } from "../../../utils/JwtUtils";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
 import axios from "axios";
+import crypto from "crypto";
+import { DecryptCommandOutput } from "@aws-sdk/client-kms";
 
 jest.mock('axios');
 
@@ -22,6 +24,8 @@ jest.mock("../../../utils/JwtUtils", () => ({
 		base64Encode: jest.fn().mockImplementation((args) => JSON.parse(args)),
 		base64DecodeToString: jest.fn().mockImplementation((args) => JSON.stringify(args)),
 		getHashedKid: jest.fn().mockImplementation((args) => {return args;}),
+		base64DecodeToUint8Array: jest.fn().mockImplementation(() => {return new Uint8Array([1, 2, 3, 4, 5])}),
+		decode: jest.fn().mockImplementation((args) => {return args;}),
 	},
 }));
 
@@ -38,6 +42,7 @@ describe("KmsJwtAdapter utils", () => {
 		jest.spyOn(kmsJwtAdapter.kms, "verify").mockImplementation(() => ({
 			SignatureValid: true,
 		}));
+	
 	});
 
 	describe("#sign", () => {
@@ -216,8 +221,122 @@ describe("KmsJwtAdapter utils", () => {
 	});
 
 	describe("#decrypt", () => {
+		const mockJwe = "protectedHeader.encryptedKey.iv.ciphertext.tag"
+		const mockKmsDecryptedPayload = new Uint8Array([1, 2, 3, 4, 5])
+		const kmsDecryptCommandOutput : DecryptCommandOutput = {
+			Plaintext: mockKmsDecryptedPayload,
+			KeyId: 'someKeyId',
+			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
+			$metadata: {}
+		};
+		const mockCryptoDecryptedPayload = new Uint8Array([6, 7, 8, 9, 10])
+		let mockCek: CryptoKey = { algorithm: { name: "AES-GCM" }, type: 'secret', extractable: true, usages: ['decrypt'] };
+
+		beforeEach(() => {
+			jest.spyOn(crypto.webcrypto.subtle, 'importKey').mockResolvedValue(mockCek);
+			jest.spyOn(crypto.webcrypto.subtle, 'decrypt').mockResolvedValue(mockCryptoDecryptedPayload);
+		})
+
+		it("should successfully decrypt a JWE using key rotation", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
+			const result = await kmsJwtAdapter.decrypt(mockJwe);
+
+			expect(result).toStrictEqual(mockCryptoDecryptedPayload);
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Attempting decryption with key alias:'));
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption succesfull with key alias:'));
+		})
+
+		  it("should successfully decrypt a JWE using the legacy key", async () => {
+			process.env.KEY_ROTATION_ENABLED = "false";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
+			const result = await kmsJwtAdapter.decrypt(mockJwe);
+
+			expect(result).toStrictEqual(mockCryptoDecryptedPayload);
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption succesfull with legacy key'));
+		});
+
 		it("throws error if the jwe doesn't contain the correct number of components", async () => {
 			await expect(kmsJwtAdapter.decrypt("protectedHeader.encryptedKey.iv.ciphertext")).rejects.toThrow(expect.objectContaining({ message: "Error decrypting JWE: Missing component" }));
 		});
+
+		it("should handle KMS decryption errors during key rotation", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockRejectedValueOnce(new Error("KMS error"));
+
+			await expect(kmsJwtAdapter.decrypt(mockJwe)).rejects.toThrow(expect.objectContaining({ message: "Error decrypting JWE: Unable to decrypt encryption key via KMS" }));
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Attempting decryption with key alias:'));
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption failed with key alias'));
+		});
+
+		it("should handle KMS decryption errors legacy key", async () => {
+			process.env.KEY_ROTATION_ENABLED = "false";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockRejectedValueOnce(new Error("KMS error"));
+
+			await expect(kmsJwtAdapter.decrypt(mockJwe)).rejects.toThrow(expect.objectContaining({ message: "Error decrypting JWE: Unable to decrypt encryption key via KMS" }));
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption failed with legacy key with kid'));
+		});
+
+		it("should handle missing ENCRYPTION_KEY_IDS environment variable", async () => {
+			process.env.KEY_ROTATION_ENABLED = "false";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
+			delete process.env.ENCRYPTION_KEY_IDS;
+			
+			await expect(kmsJwtAdapter.decrypt(mockJwe)).rejects.toThrow("Error decrypting JWE: Unable to decrypt encryption key via KMS");
+		});
+
+		it("should handle decryption errors from Crypto", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
+			jest.spyOn(crypto.webcrypto.subtle, 'decrypt').mockRejectedValueOnce(new Error("Crypto error"));
+
+			await expect(kmsJwtAdapter.decrypt(mockJwe)).rejects.toThrow(expect.objectContaining({ message: "Error decrypting JWE: Unable to decrypt payload via Crypto" }));
+		});
+
+		it("should handle decoding errors", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
+			jest.spyOn(jwtUtils, 'decode').mockImplementation(() => { throw new Error("Decoding error"); });
+
+			await expect(kmsJwtAdapter.decrypt(mockJwe)).rejects.toThrow(expect.objectContaining({ message: "Error decrypting JWE: Unable to decode the decrypted payload" }));
+		});
 	});
-});
+
+	describe("sendDecryptRequest", () => {
+		const keyIdentifier = "some-key-id";
+		const encryptedKey = "some-encrypted-key";
+
+		const mockKmsDecryptedPayload = new Uint8Array([1, 2, 3, 4, 5])
+		const kmsDecryptCommandOutput : DecryptCommandOutput = {
+			Plaintext: mockKmsDecryptedPayload,
+			KeyId: 'someKeyId',
+			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
+			$metadata: {}
+		};
+
+		it("should successfully decrypt a message", async () => {
+			jest.spyOn(kmsJwtAdapter.kms, "send").mockImplementationOnce(() => (kmsDecryptCommandOutput));
+    		const result = await kmsJwtAdapter.sendDecryptRequest(keyIdentifier, encryptedKey);
+
+    		expect(result).toEqual(kmsDecryptCommandOutput);
+    		expect(kmsJwtAdapter.kms.send).toHaveBeenCalledWith(expect.objectContaining({"input": {
+				CiphertextBlob: new Uint8Array([1,2,3,4,5]),
+				EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
+				KeyId: "some-key-id",
+			}}));
+			expect(kmsJwtAdapter.kms.send).toHaveBeenCalledTimes(1);
+		});
+
+		  it("should handle KMS decryption errors", async () => {
+			const errorMessage = "Simulated KMS Decryption Error";
+			jest.spyOn(kmsJwtAdapter.kms, "send").mockImplementationOnce(() => {throw new Error(errorMessage)});
+			
+			await expect(kmsJwtAdapter.sendDecryptRequest(keyIdentifier, encryptedKey)).rejects.toThrow(errorMessage);
+			expect(kmsJwtAdapter.kms.send).toHaveBeenCalledTimes(1)
+
+		});
+  	});
+		
+
+			
+})
