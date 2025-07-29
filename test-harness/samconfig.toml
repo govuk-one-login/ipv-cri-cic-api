@@ -7,5 +7,5 @@ s3_prefix = "cic-test-harness"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_NAMED_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" BackendStack=\"cic-cri-api\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" BackendStack=\"cic-cri-api-kr\""
 image_repositories = []
