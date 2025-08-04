@@ -170,6 +170,7 @@ export class KmsJwtAdapter {
 				}
 
 				try {
+					this.logger.info(`Attempting decryption with legacy key with kid: ${encryptionKeyId}`)
 					const output: DecryptCommandOutput = await this.sendDecryptRequest(encryptionKeyId, encryptedKey)
 					cek = output.Plaintext;
 					this.logger.info(`Decryption succesfull with legacy key with kid ${encryptionKeyId}`)

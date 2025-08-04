@@ -253,6 +253,7 @@ describe("KmsJwtAdapter utils", () => {
 			const result = await kmsJwtAdapter.decrypt(mockJwe);
 
 			expect(result).toStrictEqual(mockCryptoDecryptedPayload);
+			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Attempting decryption with legacy key:'));
 			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption succesfull with legacy key'));
 		});
 
