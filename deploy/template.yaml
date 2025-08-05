@@ -3812,10 +3812,10 @@ Resources:
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
-        - !ImportValue platform-alarm-pagerduty-alert-topic
+        # - !ImportValue platform-alarm-pagerduty-alert-topic
       AlarmActions:
         - !ImportValue platform-alarm-topic-critical-alert
-        - !ImportValue platform-alarm-pagerduty-alert-topic
+        # - !ImportValue platform-alarm-pagerduty-alert-topic
       InsufficientDataActions: [ ]
       MetricName: KeyAliasesUnavailable
       Namespace: !Sub "${AWS::StackName}/LogMessages"
