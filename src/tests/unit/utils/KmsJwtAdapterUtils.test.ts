@@ -221,6 +221,9 @@ describe("KmsJwtAdapter utils", () => {
 	});
 
 	describe("#decrypt", () => {
+		const activeAlias = Constants.ENCRYPTION_KEY_ALIASES[0]
+		const inactiveAlias = Constants.ENCRYPTION_KEY_ALIASES[1]
+		const previousAlias = Constants.ENCRYPTION_KEY_ALIASES[2]
 		const mockJwe = "protectedHeader.encryptedKey.iv.ciphertext.tag"
 		const mockKmsDecryptedPayload = new Uint8Array([1, 2, 3, 4, 5])
 		const kmsDecryptCommandOutput : DecryptCommandOutput = {
@@ -242,19 +245,92 @@ describe("KmsJwtAdapter utils", () => {
 			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
 			const result = await kmsJwtAdapter.decrypt(mockJwe);
 
-			expect(result).toStrictEqual(mockCryptoDecryptedPayload);
-			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Attempting decryption with key alias:'));
-			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption succesfull with key alias:'));
+			expect(result).toEqual(mockCryptoDecryptedPayload);
+			expect(logger.info).toHaveBeenNthCalledWith(1, expect.stringContaining('Attempting decryption with key alias:'));
+			expect(logger.info).toHaveBeenNthCalledWith(2, expect.stringContaining('Decryption succesfull with key alias:'));
 		})
 
-		  it("should successfully decrypt a JWE using the legacy key", async () => {
+		it("should attempt decryption with 'inactive' alias if 'active' alias fails", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			const mockSendDecryptRequest = jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest');
+			mockSendDecryptRequest.mockImplementation(async (alias: string) => {
+				if (alias.includes(activeAlias)) {
+					throw new Error(`Decryption failed for ${alias}`);
+				} else {
+					return kmsDecryptCommandOutput;
+				}
+    		});
+			const result = await kmsJwtAdapter.decrypt(mockJwe);
+			
+			expect(result).toEqual(mockCryptoDecryptedPayload);
+			expect(mockSendDecryptRequest).toHaveBeenCalledTimes(2);
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(1, `alias/${activeAlias}`, "encryptedKey");
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(2, `alias/${inactiveAlias}`, "encryptedKey");
+			expect(logger.info).toHaveBeenNthCalledWith(1, expect.stringContaining(`Attempting decryption with key alias: ${activeAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(2, expect.stringContaining(`Decryption failed with key alias ${activeAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(3, expect.stringContaining(`Attempting decryption with key alias: ${inactiveAlias}`));
+		})
+
+		it("should attempt decryption with 'previous' alias if 'active' and 'inactive' aliases fail", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			const mockSendDecryptRequest = jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest');
+			mockSendDecryptRequest.mockImplementation(async (alias: string) => {
+        		if (alias.includes(activeAlias) || alias.includes(inactiveAlias)) {
+            		throw new Error(`Decryption failed for ${alias}`);
+        		} else {
+            		return kmsDecryptCommandOutput;
+				}
+			})
+			const result = await kmsJwtAdapter.decrypt(mockJwe);
+			
+			expect(result).toEqual(mockCryptoDecryptedPayload);
+			expect(mockSendDecryptRequest).toHaveBeenCalledTimes(3);
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(1, `alias/${activeAlias}`, "encryptedKey");
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(2, `alias/${inactiveAlias}`, "encryptedKey");
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(3, `alias/${previousAlias}`, "encryptedKey");
+			expect(logger.info).toHaveBeenNthCalledWith(1, expect.stringContaining(`Attempting decryption with key alias: ${activeAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(2, expect.stringContaining(`Decryption failed with key alias ${activeAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(3, expect.stringContaining(`Attempting decryption with key alias: ${inactiveAlias}`));
+			expect(logger.info).toHaveBeenNthCalledWith(4, expect.stringContaining(`Decryption failed with key alias ${inactiveAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(5, expect.stringContaining(`Attempting decryption with key alias: ${previousAlias}`));
+		})
+
+		it("should attempt decryption with legacy key if all key aliases fail", async () => {
+			process.env.KEY_ROTATION_ENABLED = "true";
+			const legacyEncryptionKeyKid = process.env.ENCRYPTION_KEY_IDS;
+			const mockSendDecryptRequest = jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest');
+			mockSendDecryptRequest.mockImplementation(async (alias: string) => {
+        		if (alias.includes(activeAlias) || alias.includes(inactiveAlias) || alias.includes(previousAlias)) {
+            		throw new Error(`Decryption failed for ${alias}`);
+        		} else {
+            		return kmsDecryptCommandOutput;
+				}
+			})
+			const result = await kmsJwtAdapter.decrypt(mockJwe);
+
+			expect(result).toEqual(mockCryptoDecryptedPayload);
+			expect(mockSendDecryptRequest).toHaveBeenCalledTimes(4);
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(1, `alias/${activeAlias}`, "encryptedKey");
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(2, `alias/${inactiveAlias}`, "encryptedKey");
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(3, `alias/${previousAlias}`, "encryptedKey");
+			expect(mockSendDecryptRequest).toHaveBeenNthCalledWith(4, `${legacyEncryptionKeyKid}`, "encryptedKey");
+			expect(logger.info).toHaveBeenNthCalledWith(1, expect.stringContaining(`Attempting decryption with key alias: ${activeAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(2, expect.stringContaining(`Decryption failed with key alias ${activeAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(3, expect.stringContaining(`Attempting decryption with key alias: ${inactiveAlias}`));
+			expect(logger.info).toHaveBeenNthCalledWith(4, expect.stringContaining(`Decryption failed with key alias ${inactiveAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(5, expect.stringContaining(`Attempting decryption with key alias: ${previousAlias}`));
+			expect(logger.info).toHaveBeenNthCalledWith(6, expect.stringContaining(`Decryption failed with key alias ${previousAlias}`));
+    		expect(logger.info).toHaveBeenNthCalledWith(7, expect.stringContaining(`Attempting decryption with legacy key with kid: ${legacyEncryptionKeyKid}`));
+		})
+
+		it("should successfully decrypt a JWE using the legacy key if key rotation feature flag is disabled", async () => {
 			process.env.KEY_ROTATION_ENABLED = "false";
 			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockResolvedValue(kmsDecryptCommandOutput);
 			const result = await kmsJwtAdapter.decrypt(mockJwe);
 
-			expect(result).toStrictEqual(mockCryptoDecryptedPayload);
-			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Attempting decryption with legacy key:'));
-			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption succesfull with legacy key'));
+			expect(result).toEqual(mockCryptoDecryptedPayload);
+			expect(logger.info).toHaveBeenNthCalledWith(1, expect.stringContaining('Attempting decryption with legacy key with kid:'));
+			expect(logger.info).toHaveBeenNthCalledWith(2, expect.stringContaining('Decryption succesfull with legacy key'));
 		});
 
 		it("throws error if the jwe doesn't contain the correct number of components", async () => {
@@ -266,11 +342,11 @@ describe("KmsJwtAdapter utils", () => {
 			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockRejectedValueOnce(new Error("KMS error"));
 
 			await expect(kmsJwtAdapter.decrypt(mockJwe)).rejects.toThrow(expect.objectContaining({ message: "Error decrypting JWE: Unable to decrypt encryption key via KMS" }));
-			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Attempting decryption with key alias:'));
-			expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Decryption failed with key alias'));
+			expect(logger.info).toHaveBeenNthCalledWith(1, expect.stringContaining('Attempting decryption with key alias:'));
+			expect(logger.info).toHaveBeenNthCalledWith(2, expect.stringContaining('Decryption failed with key alias'));
 		});
 
-		it("should handle KMS decryption errors legacy key", async () => {
+		it("should handle KMS decryption errors with legacy key", async () => {
 			process.env.KEY_ROTATION_ENABLED = "false";
 			jest.spyOn(kmsJwtAdapter, 'sendDecryptRequest').mockRejectedValueOnce(new Error("KMS error"));
 
