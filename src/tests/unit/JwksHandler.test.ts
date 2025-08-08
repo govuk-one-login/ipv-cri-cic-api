@@ -1,4 +1,4 @@
- import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
+import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
@@ -31,6 +31,12 @@ jest.mock("@aws-sdk/client-s3", () => ({
 	})),
 	PutObjectCommand: jest.fn().mockImplementation((args) => args),
 	CopyObjectCommand: jest.fn().mockImplementation((args) => args),
+}));
+
+jest.mock("../../utils/JwtUtils", () => ({
+	jwtUtils: {
+		getHashedKid: jest.fn().mockImplementation((args) => {return args;}),
+	},
 }));
 
 describe("JwksHandler", () => {

@@ -112,6 +112,7 @@ Mappings:
     dev:
       ISSUER: "https://review-c.dev.account.gov.uk"
       DNSSUFFIX: review-c.dev.account.gov.uk
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint": "https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json",
@@ -124,6 +125,7 @@ Mappings:
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
+      KEYROTATIONENABLED: false
       CLIENTS: 
         '[{
           "jwksEndpoint": "https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json",
@@ -136,6 +138,7 @@ Mappings:
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
+      KEYROTATIONENABLED: false
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json",
@@ -147,6 +150,7 @@ Mappings:
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
+      KEYROTATIONENABLED: false
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", 
@@ -158,6 +162,7 @@ Mappings:
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
+      KEYROTATIONENABLED: false
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", 
@@ -997,6 +1002,8 @@ Resources:
             !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
           ENCRYPTION_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+          KEY_ROTATION_ENABLED:
+            !FindInMap [EnvironmentVariables, !Ref Environment, KEYROTATIONENABLED]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -3787,7 +3794,7 @@ Resources:
     Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref SessionFunctionLogGroup
-      FilterPattern: '{ $.messageCode = "KEY_ALIASES_UNAVAILABLE" }'
+      FilterPattern: '{ $.messageCode = "FAILED_DECRYPTING_JWE" }'
       MetricTransformations:
         - 
           MetricValue: "1"
@@ -3801,14 +3808,14 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-KeyAliasesUnavailable"
-      AlarmDescription: !Sub "KEY_ALIASES_UNAVAILABLE critical ${SupportManualURL}"
+      AlarmDescription: !Sub "FAILED_DECRYPTING_JWE critical ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
-        - !ImportValue platform-alarm-pagerduty-alert-topic
+        # - !ImportValue platform-alarm-pagerduty-alert-topic
       AlarmActions:
         - !ImportValue platform-alarm-topic-critical-alert
-        - !ImportValue platform-alarm-pagerduty-alert-topic
+        # - !ImportValue platform-alarm-pagerduty-alert-topic
       InsufficientDataActions: [ ]
       MetricName: KeyAliasesUnavailable
       Namespace: !Sub "${AWS::StackName}/LogMessages"

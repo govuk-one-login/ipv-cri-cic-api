@@ -9,6 +9,7 @@ import axios from "axios";
 import { createKmsClient } from "./KMSClient";
 import * as AWS from "@aws-sdk/client-kms";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { Constants } from "../utils/Constants";
 
 export class KmsJwtAdapter {
     readonly kid: string;
@@ -84,7 +85,7 @@ export class KmsJwtAdapter {
 
     async verifyWithJwks(urlEncodedJwt: string, publicKeyEndpoint: string, targetKid?: string): Promise<JWTPayload | null> {
 		if (!this.cachedJwks || (this.cachedTime && new Date() > this.cachedTime)) {
-			this.logger.info("No cached keys found or cache time has expired");
+			this.logger.info("No cached signing keys found or cache time has expired");
     		const oidcProviderJwks = (await axios.get(publicKeyEndpoint));
 			this.cachedJwks = oidcProviderJwks.data.keys;
 			const cacheControl = oidcProviderJwks.headers['cache-control'];
@@ -142,27 +143,50 @@ export class KmsJwtAdapter {
     		tag,
     	] = jweComponents;
 
-    	let cek: Uint8Array;
-    	try {
-    		const inputs: DecryptCommandInput = {
-    			CiphertextBlob: jwtUtils.base64DecodeToUint8Array(encryptedKey),
-    			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
-    			KeyId: process.env.ENCRYPTION_KEY_IDS,
-    		};
+    	let cek: Uint8Array | undefined;
+		try {
+			if (process.env.KEY_ROTATION_ENABLED === "true") {
+				for (const alias of Constants.ENCRYPTION_KEY_ALIASES) {
+					try {
+						this.logger.info(`Attempting decryption with key alias: ${alias}`)
+						const output: DecryptCommandOutput = await this.sendDecryptRequest(`alias/${alias}`, encryptedKey);
+						if (output.Plaintext) {
+							this.logger.info(`Decryption succesfull with key alias: ${alias}`)
+							cek = output.Plaintext;
+							break; 
+						}
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					} catch (error) {
+						this.logger.info(`Decryption failed with key alias ${alias}: ${error}`);
+      				}
+				}
+			}
 
-    		const output: DecryptCommandOutput = await this.kms.send(
-    			new DecryptCommand(inputs),
-    		);
-			
-    		const plaintext = output.Plaintext ?? null;
-			
-    		if (plaintext === null) {
-    			throw new Error("No Plaintext received when calling KMS to decrypt the Encryption Key");
-    		}
-    		cek = plaintext;
-    	} catch (err) {
-    		throw new JsonWebTokenError("Error decrypting JWE: Unable to decrypt encryption key via KMS", err);
-    	}
+			// Fallback to legacy key if feature flag disabled/failure to decrypt with all key aliases
+			if (cek === undefined) {
+				const encryptionKeyId = process.env.ENCRYPTION_KEY_IDS;
+				if (!encryptionKeyId) {
+					throw new Error("Missing environment variable: ENCRYPTION_KEY_IDS");
+				}
+
+				try {
+					this.logger.info(`Attempting decryption with legacy key with kid: ${encryptionKeyId}`)
+					const output: DecryptCommandOutput = await this.sendDecryptRequest(encryptionKeyId, encryptedKey)
+					cek = output.Plaintext;
+					this.logger.info(`Decryption succesfull with legacy key with kid ${encryptionKeyId}`)
+				} catch (error) {
+					this.logger.info(`Decryption failed with legacy key with kid ${encryptionKeyId}: ${error}`);
+				} 
+			}
+
+			// Throw error if failure to decrypt with all key aliases + legacy key
+			if (cek === undefined) {
+				throw new Error("No Plaintext received when calling KMS to decrypt the Encryption Key");
+			}
+
+		} catch (error) {
+			throw new JsonWebTokenError("Error decrypting JWE: Unable to decrypt encryption key via KMS", error);
+		}
 
     	let payload: Uint8Array;
     	try {
@@ -193,4 +217,17 @@ export class KmsJwtAdapter {
     		throw new JsonWebTokenError("Error decrypting JWE: Unable to decode the decrypted payload", err);
     	}
   	}
+
+	async sendDecryptRequest(keyIdentifier: string, encryptedKey: string): Promise<DecryptCommandOutput> {
+		const inputs: DecryptCommandInput = {
+    			CiphertextBlob: jwtUtils.base64DecodeToUint8Array(encryptedKey),
+    			EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
+    			KeyId: keyIdentifier,
+    		};
+
+    		const output: DecryptCommandOutput = await this.kms.send(
+    			new DecryptCommand(inputs),
+    		);
+		return output;
+	}
 }
