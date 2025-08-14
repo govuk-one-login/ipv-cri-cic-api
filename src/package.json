@@ -82,7 +82,7 @@
         "express-asyncify": "2.1.2"
     },
     "engines": {
-        "node": "20.18.3"
+        "node": "22.*"
     },
       "overrides": {
     "form-data": ">=4.0.4"
