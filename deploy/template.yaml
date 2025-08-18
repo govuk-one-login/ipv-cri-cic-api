@@ -125,7 +125,7 @@ Mappings:
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint": "https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json",
@@ -138,7 +138,7 @@ Mappings:
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json",
