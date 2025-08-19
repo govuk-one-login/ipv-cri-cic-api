@@ -42,7 +42,7 @@
     "compile": "./node_modules/.bin/tsc"
   },
   "engines": {
-    "node": "22.*"
+    "node": "22.0.0"
   },
   "overrides": {
     "form-data": ">=4.0.4"
