@@ -150,7 +150,7 @@ Mappings:
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", 
