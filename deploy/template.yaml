@@ -426,8 +426,8 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-vpc-changes"
-      AlarmDescription: 
-        - !Sub "A CloudWatch Alarm that triggers when changes are made to a VPC ${RunbookUrl}"
+      AlarmDescription: !Sub 
+        - "A CloudWatch Alarm that triggers when changes are made to a VPC ${RunbookUrl}"
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       MetricName: VpcEventChanges
       Namespace: !Sub "${AWS::StackName}/LogMessages"
