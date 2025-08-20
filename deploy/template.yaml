@@ -162,7 +162,7 @@ Mappings:
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", 
