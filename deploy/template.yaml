@@ -125,7 +125,7 @@ Mappings:
     build:
       ISSUER: "https://review-c.build.account.gov.uk"
       DNSSUFFIX: review-c.build.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint": "https://ipvstub.review-c.build.account.gov.uk/.well-known/jwks.json",
@@ -138,7 +138,7 @@ Mappings:
     staging:
       ISSUER: "https://review-c.staging.account.gov.uk"
       DNSSUFFIX: review-c.staging.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json",
@@ -150,7 +150,7 @@ Mappings:
     integration:
       ISSUER: "https://review-c.integration.account.gov.uk"
       DNSSUFFIX: review-c.integration.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json", 
@@ -162,7 +162,7 @@ Mappings:
     production:
       ISSUER: "https://review-c.account.gov.uk"
       DNSSUFFIX: review-c.account.gov.uk
-      KEYROTATIONENABLED: false
+      KEYROTATIONENABLED: true
       CLIENTS: 
         '[{
           "jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json", 
@@ -1504,11 +1504,12 @@ Resources:
                 - Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
       Tags:
         key_consumer_type: manage
-      Events:
-        InvocationLevel:
-          Type: Schedule
-          Properties:
-            Schedule: cron(0 * * * ? *)
+      # Disabled as CIC CRI now uses keys published by key rotation on the ./well-known e/p
+      # Events:
+      #   InvocationLevel:
+      #     Type: Schedule
+      #     Properties:
+      #       Schedule: cron(0 * * * ? *)
 
       Environment:
         Variables:
