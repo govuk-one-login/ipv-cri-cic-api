@@ -50,10 +50,6 @@ Parameters:
     Description: "Set to the string value `true` to deploy alarms in a DEV environment"
     Type: String
     Default: false
-  SupportManualURL:
-    Description: "Link to the CIC support manual"
-    Type: String
-    Default: 'https://govukverify.atlassian.net/wiki/spaces/Kiwi/pages/4371939527/6.3+CIC+CRI+Support+Documentation'
   LambdaConcurrency:
     Description: "Reserved concurrency for Lambdas running in non-DEV environments"
     Type: Number
@@ -108,6 +104,10 @@ Mappings:
     production:
       CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
 
+  StaticVariables:
+      urls:
+        CICSupportManual: "https://govukverify.atlassian.net/wiki/spaces/Kiwi/pages/4371939527/6.3+CIC+CRI+Support+Documentation"
+  
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       ISSUER: "https://review-c.dev.account.gov.uk"
@@ -325,7 +325,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-S3Bucket-changes"
-      AlarmDescription: !Sub "A CloudWatch Alarm that triggers when changes are made to S3 Bucket ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "A CloudWatch Alarm that triggers when changes are made to S3 Bucket ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -360,7 +362,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties: 
       AlarmName: !Sub "${AWS::StackName}-IGW-changes"
-      AlarmDescription: !Sub "Triggers CloudWatch Alarm when changes are made to an Internet Gateway in a VPC ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Triggers CloudWatch Alarm when changes are made to an Internet Gateway in a VPC ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       MetricName: IGatewayActivityEvent
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
@@ -390,7 +394,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-vpc-route-changes"
-      AlarmDescription: !Sub "A CloudWatch Alarm that triggers when changes are made to a VPC's Route Table ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "A CloudWatch Alarm that triggers when changes are made to a VPC's Route Table ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       MetricName: VpcRouteTableEvent
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
@@ -420,7 +426,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-vpc-changes"
-      AlarmDescription: !Sub "A CloudWatch Alarm that triggers when changes are made to a VPC ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "A CloudWatch Alarm that triggers when changes are made to a VPC ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       MetricName: VpcEventChanges
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
@@ -451,7 +459,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-organisations-changes"
-      AlarmDescription: !Sub "A CloudWatch Alarm that triggers when changes are made to AWS Organisations ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "A CloudWatch Alarm that triggers when changes are made to AWS Organisations ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       MetricName: OrganisationsEventChange
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
@@ -647,7 +657,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-CICAPIGateway-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -817,7 +829,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -956,7 +970,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1102,7 +1118,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1222,7 +1240,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TokenFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1343,7 +1363,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1544,7 +1566,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1653,7 +1677,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionConfigFunction-FatalErrorAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when Fatal Error occurs. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1753,7 +1779,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-5XXErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the backend api-gateway. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the backend api-gateway. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1803,7 +1831,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-5XXErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the backend api-gateway. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the backend api-gateway. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
@@ -1853,7 +1883,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-UserInfo5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the userInfo endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1915,7 +1947,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-UserInfo5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the userInfo endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -1979,7 +2013,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Token5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Token endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the Token endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2041,7 +2077,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Token5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Token endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the Token endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -2105,7 +2143,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Authorization5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the authorization endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the authorization endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2167,7 +2207,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Authorization5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the authorization endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the authorization endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -2231,7 +2273,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionConfig5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the session-config endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the session-config endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2293,7 +2337,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionConfig5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the session-config endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the session-config endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -2357,7 +2403,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentity5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Claimed Identity endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the Claimed Identity endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2419,7 +2467,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentity5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Claimed Identity endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the Claimed Identity endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -2483,7 +2533,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Session5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Session endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the Session endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2545,7 +2597,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Session5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Session endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the Session endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -2609,7 +2663,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction5XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 5XX errors on the Json Web Keys endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 5XX errors on the Json Web Keys endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2671,7 +2727,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeys5XXApiGwErrorCriticalAlarm"
-      AlarmDescription: !Sub "There has been a significant proportion of 5XX errors on the Json Web Keys endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a significant proportion of 5XX errors on the Json Web Keys endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -2737,7 +2795,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-UserInfo4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the userInfo endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the userInfo endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2799,7 +2859,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Token4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Token endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the Token endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2861,7 +2923,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Authorization4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the authorization endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the authorization endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2923,7 +2987,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionConfig4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the session-config endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the session-config endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2985,7 +3051,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentity4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Claimed Identity endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the Claimed Identity endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3047,7 +3115,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-Session4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Session endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the Session endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3109,7 +3179,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeys4XXApiGwErrorAlarm"
-      AlarmDescription: !Sub "There has been a small proportion of 4XX errors on the Json Web Keys endpoint. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been a small proportion of 4XX errors on the Json Web Keys endpoint. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3173,7 +3245,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-apiGWLatencyAlarm"
-      AlarmDescription: !Sub "There has been increased latency on backend api-gateway. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "There has been increased latency on backend api-gateway. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: false  # disabled until we're ready for alarm actions to fire
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3221,7 +3295,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TXMASQSOldMessagesAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when the age of the oldest TXMA message is 5 or more minutes. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when the age of the oldest TXMA message is 5 or more minutes. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3246,7 +3322,9 @@ Resources:
     Condition: "DeployAlarms"
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TXMADLQMessagesVisibleAlarm"
-      AlarmDescription: !Sub "Trigger an alarm when message gets added to TXMA DLQ. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger an alarm when message gets added to TXMA DLQ. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3278,7 +3356,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3303,7 +3383,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-TokenFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3328,7 +3410,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3353,7 +3437,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-SessionConfigFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3378,7 +3464,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3403,7 +3491,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of reserved concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-SessionFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3428,7 +3518,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if over 80% of JsonWeb Keys concurrency is used. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if over 80% of JsonWeb Keys concurrency is used. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
@@ -3455,7 +3547,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${ClaimedIdentityFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${ClaimedIdentityFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-ClaimedIdentityFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3480,7 +3574,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${SessionFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${SessionFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-SessionFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3505,7 +3601,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${JsonWebKeysFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${JsonWebKeysFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3530,7 +3628,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${AuthorizationFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${AuthorizationFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3555,7 +3655,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${SessionConfigFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${SessionConfigFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-SessionConfigFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3580,7 +3682,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${TokenFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${TokenFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-TokenFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3605,7 +3709,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${UserInfoFunction} lambda throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger if the ${UserInfoFunction} lambda throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3710,7 +3816,9 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger the alarm if any lambda in the account throttles. ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "Trigger the alarm if any lambda in the account throttles. ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       AlarmName: !Sub "${AWS::StackName}-LambdaThrottleAlarm"
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3743,7 +3851,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtAlarm"
-      AlarmDescription: !Sub "FAILED_VERIFYING_JWT warning ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "FAILED_VERIFYING_JWT warning ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3768,7 +3878,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm"
-      AlarmDescription: !Sub "FAILED_VERIFYING_JWT critical ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "FAILED_VERIFYING_JWT critical ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-pagerduty-alert-topic
@@ -3809,7 +3921,9 @@ Resources:
     Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-KeyAliasesUnavailable"
-      AlarmDescription: !Sub "FAILED_DECRYPTING_JWE critical ${SupportManualURL}"
+      AlarmDescription: !Sub 
+        - "FAILED_DECRYPTING_JWE critical ${RunbookUrl}"
+        - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
