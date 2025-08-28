@@ -36,7 +36,7 @@ jobs:
           use-installer: true
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4.2.1
+        uses: aws-actions/configure-aws-credentials@v4.3.1
         with:
           role-to-assume: ${{ secrets.BUILD_CRI_CIC_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
