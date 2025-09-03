@@ -155,7 +155,7 @@ export class KmsJwtAdapter {
 							cek = output.Plaintext;
 							break; 
 						}
-					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					 
 					} catch (error) {
 						this.logger.info(`Decryption failed with key alias ${alias}: ${error}`);
       				}
