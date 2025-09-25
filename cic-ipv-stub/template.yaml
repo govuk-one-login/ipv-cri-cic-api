@@ -60,7 +60,7 @@ Mappings:
     dev:
       DNSSUFFIX: review-c.dev.account.gov.uk
       BASEFRONTURL: "https://cic-cri-front.review-c.dev.account.gov.uk"
-      BASEAPIURL: "https://api-cic-cri-api.review-c.dev.account.gov.uk"
+      BASEAPIURL: !Sub "https://api-${BackendStack}.review-c.dev.account.gov.uk"
     build:
       DNSSUFFIX: review-c.build.account.gov.uk
       BASEFRONTURL: "https://www.review-c.build.account.gov.uk"
@@ -662,10 +662,10 @@ Resources:
       Description: The Base URI from backend stack to test
       Name: !Sub "/${Environment}/${AWS::StackName}/API/PROVIDER_BASE_URI"
       Type: String
-      Value: !Sub
-        - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
-        - ImportProviderStack:
-            Fn::ImportValue: !Sub "${BackendStack}-CICApiGatewayId"
+      Value: !If
+        - CreateDevResources
+        - !Sub "https://api-${BackendStack}.review-c.dev.account.gov.uk"
+        - "https://api.review-c.build.account.gov.uk"
       Tags:
         APP: !Sub cic-${AWS::StackName}
 
