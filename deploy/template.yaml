@@ -207,6 +207,10 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
+  IsDevOrBuildOrStaging: !Or
+    - !Equals [ !Ref Environment, dev ]
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -611,8 +615,8 @@ Resources:
         Service: backend
         Name: CICRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
-        FMSRegionalPolicy: false
-        CustomPolicy: true
+        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
+        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
 
   CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
