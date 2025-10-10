@@ -60,7 +60,7 @@ Mappings:
     dev:
       DNSSUFFIX: review-c.dev.account.gov.uk
       BASEFRONTURL: "https://cic-cri-front.review-c.dev.account.gov.uk"
-      BASEAPIURL: !Sub "https://api-${BackendStack}.review-c.dev.account.gov.uk"
+      BASEAPIURL: "https://api-cic-cri-api.review-c.dev.account.gov.uk"
     build:
       DNSSUFFIX: review-c.build.account.gov.uk
       BASEFRONTURL: "https://www.review-c.build.account.gov.uk"
