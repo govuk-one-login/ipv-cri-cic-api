@@ -4613,8 +4613,8 @@ Outputs:
     Description: "CIC IPV Stub"
     Value: !If
       - CreateDevResources
-      - !Sub "https://${IPVStubStackName}-review-c.dev.account.gov.uk/"
-      - "https://ipvstub.review-c.build.account.gov.uk/"
+      - !Sub "https://${IPVStubStackName}-review-c.dev.account.gov.uk"
+      - "https://ipvstub.review-c.build.account.gov.uk"
   TxMASQSQueue: 
     Description: "Arn of the TxMASQSQueue"
     Value: !GetAtt TxMASQSQueue.Arn
