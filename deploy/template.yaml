@@ -682,13 +682,7 @@ Resources:
   ### End of API Gateway definition.
 
   ### API Gateway Custom Domain definition
-  WAFv2ACLAssociation:
-    #Condition: IsNotDevelopment
-    Type: AWS::WAFv2::WebACLAssociation
-    Properties:
-      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${CICRestApi}/stages/${CICRestApi.Stage}"
-      WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
-
+  
   CICApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
@@ -4619,8 +4613,10 @@ Outputs:
   CICIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "CIC IPV Stub"
-    Value:
-      Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
+    Value: !If
+      - CreateDevResources
+      - !Sub "https://${IPVStubStackName}-ipvstub.review-c.dev.account.gov.uk"
+      - "https://ipvstub.review-c.build.account.gov.uk"
   TxMASQSQueue: 
     Description: "Arn of the TxMASQSQueue"
     Value: !GetAtt TxMASQSQueue.Arn

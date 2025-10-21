@@ -659,19 +659,6 @@ Resources:
         - Key: Environment
           Value: !Sub ${Environment}
 
-  # SSMParameter for .env variable
-  ProviderBaseUri:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The Base URI from backend stack to test
-      Name: !Sub "/${Environment}/${AWS::StackName}/API/PROVIDER_BASE_URI"
-      Type: String
-      Value: !Sub
-        - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
-        - ImportProviderStack:
-            Fn::ImportValue: !Sub "${BackendStack}-CICApiGatewayId"
-      Tags:
-        APP: !Sub cic-${AWS::StackName}
 
   IPVStubId:
     Type: AWS::SSM::Parameter
