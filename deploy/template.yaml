@@ -1422,6 +1422,14 @@ Resources:
     Properties:
       MessageRetentionPeriod: 259200 # three days
       KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+  
+  TxMASQSQueueARNParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${AWS::StackName}/TxMASQSQueueARN"
+      Type: String
+      Value: !GetAtt TxMASQSQueue.Arn
+      Description: ARN of the TxMA SQS queue
 
   TxMAKMSEncryptionKey:
     Type: AWS::KMS::Key
@@ -1467,6 +1475,14 @@ Resources:
         - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
+  
+  TxMAKMSEncryptionKeyARNParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${AWS::StackName}/TxMAKMSEncryptionKeyARN"
+      Type: String
+      Value: !GetAtt TxMAKMSEncryptionKey.Arn
+      Description: ARN of the TxMA KMS encryption key
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
