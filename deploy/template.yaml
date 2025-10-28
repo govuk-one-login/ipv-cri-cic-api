@@ -774,6 +774,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - ClaimedIdentityHandler.ts
+        UseNpmCi: true
 
   ClaimedIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -916,6 +917,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - UserInfoHandler.ts
+        UseNpmCi: true
 
   UserInfoFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1063,6 +1065,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionHandler.ts
+        UseNpmCi: true
 
   SessionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1185,6 +1188,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AccessTokenHandler.ts
+        UseNpmCi: true
 
   TokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1308,6 +1312,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AuthorizationCodeHandler.ts
+        UseNpmCi: true
 
   AuthorizationFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1520,6 +1525,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - JwksHandler.ts
+        UseNpmCi: true
 
   JsonWebKeysLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1622,6 +1628,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionConfigHandler.ts
+        UseNpmCi: true
 
   SessionConfigFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1741,6 +1748,7 @@ Resources:
         Sourcemap: false
         EntryPoints:
           - AbortHandler.ts
+        UseNpmCi: true
 
   AbortLogGroup:
     Type: AWS::Logs::LogGroup
