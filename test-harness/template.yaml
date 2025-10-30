@@ -43,12 +43,10 @@ Mappings:
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
-      ACCOUNTID: "060113405249"
       SESSIONTABLEENCRYPTIONKEYARN: "0ba88bed-fd6d-4417-be38-c8c0491d5541"
       PERSONTABLEENCRYPTIONKEYARN: "74ae43b4-e183-486e-bb6b-fd0262d9d671"
       TESTHARNESSURL: "testharness.review-c.dev.account.gov.uk"
     build:
-      ACCOUNTID: "155922983858"
       SESSIONTABLEENCRYPTIONKEYARN: "61ef9e48-6a45-44d7-8d50-37d7fc19368c"
       PERSONTABLEENCRYPTIONKEYARN: "0a5b4b8b-3798-48eb-ab25-d669bd724611"
       TESTHARNESSURL: "testharness.review-c.build.account.gov.uk"
@@ -233,16 +231,14 @@ Resources:
             Action: 
             - dynamodb:GetItem
             Resource: !Sub
-              - "arn:aws:dynamodb:${AWS::Region}:${accountId}:table/session-cic-cri-ddb"
-              - accountId: !FindInMap [ EnvironmentVariables, !Ref Environment, ACCOUNTID ]
+              - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
           - Effect: Allow
             Action: 
             - dynamodb:Query
             Resource: !Sub
             - "${tableName}/index/*"
             - tableName: !Sub
-                - "arn:aws:dynamodb:${AWS::Region}:${accountId}:table/session-cic-cri-ddb"
-                - accountId: !FindInMap [ EnvironmentVariables, !Ref Environment, ACCOUNTID ]
+                - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
       - PolicyName: SessionTableDecryptPolicy
         PolicyDocument:
           Version: 2012-10-17
@@ -251,9 +247,8 @@ Resources:
             Action: 
             - kms:Decrypt
             Resource: !Sub
-              - "arn:aws:kms:${AWS::Region}:${accountId}:key/${sessionTableEncryptionKeyArn}"
-              - accountId: !FindInMap [ EnvironmentVariables, !Ref Environment, ACCOUNTID ]
-                sessionTableEncryptionKeyArn: !FindInMap [ EnvironmentVariables, !Ref Environment, SESSIONTABLEENCRYPTIONKEYARN ]
+              - "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${sessionTableEncryptionKeyArn}"
+              - sessionTableEncryptionKeyArn: !FindInMap [ EnvironmentVariables, !Ref Environment, SESSIONTABLEENCRYPTIONKEYARN ]
       - PolicyName: PersonIdentityReadAccess
         PolicyDocument:
           Version: 2012-10-17
@@ -262,8 +257,7 @@ Resources:
             Action: 
             - dynamodb:GetItem
             Resource: !Sub
-              - "arn:aws:dynamodb:${AWS::Region}:${accountId}:table/person-identity-cic-cri-ddb"
-              - accountId: !FindInMap [ EnvironmentVariables, !Ref Environment, ACCOUNTID ]
+              - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/person-identity-cic-cri-ddb"
       - PolicyName: PersonIdentityDecryptPolicy
         PolicyDocument:
           Version: 2012-10-17
@@ -272,9 +266,8 @@ Resources:
             Action: 
             - kms:Decrypt
             Resource: !Sub
-              - "arn:aws:kms:${AWS::Region}:${accountId}:key/${personTableEncryptionKeyArn}"
-              - accountId: !FindInMap [ EnvironmentVariables, !Ref Environment, ACCOUNTID ]
-                personTableEncryptionKeyArn: !FindInMap [ EnvironmentVariables, !Ref Environment, PERSONTABLEENCRYPTIONKEYARN ]
+              - "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${personTableEncryptionKeyArn}"
+              - personTableEncryptionKeyArn: !FindInMap [ EnvironmentVariables, !Ref Environment, PERSONTABLEENCRYPTIONKEYARN ]
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
