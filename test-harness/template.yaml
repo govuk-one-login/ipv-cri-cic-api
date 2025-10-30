@@ -43,10 +43,13 @@ Mappings:
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
+      SESSIONTABLEENCRYPTIONKEYARN: "0ba88bed-fd6d-4417-be38-c8c0491d5541"
+      PERSONTABLEENCRYPTIONKEYARN: "74ae43b4-e183-486e-bb6b-fd0262d9d671"
       TESTHARNESSURL: "testharness.review-c.dev.account.gov.uk"
     build:
+      SESSIONTABLEENCRYPTIONKEYARN: "61ef9e48-6a45-44d7-8d50-37d7fc19368c"
+      PERSONTABLEENCRYPTIONKEYARN: "0a5b4b8b-3798-48eb-ab25-d669bd724611"
       TESTHARNESSURL: "testharness.review-c.build.account.gov.uk"
-
 Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
@@ -127,27 +130,24 @@ Resources:
         - S3ReadPolicy:
             BucketName: !Ref EventTestBucket
         - Statement:
-            - Sid: TxMAKMSDecryptkeysPolicy
-              Effect: Allow
-              Action:
-                - "kms:Decrypt"
-              Resource:
-                Fn::ImportValue: !Sub "${BackendStack}-TxMAKMSEncryptionKey-arn"
-            - Sid: TxMASQSConsumeEventPolicy
-              Effect: Allow
-              Action:
-                - "sqs:DeleteMessage"
-                - "sqs:GetQueueAttributes"
-                - "sqs:ChangeMessageVisibility"
-                - "sqs:ReceiveMessage"
-              Resource:
-                Fn::ImportValue: !Sub "${BackendStack}-TxMASQSQueue-arn"
+          - Sid: TxMAKMSDecryptkeysPolicy
+            Effect: Allow
+            Action:
+              - "kms:Decrypt"
+            Resource: !Sub "{{resolve:ssm:/${BackendStack}/TxMAKMSEncryptionKeyARN}}"
+          - Sid: TxMASQSConsumeEventPolicy
+            Effect: Allow
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:ReceiveMessage"
+            Resource: !Sub "{{resolve:ssm:/${BackendStack}/TxMASQSQueueARN}}"
       Events:
         TxMASQSEvent:
           Type: SQS
           Properties:
-            Queue:
-              Fn::ImportValue: !Sub "${BackendStack}-TxMASQSQueue-arn"
+            Queue: !Sub "{{resolve:ssm:/${BackendStack}/TxMASQSQueueARN}}"
             Enabled: true
             FunctionResponseTypes:
               - ReportBatchItemFailures
@@ -231,20 +231,13 @@ Resources:
           - Effect: Allow
             Action: 
             - dynamodb:GetItem
-            Resource:
-              Fn::ImportValue: !Sub "${BackendStack}-SessionTable-arn"
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
           - Effect: Allow
             Action: 
             - dynamodb:Query
-            Resource:
-              "Fn::Sub": [
-                "${tableName}/index/*",
-                {
-                  "tableName": {
-                    Fn::ImportValue: !Sub "${BackendStack}-SessionTable-arn"
-                  }
-                }
-              ]
+            Resource: !Sub
+            - "${tableName}/index/*"
+            - tableName: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
       - PolicyName: SessionTableDecryptPolicy
         PolicyDocument:
           Version: 2012-10-17
@@ -252,8 +245,9 @@ Resources:
           - Effect: Allow
             Action: 
             - kms:Decrypt
-            Resource:
-              Fn::ImportValue: !Sub "${BackendStack}-SessionTableEncryptionKey-arn"
+            Resource: !Sub
+              - "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${sessionTableEncryptionKeyArn}"
+              - sessionTableEncryptionKeyArn: !FindInMap [ EnvironmentVariables, !Ref Environment, SESSIONTABLEENCRYPTIONKEYARN ]
       - PolicyName: PersonIdentityReadAccess
         PolicyDocument:
           Version: 2012-10-17
@@ -261,8 +255,7 @@ Resources:
           - Effect: Allow
             Action: 
             - dynamodb:GetItem
-            Resource:
-              Fn::ImportValue: !Sub "${BackendStack}-PersonIdentityTable-arn"
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/person-identity-cic-cri-ddb"
       - PolicyName: PersonIdentityDecryptPolicy
         PolicyDocument:
           Version: 2012-10-17
@@ -270,8 +263,9 @@ Resources:
           - Effect: Allow
             Action: 
             - kms:Decrypt
-            Resource:
-              Fn::ImportValue: !Sub "${BackendStack}-PersonIdentityTableEncryptionKey-arn"
+            Resource: !Sub
+              - "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${personTableEncryptionKeyArn}"
+              - personTableEncryptionKeyArn: !FindInMap [ EnvironmentVariables, !Ref Environment, PERSONTABLEENCRYPTIONKEYARN ]
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
