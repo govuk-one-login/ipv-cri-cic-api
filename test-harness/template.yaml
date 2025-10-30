@@ -231,15 +231,13 @@ Resources:
           - Effect: Allow
             Action: 
             - dynamodb:GetItem
-            Resource: !Sub
-              - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
           - Effect: Allow
             Action: 
             - dynamodb:Query
             Resource: !Sub
             - "${tableName}/index/*"
-            - tableName: !Sub
-                - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
+            - tableName: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/session-cic-cri-ddb"
       - PolicyName: SessionTableDecryptPolicy
         PolicyDocument:
           Version: 2012-10-17
@@ -257,8 +255,7 @@ Resources:
           - Effect: Allow
             Action: 
             - dynamodb:GetItem
-            Resource: !Sub
-              - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/person-identity-cic-cri-ddb"
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/person-identity-cic-cri-ddb"
       - PolicyName: PersonIdentityDecryptPolicy
         PolicyDocument:
           Version: 2012-10-17
