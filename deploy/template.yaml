@@ -207,10 +207,6 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
-  IsDevOrBuildOrStaging: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -615,8 +611,8 @@ Resources:
         Service: backend
         Name: CICRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: false
+        CustomPolicy: true
 
   CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
@@ -778,6 +774,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - ClaimedIdentityHandler.ts
+        UseNpmCi: true
 
   ClaimedIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -920,6 +917,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - UserInfoHandler.ts
+        UseNpmCi: true
 
   UserInfoFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1067,6 +1065,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionHandler.ts
+        UseNpmCi: true
 
   SessionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1189,6 +1188,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AccessTokenHandler.ts
+        UseNpmCi: true
 
   TokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1312,6 +1312,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AuthorizationCodeHandler.ts
+        UseNpmCi: true
 
   AuthorizationFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1540,6 +1541,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - JwksHandler.ts
+        UseNpmCi: true
 
   JsonWebKeysLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1642,6 +1644,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionConfigHandler.ts
+        UseNpmCi: true
 
   SessionConfigFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1761,6 +1764,7 @@ Resources:
         Sourcemap: false
         EntryPoints:
           - AbortHandler.ts
+        UseNpmCi: true
 
   AbortLogGroup:
     Type: AWS::Logs::LogGroup
