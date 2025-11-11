@@ -207,10 +207,6 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
-  IsDevOrBuildOrStaging: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -615,8 +611,8 @@ Resources:
         Service: backend
         Name: CICRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: false
+        CustomPolicy: true
 
   CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1427,6 +1423,14 @@ Resources:
     Properties:
       MessageRetentionPeriod: 259200 # three days
       KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+  
+  TxMASQSQueueARNParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${AWS::StackName}/TxMASQSQueueARN"
+      Type: String
+      Value: !GetAtt TxMASQSQueue.Arn
+      Description: ARN of the TxMA SQS queue
 
   TxMAKMSEncryptionKey:
     Type: AWS::KMS::Key
@@ -1472,6 +1476,14 @@ Resources:
         - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
+  
+  TxMAKMSEncryptionKeyARNParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${AWS::StackName}/TxMAKMSEncryptionKeyARN"
+      Type: String
+      Value: !GetAtt TxMAKMSEncryptionKey.Arn
+      Description: ARN of the TxMA KMS encryption key
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
