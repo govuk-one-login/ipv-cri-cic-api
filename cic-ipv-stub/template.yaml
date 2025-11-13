@@ -115,7 +115,7 @@ Resources:
                   - kms:GetPublicKey
                 Resource:
                   - !GetAtt IPVStubKMSSigningKey.Arn
-                  - !GetAtt IPVStubKMSAdditionalKey.Arn
+                  - !GetAtt IPVStubKMSAdditionalSigningKey.Arn
                   - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
               - Effect: Allow
                 Action:
@@ -392,7 +392,7 @@ Resources:
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
+          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalSigningKey
           ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !If
@@ -458,7 +458,7 @@ Resources:
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
+          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalSigningKey
           JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
       Policies:
         - Statement:
@@ -508,7 +508,7 @@ Resources:
       Environment:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
+          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalSigningKey
           ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
       Policies:
         - Statement:
@@ -518,7 +518,7 @@ Resources:
                 - kms:GetPublicKey
               Resource:
                 - !GetAtt IPVStubKMSSigningKey.Arn
-                - !GetAtt IPVStubKMSAdditionalKey.Arn
+                - !GetAtt IPVStubKMSAdditionalSigningKey.Arn
                 - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
@@ -606,8 +606,14 @@ Resources:
           Value: Test Signing Key
         - Key: Environment
           Value: !Sub ${Environment}
+  
+  IPVStubKMSSigningKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-signing-key"
+      TargetKeyId: !Ref IPVStubKMSSigningKey
           
-  IPVStubKMSAdditionalKey:
+  IPVStubKMSAdditionalSigningKey:
     Type: AWS::KMS::Key
     Properties:
       Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
@@ -632,6 +638,12 @@ Resources:
           Value: Test Signing Key
         - Key: Environment
           Value: !Sub ${Environment}
+  
+  IPVStubKMSAdditionalSigningKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-additional-signing-key"
+      TargetKeyId: !Ref IPVStubKMSAdditionalSigningKey
 
   IPVStubKMSAdditionalEncryptionKey:
     Type: AWS::KMS::Key
@@ -658,6 +670,12 @@ Resources:
           Value: Test Encryption Key
         - Key: Environment
           Value: !Sub ${Environment}
+  
+  IPVStubKMSAdditionalEncryptionKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
+      TargetKeyId: !Ref IPVStubKMSAdditionalEncryptionKey
 
 
   IPVStubId:
