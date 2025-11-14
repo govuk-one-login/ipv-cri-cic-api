@@ -606,6 +606,7 @@ Resources:
           Value: Test Signing Key
         - Key: Environment
           Value: !Sub ${Environment}
+    DeletionPolicy: Retain
   
   IPVStubKMSSigningKeyAlias:
     Type: 'AWS::KMS::Alias'
@@ -638,6 +639,7 @@ Resources:
           Value: Test Signing Key
         - Key: Environment
           Value: !Sub ${Environment}
+    DeletionPolicy: Retain
   
   IPVStubKMSAdditionalSigningKeyAlias:
     Type: 'AWS::KMS::Alias'
@@ -670,6 +672,7 @@ Resources:
           Value: Test Encryption Key
         - Key: Environment
           Value: !Sub ${Environment}
+    DeletionPolicy: Retain
   
   IPVStubKMSAdditionalEncryptionKeyAlias:
     Type: 'AWS::KMS::Alias'
