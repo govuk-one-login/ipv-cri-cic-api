@@ -46,6 +46,10 @@ Conditions:
       - Fn::Equals:
           - !Ref PermissionsBoundary
           - "none"
+  
+  CreateDevResources: !Or
+    - !Equals [!Ref Environment, 'dev']
+    - !Equals [!Ref Environment, 'build']
 
 Globals:
   Function:
@@ -132,6 +136,112 @@ Resources:
     Properties:
       AliasName: !Sub "alias/session_decryption_key_active_alias"
       TargetKeyId: !Ref KMSEncryptionKey
+
+#----------------------------------------------------------------------------------------------------------------  
+# KMS keys for the IPV stub, only deployed to Dev and Build
+#---------------------------------------------------------------------------------------------------------------- 
+  IPVStubSigningKey:
+    Type: AWS::KMS::Key
+    Condition: CreateDevResources
+    Properties:
+      Description: A KMS Key for testing signing KMS integration in the development account.
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: ECC_NIST_P256
+      KeyUsage: SIGN_VERIFY
+      MultiRegion: false
+      PendingWindowInDays: !Ref KmsPendingWindowInDays
+      Tags:
+        - Key: KeyType
+          Value: Test Signing Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_7
+  
+  IPVStubSigningKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-signing-key"
+      TargetKeyId: !Ref IPVStubSigningKey
+          
+  IPVStubAdditionalSigningKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: ECC_NIST_P256
+      KeyUsage: SIGN_VERIFY
+      MultiRegion: false
+      PendingWindowInDays: !Ref KmsPendingWindowInDays
+      Tags:
+        - Key: KeyType
+          Value: Test Signing Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_7
+  
+  IPVStubAdditionalSigningKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-additional-signing-key"
+      TargetKeyId: !Ref IPVStubAdditionalSigningKey
+
+  IPVStubAdditionalEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: RSA_2048
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: !Ref KmsPendingWindowInDays
+      Tags:
+        - Key: KeyType
+          Value: Test Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_7
+  
+  IPVStubAdditionalEncryptionKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
+      TargetKeyId: !Ref IPVStubAdditionalEncryptionKey
 
 Outputs:
   SigningKeyArn:
