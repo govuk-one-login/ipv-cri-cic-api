@@ -171,7 +171,7 @@ Resources:
     Type: 'AWS::KMS::Alias'
     Condition: CreateDevResources
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}-signing-key"
+      AliasName: !Sub "alias/${AWS::StackName}-ipvstub-signing-key"
       TargetKeyId: !Ref IPVStubSigningKey
           
   IPVStubAdditionalSigningKey:
@@ -207,7 +207,7 @@ Resources:
     Type: 'AWS::KMS::Alias'
     Condition: CreateDevResources
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}-additional-signing-key"
+      AliasName: !Sub "alias/${AWS::StackName}-ipvstub-additional-signing-key"
       TargetKeyId: !Ref IPVStubAdditionalSigningKey
 
   IPVStubAdditionalEncryptionKey:
@@ -243,7 +243,7 @@ Resources:
     Type: 'AWS::KMS::Alias'
     Condition: CreateDevResources
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
+      AliasName: !Sub "alias/${AWS::StackName}-ipvstub-additional-encryption-key"
       TargetKeyId: !Ref IPVStubAdditionalEncryptionKey
 
 Outputs:
