@@ -613,6 +613,7 @@ Resources:
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-signing-key"
       TargetKeyId: !Ref IPVStubKMSSigningKey
+    DeletionPolicy: Retain
           
   IPVStubKMSAdditionalSigningKey:
     Type: AWS::KMS::Key
@@ -646,6 +647,7 @@ Resources:
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-signing-key"
       TargetKeyId: !Ref IPVStubKMSAdditionalSigningKey
+    DeletionPolicy: Retain
 
   IPVStubKMSAdditionalEncryptionKey:
     Type: AWS::KMS::Key
@@ -679,7 +681,7 @@ Resources:
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
       TargetKeyId: !Ref IPVStubKMSAdditionalEncryptionKey
-
+  DeletionPolicy: Retain
 
   IPVStubId:
     Type: AWS::SSM::Parameter
