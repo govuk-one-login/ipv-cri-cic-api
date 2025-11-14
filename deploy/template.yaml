@@ -207,6 +207,9 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
+  IsDevOrBuild: !Or
+    - !Equals [ !Ref Environment, dev ]
+    - !Equals [ !Ref Environment, build ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
