@@ -37,19 +37,6 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
     Type: String
     Default: "none"
-  # KMS keys used by this stack - default values are set to the L2 KMS stack outputs
-  IPVStubSigningKeyArn:
-    Type: String
-    Description: A KMS Key for testing signing KMS integration in the development account.
-    Default: !ImportValue IPVStubSigningKeyArn
-  IPVStubAdditionalSigningKeyArn:
-    Type: String
-    Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
-    Default: !ImportValue IPVStubAdditionalSigningKeyArn
-  IPVStubAdditionalEncryptionKeyArn:
-    Type: String
-    Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails
-    Default: !ImportValue IPVStubAdditionalEncryptionKeyArn
 
 Mappings:
   Configuration:
@@ -127,9 +114,9 @@ Resources:
                   - kms:Sign
                   - kms:GetPublicKey
                 Resource:
-                  - !Ref IPVStubSigningKeyArn
-                  - !Ref IPVStubAdditionalSigningKeyArn
-                  - !Ref IPVStubAdditionalEncryptionKeyArn
+                  - !ImportValue IPVStubSigningKeyArn
+                  - !ImportValue IPVStubAdditionalSigningKeyArn
+                  - !ImportValue IPVStubAdditionalEncryptionKeyArn
               - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
@@ -404,9 +391,9 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
-          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
+          SIGNING_KEY: !ImportValue IPVStubSigningKeyArn
+          ADDITIONAL_SIGNING_KEY: !ImportValue IPVStubAdditionalSigningKeyArn
+          ADDITIONAL_ENCRYPTION_KEY: !ImportValue IPVStubAdditionalEncryptionKeyArn
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !If
             - CreateDevResources
@@ -430,7 +417,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !Ref IPVStubSigningKeyArn
+                - !ImportValue IPVStubSigningKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -470,8 +457,8 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
+          SIGNING_KEY: !ImportValue IPVStubSigningKeyArn
+          ADDITIONAL_SIGNING_KEY: !ImportValue IPVStubAdditionalSigningKeyArn
           JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
       Policies:
         - Statement:
@@ -480,7 +467,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !Ref IPVStubSigningKeyArn
+                - !ImportValue IPVStubSigningKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -520,9 +507,9 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalKey
-          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
+          SIGNING_KEY: !ImportValue IPVStubSigningKeyArn
+          ADDITIONAL_SIGNING_KEY: !ImportValue IPVStubAdditionalSigningKeyArn
+          ADDITIONAL_ENCRYPTION_KEY: !ImportValue IPVStubAdditionalEncryptionKeyArn
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -530,9 +517,9 @@ Resources:
               Action:
                 - kms:GetPublicKey
               Resource:
-                - !Ref IPVStubSigningKeyArn
-                - !Ref IPVStubAdditionalSigningKeyArn
-                - !Ref IPVStubAdditionalEncryptionKeyArn
+                - !ImportValue IPVStubSigningKeyArn
+                - !ImportValue IPVStubAdditionalSigningKeyArn
+                - !ImportValue IPVStubAdditionalEncryptionKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
