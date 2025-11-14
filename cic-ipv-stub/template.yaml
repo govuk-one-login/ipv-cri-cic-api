@@ -693,7 +693,7 @@ Resources:
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
       TargetKeyId: !Ref IPVStubAdditionalEncryptionKey
-  DeletionPolicy: Retain
+    DeletionPolicy: Retain
 
   IPVStubId:
     Type: AWS::SSM::Parameter
@@ -714,16 +714,6 @@ Resources:
       Value: !Sub
         - "https://${testRedirectUri}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/redirect"
         - testRedirectUri: !Ref IPVStubApiGw
-      Tags:
-        APP: !Sub cic-${AWS::StackName}
-
-  IPVStubSigningKey:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The Base URI from backend stack to test
-      Name: !Sub "/${Environment}/${AWS::StackName}/API/TEST_CLIENT_SIGNING_KEY"
-      Type: String
-      Value: !Ref IPVStubSigningKey
       Tags:
         APP: !Sub cic-${AWS::StackName}
 
