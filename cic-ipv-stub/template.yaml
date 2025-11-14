@@ -581,85 +581,6 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/IPVStubRedirect-${AWS::StackName}"
 
-  IPVStubKMSSigningKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: A KMS Key for testing signing KMS integration in the development account.
-      Enabled: true
-      EnableKeyRotation: false
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "kms:*"
-            Resource:
-              - "*"
-      KeySpec: ECC_NIST_P256
-      KeyUsage: SIGN_VERIFY
-      MultiRegion: false
-      PendingWindowInDays: 7
-      Tags:
-        - Key: KeyType
-          Value: Test Signing Key
-        - Key: Environment
-          Value: !Sub ${Environment}
-          
-  IPVStubKMSAdditionalKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
-      Enabled: true
-      EnableKeyRotation: false
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "kms:*"
-            Resource:
-              - "*"
-      KeySpec: ECC_NIST_P256
-      KeyUsage: SIGN_VERIFY
-      MultiRegion: false
-      PendingWindowInDays: 7
-      Tags:
-        - Key: KeyType
-          Value: Test Signing Key
-        - Key: Environment
-          Value: !Sub ${Environment}
-
-  IPVStubKMSAdditionalEncryptionKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails
-      Enabled: true
-      EnableKeyRotation: false
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "kms:*"
-            Resource:
-              - "*"
-      KeySpec: RSA_2048
-      KeyUsage: ENCRYPT_DECRYPT
-      MultiRegion: false
-      PendingWindowInDays: 7
-      Tags:
-        - Key: KeyType
-          Value: Test Encryption Key
-        - Key: Environment
-          Value: !Sub ${Environment}
-
-
   IPVStubId:
     Type: AWS::SSM::Parameter
     Properties:
@@ -679,16 +600,6 @@ Resources:
       Value: !Sub
         - "https://${testRedirectUri}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/redirect"
         - testRedirectUri: !Ref IPVStubApiGw
-      Tags:
-        APP: !Sub cic-${AWS::StackName}
-
-  IPVStubSigningKey:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The Base URI from backend stack to test
-      Name: !Sub "/${Environment}/${AWS::StackName}/API/TEST_CLIENT_SIGNING_KEY"
-      Type: String
-      Value: !Ref IPVStubKMSSigningKey
       Tags:
         APP: !Sub cic-${AWS::StackName}
 
