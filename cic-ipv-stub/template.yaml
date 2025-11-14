@@ -114,9 +114,9 @@ Resources:
                   - kms:Sign
                   - kms:GetPublicKey
                 Resource:
-                  - !ImportValue IPVStubSigningKeyArn
-                  - !ImportValue IPVStubAdditionalSigningKeyArn
-                  - !ImportValue IPVStubAdditionalEncryptionKeyArn
+                  - !ImportValue cic-cri-kms-ipvstub-signing-key
+                  - !ImportValue cic-cri-kms-ipvstub-additional-signing-key
+                  - !ImportValue cic-cri-kms-ipvstub-additional-encryption-key
               - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
@@ -391,9 +391,9 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !ImportValue IPVStubSigningKeyArn
-          ADDITIONAL_SIGNING_KEY: !ImportValue IPVStubAdditionalSigningKeyArn
-          ADDITIONAL_ENCRYPTION_KEY: !ImportValue IPVStubAdditionalEncryptionKeyArn
+          SIGNING_KEY: !ImportValue cic-cri-kms-ipvstub-signing-key
+          ADDITIONAL_SIGNING_KEY: !ImportValue cic-cri-kms-ipvstub-additional-signing-key
+          ADDITIONAL_ENCRYPTION_KEY: !ImportValue cic-cri-kms-ipvstub-additional-encryption-key
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !If
             - CreateDevResources
@@ -417,7 +417,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !ImportValue IPVStubSigningKeyArn
+                - !ImportValue cic-cri-kms-ipvstub-signing-key
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -457,8 +457,8 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !ImportValue IPVStubSigningKeyArn
-          ADDITIONAL_SIGNING_KEY: !ImportValue IPVStubAdditionalSigningKeyArn
+          SIGNING_KEY: !ImportValue cic-cri-kms-ipvstub-signing-key
+          ADDITIONAL_SIGNING_KEY: !ImportValue cic-cri-kms-ipvstub-additional-signing-key
           JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
       Policies:
         - Statement:
@@ -467,7 +467,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !ImportValue IPVStubSigningKeyArn
+                - !ImportValue cic-cri-kms-ipvstub-signing-key
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -507,9 +507,9 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !ImportValue IPVStubSigningKeyArn
-          ADDITIONAL_SIGNING_KEY: !ImportValue IPVStubAdditionalSigningKeyArn
-          ADDITIONAL_ENCRYPTION_KEY: !ImportValue IPVStubAdditionalEncryptionKeyArn
+          SIGNING_KEY: !ImportValue cic-cri-kms-ipvstub-signing-key
+          ADDITIONAL_SIGNING_KEY: !ImportValue cic-cri-kms-ipvstub-additional-signing-key
+          ADDITIONAL_ENCRYPTION_KEY: !ImportValue cic-cri-kms-ipvstub-additional-encryption-key
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -517,9 +517,9 @@ Resources:
               Action:
                 - kms:GetPublicKey
               Resource:
-                - !ImportValue IPVStubSigningKeyArn
-                - !ImportValue IPVStubAdditionalSigningKeyArn
-                - !ImportValue IPVStubAdditionalEncryptionKeyArn
+                - !ImportValue cic-cri-kms-ipvstub-signing-key
+                - !ImportValue cic-cri-kms-ipvstub-additional-signing-key
+                - !ImportValue cic-cri-kms-ipvstub-additional-encryption-key
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
