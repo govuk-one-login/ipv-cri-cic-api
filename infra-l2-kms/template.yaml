@@ -177,6 +177,7 @@ Resources:
           
   IPVStubAdditionalSigningKey:
     Type: AWS::KMS::Key
+    Condition: CreateDevResources
     Properties:
       Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
       Enabled: true
@@ -211,6 +212,7 @@ Resources:
 
   IPVStubAdditionalEncryptionKey:
     Type: AWS::KMS::Key
+    Condition: CreateDevResources
     Properties:
       Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails
       Enabled: true
