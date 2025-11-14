@@ -37,6 +37,19 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
     Type: String
     Default: "none"
+  # KMS keys used by this stack - default values are set to the L2 KMS stack outputs
+  IPVStubSigningKeyArn:
+    Type: String
+    Description: A KMS Key for testing signing KMS integration in the development account.
+    Default: !ImportValue IPVStubSigningKeyArn
+  IPVStubAdditionalSigningKeyArn:
+    Type: String
+    Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
+    Default: !ImportValue IPVStubAdditionalSigningKeyArn
+  IPVStubAdditionalEncryptionKeyArn:
+    Type: String
+    Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails
+    Default: !ImportValue IPVStubAdditionalEncryptionKeyArn
 
 Mappings:
   Configuration:
@@ -114,9 +127,9 @@ Resources:
                   - kms:Sign
                   - kms:GetPublicKey
                 Resource:
-                  - !GetAtt IPVStubKMSSigningKey.Arn
-                  - !GetAtt IPVStubKMSAdditionalKey.Arn
-                  - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
+                  - !Ref IPVStubSigningKeyArn
+                  - !Ref IPVStubAdditionalSigningKeyArn
+                  - !Ref IPVStubAdditionalEncryptionKeyArn
               - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
@@ -417,7 +430,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !GetAtt IPVStubKMSSigningKey.Arn
+                !Ref IPVStubSigningKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -467,7 +480,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !GetAtt IPVStubKMSSigningKey.Arn
+                !Ref IPVStubSigningKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -517,9 +530,9 @@ Resources:
               Action:
                 - kms:GetPublicKey
               Resource:
-                - !GetAtt IPVStubKMSSigningKey.Arn
-                - !GetAtt IPVStubKMSAdditionalKey.Arn
-                - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
+                !Ref IPVStubSigningKeyArn
+                !Ref IPVStubAdditionalSigningKeyArn
+                !Ref IPVStubAdditionalEncryptionKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
