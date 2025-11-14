@@ -37,6 +37,18 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles. Mandatory."
     Type: String
     Default: "none"
+  SigningKeyAlias:
+    Type: String
+    Description: The alias of the existing KMS IPVStubSigningKey. This should point to a retained KMS key.
+    Default: alias/IPVStubSigningKeyAlias 
+  AdditionalSigningKeyAlias:
+    Type: String
+    Description: The alias of the existing KMS IPVStubAdditionalSigningKey. This should point to a retained KMS key.
+    Default: alias/IPVStubAdditionalSigningKeyAlias 
+  AdditionalEncryptionKeyAlias:
+    Type: String
+    Description: The alias of the existing KMS AdditionalEncryptionKey. This should point to a retained KMS key.
+    Default: alias/AdditionalEncryptionKeyAlias 
 
 Mappings:
   Configuration:
@@ -114,9 +126,9 @@ Resources:
                   - kms:Sign
                   - kms:GetPublicKey
                 Resource:
-                  - !GetAtt IPVStubKMSSigningKey.Arn
-                  - !GetAtt IPVStubKMSAdditionalSigningKey.Arn
-                  - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
+                  - !GetAtt IPVStubSigningKey.Arn
+                  - !GetAtt IPVStubAdditionalSigningKey.Arn
+                  - !GetAtt IPVStubAdditionalEncryptionKey.Arn
               - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
@@ -391,9 +403,9 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalSigningKey
-          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
+          SIGNING_KEY: !Ref IPVStubSigningKey
+          ADDITIONAL_SIGNING_KEY: !Ref IPVStubAdditionalSigningKey
+          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubAdditionalEncryptionKey
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !If
             - CreateDevResources
@@ -417,7 +429,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !GetAtt IPVStubKMSSigningKey.Arn
+                - !GetAtt IPVStubSigningKey.Arn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -457,8 +469,8 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalSigningKey
+          SIGNING_KEY: !Ref IPVStubSigningKey
+          ADDITIONAL_SIGNING_KEY: !Ref IPVStubAdditionalSigningKey
           JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
       Policies:
         - Statement:
@@ -467,7 +479,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !GetAtt IPVStubKMSSigningKey.Arn
+                - !GetAtt IPVStubSigningKey.Arn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -507,9 +519,9 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !Ref IPVStubKMSSigningKey
-          ADDITIONAL_SIGNING_KEY: !Ref IPVStubKMSAdditionalSigningKey
-          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubKMSAdditionalEncryptionKey
+          SIGNING_KEY: !Ref IPVStubSigningKey
+          ADDITIONAL_SIGNING_KEY: !Ref IPVStubAdditionalSigningKey
+          ADDITIONAL_ENCRYPTION_KEY: !Ref IPVStubAdditionalEncryptionKey
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -517,9 +529,9 @@ Resources:
               Action:
                 - kms:GetPublicKey
               Resource:
-                - !GetAtt IPVStubKMSSigningKey.Arn
-                - !GetAtt IPVStubKMSAdditionalSigningKey.Arn
-                - !GetAtt IPVStubKMSAdditionalEncryptionKey.Arn
+                - !GetAtt IPVStubSigningKey.Arn
+                - !GetAtt IPVStubAdditionalSigningKey.Arn
+                - !GetAtt IPVStubAdditionalEncryptionKey.Arn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -581,7 +593,7 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/IPVStubRedirect-${AWS::StackName}"
 
-  IPVStubKMSSigningKey:
+  IPVStubSigningKey:
     Type: AWS::KMS::Key
     Properties:
       Description: A KMS Key for testing signing KMS integration in the development account.
@@ -608,14 +620,14 @@ Resources:
           Value: !Sub ${Environment}
     DeletionPolicy: Retain
   
-  IPVStubKMSSigningKeyAlias:
+  IPVStubSigningKeyAlias:
     Type: 'AWS::KMS::Alias'
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-signing-key"
-      TargetKeyId: !Ref IPVStubKMSSigningKey
+      TargetKeyId: !Ref IPVStubSigningKey
     DeletionPolicy: Retain
           
-  IPVStubKMSAdditionalSigningKey:
+  IPVStubAdditionalSigningKey:
     Type: AWS::KMS::Key
     Properties:
       Description: A additional valid signing key in KMS to reflect multiple JWK's returned by the 'well-known' endpoint
@@ -642,14 +654,14 @@ Resources:
           Value: !Sub ${Environment}
     DeletionPolicy: Retain
   
-  IPVStubKMSAdditionalSigningKeyAlias:
+  IPVStubAdditionalSigningKeyAlias:
     Type: 'AWS::KMS::Alias'
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-signing-key"
-      TargetKeyId: !Ref IPVStubKMSAdditionalSigningKey
+      TargetKeyId: !Ref IPVStubAdditionalSigningKey
     DeletionPolicy: Retain
 
-  IPVStubKMSAdditionalEncryptionKey:
+  IPVStubAdditionalEncryptionKey:
     Type: AWS::KMS::Key
     Properties:
       Description: A unique public encryption key not available at the CRI's /well-known/jwks.json endpoint to test scenarios where decryption fails
@@ -676,11 +688,11 @@ Resources:
           Value: !Sub ${Environment}
     DeletionPolicy: Retain
   
-  IPVStubKMSAdditionalEncryptionKeyAlias:
+  IPVStubAdditionalEncryptionKeyAlias:
     Type: 'AWS::KMS::Alias'
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
-      TargetKeyId: !Ref IPVStubKMSAdditionalEncryptionKey
+      TargetKeyId: !Ref IPVStubAdditionalEncryptionKey
   DeletionPolicy: Retain
 
   IPVStubId:
@@ -711,7 +723,7 @@ Resources:
       Description: The Base URI from backend stack to test
       Name: !Sub "/${Environment}/${AWS::StackName}/API/TEST_CLIENT_SIGNING_KEY"
       Type: String
-      Value: !Ref IPVStubKMSSigningKey
+      Value: !Ref IPVStubSigningKey
       Tags:
         APP: !Sub cic-${AWS::StackName}
 
