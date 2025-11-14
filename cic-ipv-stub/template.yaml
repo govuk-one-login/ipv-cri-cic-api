@@ -430,7 +430,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                !Ref IPVStubSigningKeyArn
+                - !Ref IPVStubSigningKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -480,7 +480,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                !Ref IPVStubSigningKeyArn
+                - !Ref IPVStubSigningKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -530,9 +530,9 @@ Resources:
               Action:
                 - kms:GetPublicKey
               Resource:
-                !Ref IPVStubSigningKeyArn
-                !Ref IPVStubAdditionalSigningKeyArn
-                !Ref IPVStubAdditionalEncryptionKeyArn
+                - !Ref IPVStubSigningKeyArn
+                - !Ref IPVStubAdditionalSigningKeyArn
+                - !Ref IPVStubAdditionalEncryptionKeyArn
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
