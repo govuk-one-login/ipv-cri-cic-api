@@ -137,9 +137,9 @@ Resources:
       AliasName: !Sub "alias/session_decryption_key_active_alias"
       TargetKeyId: !Ref KMSEncryptionKey
 
-#----------------------------------------------------------------------------------------------------------------  
+#-------------------------------------------------------------------------
 # KMS keys for the IPV stub, only deployed to Dev and Build
-#---------------------------------------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------
   IPVStubSigningKey:
     Type: AWS::KMS::Key
     Condition: CreateDevResources
@@ -171,6 +171,7 @@ Resources:
   
   IPVStubSigningKeyAlias:
     Type: 'AWS::KMS::Alias'
+    Condition: CreateDevResources
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-signing-key"
       TargetKeyId: !Ref IPVStubSigningKey
@@ -206,6 +207,7 @@ Resources:
   
   IPVStubAdditionalSigningKeyAlias:
     Type: 'AWS::KMS::Alias'
+    Condition: CreateDevResources
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-signing-key"
       TargetKeyId: !Ref IPVStubAdditionalSigningKey
@@ -241,6 +243,7 @@ Resources:
   
   IPVStubAdditionalEncryptionKeyAlias:
     Type: 'AWS::KMS::Alias'
+    Condition: CreateDevResources
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-additional-encryption-key"
       TargetKeyId: !Ref IPVStubAdditionalEncryptionKey
@@ -272,3 +275,45 @@ Outputs:
   EncryptionKeyAlias:
     Description: "The ARN of the encryption key"
     Value: !Ref KMSEncryptionKeyAlias
+#-------------------------------------------------------------------------
+# Outputs for IPV stub keys, only referenced in Dev and Build
+#-------------------------------------------------------------------------
+IPVStubSigningKeyArn:
+  Description: "The Arn of the IPVStubSigningKey"
+  Value: !GetAtt IPVStubSigningKey.Arn
+  Export:
+    Name: !Sub "${AWS::StackName}-vc-signing-key"
+IPVStubSigningKeyId:
+  Description: "The Id of the IPVStubSigningKey"
+  Value: !Ref IPVStubSigningKey
+  Export:
+    Name: !Sub "${AWS::StackName}-vc-signing-key-id"
+IPVStubSigningKeyAlias:
+  Description: "The Alias of the IPVStubSigningKey"
+  Value: !Ref IPVStubSigningKeyAlias
+IPVStubAdditionalSigningKeyArn:
+  Description: "The Arn of the IPVStubAdditionalSigningKey"
+  Value: !GetAtt IPVStubAdditionalSigningKey.Arn
+  Export:
+    Name: !Sub "${AWS::StackName}-vc-signing-key"
+IPVStubAdditionalSigningKeyId:
+  Description: "The Id of the IPVStubAdditionalSigningKey"
+  Value: !Ref IPVStubAdditionalSigningKey
+  Export:
+    Name: !Sub "${AWS::StackName}-vc-signing-key-id"
+IPVStubAdditionalSigningKeyAlias:
+  Description: "The Alias of the IPVStubAdditionalSigningKey"
+  Value: !Ref IPVStubAdditionalSigningKeyAlias
+IPVStubAdditionalEncryptionKeyArn:
+  Description: "The Arn of the IPVStubAdditionalEncryptionKey"
+  Value: !GetAtt IPVStubAdditionalEncryptionKey.Arn
+  Export:
+    Name: !Sub "${AWS::StackName}-vc-signing-key"
+IPVStubAdditionalEncryptionKeyId:
+  Description: "The Id of the IPVStubAdditionalEncryptionKey"
+  Value: !Ref IPVStubAdditionalEncryptionKey
+  Export:
+    Name: !Sub "${AWS::StackName}-vc-signing-key-id"
+IPVStubAdditionalEncryptionKeyAlias:
+  Description: "The Alias of the IPVStubAdditionalEncryptionKey"
+  Value: !Ref IPVStubAdditionalEncryptionKeyAlias
