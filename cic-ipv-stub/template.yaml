@@ -593,28 +593,6 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/IPVStubRedirect-${AWS::StackName}"
 
-  IPVStubId:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The ID that identifies the client
-      Name: !Sub "/${Environment}/${AWS::StackName}/API/TEST_CLIENT_ID"
-      Type: String
-      Value: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-      Tags:
-        APP: !Sub cic-${AWS::StackName}
-
-  RedirectEndpointUri:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The Redirect URI
-      Name: !Sub "/${Environment}/${AWS::StackName}/API/TEST_CLIENT_REDIRECT_ENDPOINT"
-      Type: String
-      Value: !Sub
-        - "https://${testRedirectUri}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/redirect"
-        - testRedirectUri: !Ref IPVStubApiGw
-      Tags:
-        APP: !Sub cic-${AWS::StackName}
-
   IPVStubJwksEndpoint:
     Type: AWS::SSM::Parameter
     Properties:

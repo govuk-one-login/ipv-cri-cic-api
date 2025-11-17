@@ -16,13 +16,11 @@ export const handler = async (
 
   const iat = Math.floor(Date.now() / 1000);
   const payload: JWTPayload = {
-    iss: "https://ipv.core.account.gov.uk",
-    sub: crypto.randomUUID(),
+    iss: "ipv-core",
+    sub: "ipv-core",
     aud: config.aud,
-    jti: crypto.randomBytes(16).toString("hex"),
-    exp: iat + 3 * 60,
-    iat,
-  };
+    exp: iat + 10 * 60,
+    jti: "bd43c0a6642a197b722b8085a7a55963"  };
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidSigningKey;
@@ -71,7 +69,7 @@ async function sign(
   const kid = invalidKeyId ? invalidKid : signingKid;
   const hashedKid = getHashedKid(kid);
   const alg = "ECDSA_SHA_256";
-  const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid: hashedKid };
+  const jwtHeader: JwtHeader = {  kid: hashedKid, typ: "JWT",  alg: "ES256" };
   const tokenComponents = {
     header: util.base64url.encode(
       Buffer.from(JSON.stringify(jwtHeader)),

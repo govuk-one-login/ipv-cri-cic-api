@@ -2,7 +2,7 @@ version = 0.1
 [dev]
 [dev.deploy]
 [dev.deploy.parameters]
-stack_name = "cic-ipv-stub"
+stack_name = "cic-ipv-stub2"
 s3_prefix = "cic-ipv-stub"
 region = "eu-west-2"
 confirm_changeset = false
