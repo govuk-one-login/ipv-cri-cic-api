@@ -118,9 +118,9 @@ Resources:
                   - kms:Sign
                   - kms:GetPublicKey
                 Resource:
-                  - !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
-                  - !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
-                  - !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
+                  - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
+                  - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
+                  - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
@@ -395,9 +395,12 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
-          ADDITIONAL_SIGNING_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
-          ADDITIONAL_ENCRYPTION_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
+          SIGNING_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
+          ADDITIONAL_SIGNING_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
+          ADDITIONAL_ENCRYPTION_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !If
             - CreateDevResources
@@ -421,7 +424,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -461,8 +464,10 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
-          ADDITIONAL_SIGNING_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
+          SIGNING_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
+          ADDITIONAL_SIGNING_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
           JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
       Policies:
         - Statement:
@@ -471,7 +476,7 @@ Resources:
               Action:
                 - kms:Sign
               Resource:
-                - !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -511,9 +516,12 @@ Resources:
       CodeUri: src/
       Environment:
         Variables:
-          SIGNING_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
-          ADDITIONAL_SIGNING_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
-          ADDITIONAL_ENCRYPTION_KEY: !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
+          SIGNING_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
+          ADDITIONAL_SIGNING_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
+          ADDITIONAL_ENCRYPTION_KEY: 
+            Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -521,9 +529,9 @@ Resources:
               Action:
                 - kms:GetPublicKey
               Resource:
-                - !ImportValue !Sub "${L2KMSStackName}-ipvstub-signing-key"
-                - !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
-                - !ImportValue !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
+                - Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-encryption-key"
       Role: !GetAtt IPVStubLambdaRole.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
