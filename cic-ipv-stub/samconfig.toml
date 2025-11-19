@@ -7,5 +7,5 @@ s3_prefix = "cic-ipv-stub"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" BackendStack=\"cic-cri-api\" FrontendStack=\"cic-cri-front\" VpcStackName=\"vpc-cri\" PermissionsBoundary=\"none\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" BackendStack=\"cic-cri-api\" FrontendStack=\"cic-cri-front\" VpcStackName=\"vpc-cri\" L2KMSStackName=\"cic-cri-kms\" PermissionsBoundary=\"none\""
 resolve_s3 = true
