@@ -12,7 +12,7 @@ Recommended global installed packages:
 
 ## Dependencies
 
-Pull in the dependencies for the project by navigating to the `src` dir, and running `npm install`.
+Pull in the dependencies for the project by navigating to the `src` dir, and running `npm ci`.
 
 We use npm to manage dependencies, and please _do_ commit the package-lock.json file, and ensure it's up to date where possible with `npm audit`.
 

@@ -207,10 +207,6 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
-  IsDevOrBuildOrStaging: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -615,8 +611,8 @@ Resources:
         Service: backend
         Name: CICRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: false
+        CustomPolicy: true
 
   CICAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
@@ -682,13 +678,7 @@ Resources:
   ### End of API Gateway definition.
 
   ### API Gateway Custom Domain definition
-  WAFv2ACLAssociation:
-    #Condition: IsNotDevelopment
-    Type: AWS::WAFv2::WebACLAssociation
-    Properties:
-      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${CICRestApi}/stages/${CICRestApi.Stage}"
-      WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
-
+  
   CICApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
@@ -784,6 +774,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - ClaimedIdentityHandler.ts
+        UseNpmCi: true
 
   ClaimedIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -926,6 +917,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - UserInfoHandler.ts
+        UseNpmCi: true
 
   UserInfoFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1073,6 +1065,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionHandler.ts
+        UseNpmCi: true
 
   SessionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1195,6 +1188,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AccessTokenHandler.ts
+        UseNpmCi: true
 
   TokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1318,6 +1312,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AuthorizationCodeHandler.ts
+        UseNpmCi: true
 
   AuthorizationFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1428,6 +1423,14 @@ Resources:
     Properties:
       MessageRetentionPeriod: 259200 # three days
       KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+  
+  TxMASQSQueueARNParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${AWS::StackName}/TxMASQSQueueARN"
+      Type: String
+      Value: !GetAtt TxMASQSQueue.Arn
+      Description: ARN of the TxMA SQS queue
 
   TxMAKMSEncryptionKey:
     Type: AWS::KMS::Key
@@ -1473,6 +1476,14 @@ Resources:
         - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
+  
+  TxMAKMSEncryptionKeyARNParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${AWS::StackName}/TxMAKMSEncryptionKeyARN"
+      Type: String
+      Value: !GetAtt TxMAKMSEncryptionKey.Arn
+      Description: ARN of the TxMA KMS encryption key
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
@@ -1530,6 +1541,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - JwksHandler.ts
+        UseNpmCi: true
 
   JsonWebKeysLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1632,6 +1644,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionConfigHandler.ts
+        UseNpmCi: true
 
   SessionConfigFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1751,6 +1764,7 @@ Resources:
         Sourcemap: false
         EntryPoints:
           - AbortHandler.ts
+        UseNpmCi: true
 
   AbortLogGroup:
     Type: AWS::Logs::LogGroup
@@ -4611,8 +4625,10 @@ Outputs:
   CICIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "CIC IPV Stub"
-    Value:
-      Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
+    Value: !If
+      - CreateDevResources
+      - !Sub "https://${IPVStubStackName}-ipvstub.review-c.dev.account.gov.uk"
+      - "https://ipvstub.review-c.build.account.gov.uk"
   TxMASQSQueue: 
     Description: "Arn of the TxMASQSQueue"
     Value: !GetAtt TxMASQSQueue.Arn

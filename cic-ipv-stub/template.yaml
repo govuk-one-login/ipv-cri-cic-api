@@ -431,6 +431,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/startCicCheck.ts
+        UseNpmCi: True
 
   StartCICCheckFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -480,6 +481,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/generateTokenRequest.ts
+        UseNpmCi: True
 
   GenerateTokenRequestCICFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -531,6 +533,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/jsonWebKeys.ts
+        UseNpmCi: True
 
   JwksFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -563,6 +566,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/callback.ts
+        UseNpmCi: True
 
   IPVStubRedirectFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -655,19 +659,6 @@ Resources:
         - Key: Environment
           Value: !Sub ${Environment}
 
-  # SSMParameter for .env variable
-  ProviderBaseUri:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The Base URI from backend stack to test
-      Name: !Sub "/${Environment}/${AWS::StackName}/API/PROVIDER_BASE_URI"
-      Type: String
-      Value: !Sub
-        - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
-        - ImportProviderStack:
-            Fn::ImportValue: !Sub "${BackendStack}-CICApiGatewayId"
-      Tags:
-        APP: !Sub cic-${AWS::StackName}
 
   IPVStubId:
     Type: AWS::SSM::Parameter
