@@ -504,6 +504,26 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+  
+  JsonWebKeysBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref JsonWebKeysBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Deny
+            Resource:
+              - !GetAtt JsonWebKeysBucket.Arn
+              - !Sub "${JsonWebKeysBucket.Arn}/*"
+            Principal: "*"
+            Action:
+              - "s3:*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+              NumericLessThan:
+                "s3:TlsVersion": "1.2"
+    DependsOn: JsonWebKeysBucket
 
   JWKSBucketRole:
     Type: "AWS::IAM::Role"
