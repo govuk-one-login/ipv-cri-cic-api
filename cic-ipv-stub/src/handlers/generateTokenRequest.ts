@@ -22,7 +22,7 @@ export const handler = async (
     jti: crypto.randomBytes(16).toString("hex"),
     exp: iat + 3 * 60,
     iat,
-  };
+  }
 
   // Unhappy path testing enabled by optional flag provided in stub paylod
   let invalidSigningKey;
