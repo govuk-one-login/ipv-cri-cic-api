@@ -63,12 +63,12 @@ export class DeleteBucketProcessor {
 			let bucket = await this.s3Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
 
 			if (bucket?.Contents && bucket?.Contents.length > 0) {
-			await this.s3Client.send(
-				new DeleteObjectsCommand({
-				Bucket: bucketName,
-				Delete: { Objects: bucket.Contents.map((objects) => ({ Key: objects.Key })) },
-				})
-			);
+				await this.s3Client.send(
+					new DeleteObjectsCommand({
+					Bucket: bucketName,
+					Delete: { Objects: bucket.Contents.map((objects) => ({ Key: objects.Key })) },
+					})
+				);
 			}
 			await this.sendResponse(event, "SUCCESS", { message: "Bucket deleted"} );
 			return { statusCode: HttpCodesEnum.OK, body: "Bucket deleted" }
