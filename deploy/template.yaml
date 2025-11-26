@@ -504,6 +504,25 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
+  
+  JsonWebKeysBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref JsonWebKeysBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            Resource:
+              - !GetAtt JsonWebKeysBucket.Arn
+              - !Sub "${JsonWebKeysBucket.Arn}/*"
+            Principal: "*"
+            Action:
+              - "s3:*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+    DependsOn: JsonWebKeysBucket
 
   JWKSBucketRole:
     Type: "AWS::IAM::Role"
@@ -3943,19 +3962,19 @@ Resources:
       ActionsEnabled: true
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
-        # - !ImportValue platform-alarm-pagerduty-alert-topic
+        - !ImportValue platform-alarm-pagerduty-alert-topic
       AlarmActions:
         - !ImportValue platform-alarm-topic-critical-alert
-        # - !ImportValue platform-alarm-pagerduty-alert-topic
+        - !ImportValue platform-alarm-pagerduty-alert-topic
       InsufficientDataActions: [ ]
       MetricName: KeyAliasesUnavailable
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
       Dimensions: [ ]
       Period: 60
-      EvaluationPeriods: 1
-      DatapointsToAlarm: 1
-      Threshold: 1
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 3
+      Threshold: 3
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
