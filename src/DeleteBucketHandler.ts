@@ -5,10 +5,12 @@ import { Response } from "./utils/Response";
 
 export class DeleteBucketHandler implements LambdaInterface {
     async handler(event: any): Promise<any> {
-        try {
-            return await DeleteBucketProcessor.getInstance().processRequest(event);
-        } catch {
-            return Response(HttpCodesEnum.SERVER_ERROR, "An error has occured")
+        if (event.RequestType === "Delete") {
+            try {
+                return await DeleteBucketProcessor.getInstance().processRequest(event);
+            } catch {
+                return Response(HttpCodesEnum.SERVER_ERROR, "An error has occured")
+            }
         }
     }
 }
