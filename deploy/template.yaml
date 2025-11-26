@@ -596,7 +596,6 @@ Resources:
     DependsOn: DeleteBucketFunctionLogGroup
     Properties:
       FunctionName: !Sub "CIC-DeleteBucket-${AWS::StackName}"
-      Runtime: python3.11
       Handler: DeleteBucketHandler.lambdaHandler
       CodeUri: ../src/
       Policies:
@@ -608,6 +607,7 @@ Resources:
               - s3:DeleteObject
               - s3:DeleteObjectVersion
             Resource: '*'
+
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
