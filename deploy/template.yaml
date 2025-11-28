@@ -506,7 +506,7 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              SSEAlgorithm: aws:kms
   
   JsonWebKeysBucketPolicy:
     Type: AWS::S3::BucketPolicy
