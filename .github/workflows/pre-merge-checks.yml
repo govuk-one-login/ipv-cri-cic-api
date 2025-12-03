@@ -113,7 +113,7 @@ jobs:
       - name: Construct IPV stub URL
         id: ipv_stub_url
         run: |
-          echo "ipv_stub_url=https://pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}-ipvstub.review-c.dev.account.gov.uk/" >> $GITHUB_OUTPUT 
+          echo "ipv_stub_url=https://pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}-ipvstub.review-c.dev.account.gov.uk" >> $GITHUB_OUTPUT 
 
   test:
     runs-on: ubuntu-latest
