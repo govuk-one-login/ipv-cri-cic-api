@@ -6,7 +6,7 @@ on:
         required: true
 
 concurrency:
-  group: pre-merge-check${{ github.head_ref || github.ref_name }}
+  group: pre-merge-checks${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -68,11 +68,11 @@ jobs:
         run: |
           echo "api_url=https://api-pre-merge-${{ needs.setup.outputs.sha_short }}.review-c.dev.account.gov.uk" >> $GITHUB_OUTPUT 
 
-      - name: SAM Build CIC test harness stack
+      - name: SAM Build test harness stack
         working-directory: ./test-harness
         run: sam build -t template.yaml
 
-      - name: SAM Deploy CIC test harness stack
+      - name: SAM Deploy test harness stack
         working-directory: ./test-harness
         run: |
           sam deploy \
@@ -81,11 +81,7 @@ jobs:
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
-              CodeSigningConfigArn=none \
               Environment=dev \
-              PermissionsBoundary=none \
-              SecretPrefix=none \
-              VpcStackName=vpc-cri \
               BackendStack="pre-merge-${{ needs.setup.outputs.sha_short }}"
 
       - name: Construct Test Harness URL
