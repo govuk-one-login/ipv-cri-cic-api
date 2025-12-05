@@ -125,6 +125,13 @@ jobs:
 
       - name: SAM Build
         run: |
+          pwd
+          cd ../src
+          pwd
+          echo 'ignore-scripts?'
+          npm config get ignore-scripts
+          cd ../deploy
+          pwd
           echo 'ignore-scripts?'
           npm config get ignore-scripts
           sam build -t template.yaml
