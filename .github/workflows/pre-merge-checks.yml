@@ -6,9 +6,9 @@ on:
         required: true
 
 concurrency:
-  group: pre-merge-checks${{ github.head_ref || github.ref_name }}
+  group: pre-merge-check${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
-
+      
 jobs:
   setup:
     runs-on: ubuntu-latest
