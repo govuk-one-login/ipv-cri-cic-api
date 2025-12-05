@@ -1,4 +1,5 @@
 name: Pre-merge checks
+
 on:
   workflow_call:
     secrets:
@@ -62,7 +63,7 @@ jobs:
           --template-file .aws-sam/build/template.yaml \
           --capabilities CAPABILITY_NAMED_IAM \
           --parameter-overrides Environment=dev
-     
+    
       - name: Construct API URL
         id: api_url
         run: |
