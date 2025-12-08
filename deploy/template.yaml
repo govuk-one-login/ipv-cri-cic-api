@@ -293,6 +293,16 @@ Globals:
             !Ref AWS::StackName,
           ] # What is this? @TODO
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
+        CLIENT_CONFIG: !If
+          - CreateDevResources
+          - !Join ['', [
+                !Select [0, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
+                !Ref IPVStubStackName,
+                !Select [1, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
+                !Ref IPVStubStackName,
+                !Select [2, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]]
+            ]]
+          - !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
     AutoPublishAlias: live
     DeploymentPreference:
       Enabled: true
@@ -1027,16 +1037,6 @@ Resources:
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
-          CLIENT_CONFIG: !If
-            - CreateDevResources
-            - !Join ['', [
-                  !Select [0, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
-                  !Ref IPVStubStackName,
-                  !Select [1, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
-                  !Ref IPVStubStackName,
-                  !Select [2, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]]
-              ]]
-            - !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
           ENCRYPTION_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
           KEY_ROTATION_ENABLED:
@@ -1180,16 +1180,6 @@ Resources:
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-          CLIENT_CONFIG: !If
-            - CreateDevResources
-            - !Join ['', [
-                  !Select [0, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
-                  !Ref IPVStubStackName,
-                  !Select [1, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
-                  !Ref IPVStubStackName,
-                  !Select [2, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]]
-              ]]
-            - !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
