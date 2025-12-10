@@ -128,6 +128,5 @@ jobs:
   
   # This is a temporary trigger for the pre-merge check, set up for testing purposes. A decision will be made later regarding the actual pre-merge trigger.
   # pre-merge-checks:
-  #   if: ${{ github.actor != 'dependabot[bot]' }}
   #   uses: ./.github/workflows/pre-merge-checks.yml
   #   secrets: inherit
