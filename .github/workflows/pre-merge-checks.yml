@@ -1,5 +1,4 @@
 name: Pre-merge checks
-
 on:
   workflow_call:
     secrets:
@@ -27,7 +26,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     needs: setup
     permissions:
       id-token: write
@@ -35,6 +34,7 @@ jobs:
     outputs:
       api_url: ${{ steps.api_url.outputs.api_url }}
       test_harness_url: ${{ steps.test_harness_url.outputs.test_harness_url }}
+      ipv_stub_url: ${{ steps.ipv_stub_url.outputs.ipv_stub_url }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
@@ -59,12 +59,14 @@ jobs:
         working-directory: ./deploy
         run: |
           sam deploy \
-          --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" \
-          --s3-bucket ${{secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME}} \
-          --template-file .aws-sam/build/template.yaml \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --parameter-overrides Environment=dev
-      
+            --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --template-file .aws-sam/build/template.yaml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              Environment=dev \
+              IPVStubStackName="pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
+
       - name: Construct API URL
         id: api_url
         run: |
@@ -91,7 +93,29 @@ jobs:
         id: test_harness_url
         run: |
           echo "test_harness_url=https://pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}-testharness.review-c.dev.account.gov.uk/" >> $GITHUB_OUTPUT 
-        
+      
+      - name: SAM Build IPV stub
+        working-directory: ./cic-ipv-stub
+        run: sam build -t template.yaml
+
+      - name: SAM Deploy IPV stub
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        working-directory: ./cic-ipv-stub
+        run: |
+          sam deploy \
+            --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --template-file .aws-sam/build/template.yaml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              Environment=dev \
+              BackendStack="pre-merge-${{ needs.setup.outputs.sha_short }}"
+
+      - name: Construct IPV stub URL
+        id: ipv_stub_url
+        run: |
+          echo "ipv_stub_url=https://pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}-ipvstub.review-c.dev.account.gov.uk" >> $GITHUB_OUTPUT 
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15

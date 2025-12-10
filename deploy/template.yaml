@@ -113,12 +113,12 @@ Mappings:
       ISSUER: "https://review-c.dev.account.gov.uk"
       DNSSUFFIX: review-c.dev.account.gov.uk
       KEYROTATIONENABLED: true
-      CLIENTS: 
-        '[{
-          "jwksEndpoint": "https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json",
+      CLIENTS: >
+        [{
+          "jwksEndpoint": "https://${IPVStubStackName}-ipvstub.review-c.dev.account.gov.uk/.well-known/jwks.json",
           "clientId": "5C584572",
-          "redirectUri": "https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/redirect"
-        }]'
+          "redirectUri": "https://${IPVStubStackName}-ipvstub.review-c.dev.account.gov.uk/redirect"
+        }]
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       AUTHSESSIONTTL: "86400" # 1 day in seconds
       TESTHARNESSURL: "https://cic-test-harness-testharness.review-c.dev.account.gov.uk/"
@@ -293,6 +293,16 @@ Globals:
             !Ref AWS::StackName,
           ] # What is this? @TODO
         SQS_AUDIT_EVENT_PREFIX: CIC-F2F # The prefix to add to TxMA event messages
+        CLIENT_CONFIG: !If
+          - CreateDevResources
+          - !Join ['', [
+                !Select [0, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
+                !Ref IPVStubStackName,
+                !Select [1, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
+                !Ref IPVStubStackName,
+                !Select [2, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]]
+            ]]
+          - !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
     AutoPublishAlias: live
     DeploymentPreference:
       Enabled: true
@@ -1086,8 +1096,6 @@ Resources:
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
-          CLIENT_CONFIG:
-            !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
           ENCRYPTION_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
           KEY_ROTATION_ENABLED:
@@ -1231,7 +1239,6 @@ Resources:
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-          CLIENT_CONFIG: !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
