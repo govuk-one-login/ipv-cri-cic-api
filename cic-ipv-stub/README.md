@@ -10,3 +10,17 @@ If modifications are made to the test client and a new stack is being used, reme
 
 
 To fetch an ssm parameter created from this stack, use the `get-ssm-test-params.sh` by passing in the key for the ssm parameter.
+
+## CURL commands to start session in dev & build environments
+
+#### dev
+
+curl --location --request POST 'https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/start' \
+--header 'Cookie: lng=en' \
+--data '' | grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
+
+#### build
+
+curl --location --request POST 'https://ipvstub.review-c.build.account.gov.uk/start' \
+--header 'Cookie: lng=en' \
+--data '' | grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
