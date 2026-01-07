@@ -133,8 +133,6 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v4
