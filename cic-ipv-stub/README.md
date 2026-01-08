@@ -13,14 +13,47 @@ To fetch an ssm parameter created from this stack, use the `get-ssm-test-params.
 
 ## CURL commands to start session in dev & build environments
 
-#### dev
+### dev
+
+#### Regular journey
 
 curl --location --request POST 'https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/start' \
 --header 'Cookie: lng=en' \
 --data '' | grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
 
-#### build
+#### No photo ID/Bank account journey
+
+curl --location --request POST 'https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/start' \
+  --header 'Cookie: lng=en' \
+  --data '{ "context": "bank_account" }' \
+| grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
+
+#### Low confidence/HMRC check journey
+
+curl --location --request POST 'https://cic-ipv-stub-ipvstub.review-c.dev.account.gov.uk/start' \
+  --header 'Cookie: lng=en' \
+  --data '{ "context": "hmrc_check" }' \
+| grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
+
+
+### build
+
+#### Regular journey
 
 curl --location --request POST 'https://ipvstub.review-c.build.account.gov.uk/start' \
 --header 'Cookie: lng=en' \
 --data '' | grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
+
+#### No photo ID/Bank account journey
+
+curl --location --request POST 'https://ipvstub.review-c.build.account.gov.uk/start' \
+  --header 'Cookie: lng=en' \
+  --data '{ "context": "bank_account" }' \
+| grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
+
+#### Low confidence/HMRC check journey
+
+curl --location --request POST 'https://ipvstub.review-c.build.account.gov.uk/start' \
+  --header 'Cookie: lng=en' \
+  --data '{ "context": "hmrc_check" }' \
+| grep -o '"AuthorizeLocation":"[^"]*' | cut -d'"' -f4
