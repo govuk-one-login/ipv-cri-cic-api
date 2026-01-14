@@ -17,7 +17,7 @@ jobs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get output variables
         id: vars
@@ -37,7 +37,7 @@ jobs:
       ipv_stub_url: ${{ steps.ipv_stub_url.outputs.ipv_stub_url }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -132,7 +132,9 @@ jobs:
       DEV_CIC_SESSION_TABLE_NAME: ${{ secrets.DEV_CIC_SESSION_TABLE_NAME }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Assume temporary AWS role
         uses: aws-actions/configure-aws-credentials@v4
