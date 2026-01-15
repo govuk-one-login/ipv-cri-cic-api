@@ -16,6 +16,8 @@ import {
 } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
 describe("E2E Happy Path Tests", () => {
 	it.each([
 		[dataSlim],

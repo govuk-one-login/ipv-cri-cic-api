@@ -6,6 +6,8 @@ import { constants } from "./ApiConstants";
 import { abortPost, getSessionAndVerifyKey, startStubServiceAndReturnSessionId, wellKnownGet, claimedIdentityPost, authorizationGet, tokenPost, userInfoPost, startTokenPost } from "./ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
 describe("Happy path tests", () => {
 	describe("/session endpoint", () => {
 		it.each([

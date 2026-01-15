@@ -6,7 +6,8 @@ import dataDoubleSpace from "../data/dataDoubleSpace.json";
 import dataSpaceStart from "../data/dataSpaceStart.json";
 import dataSpaceEnd from "../data/dataSpaceEnd.json";
 
-
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	let stubResponse: any;
 	beforeAll(async () => {
