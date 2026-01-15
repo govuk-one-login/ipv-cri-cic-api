@@ -8,6 +8,7 @@ import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils"
 
 //QualityGateIntegrationTest 
 //QualityGateRegressionTest
+//QualityGateStackTest
 describe("Happy path tests", () => {
 	describe("/session endpoint", () => {
 		it.each([

@@ -15,7 +15,7 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	});
 
 	it("E2E Negative Path Journey - Sessions: Empty Request Body", async () => {
-		// Session Post      
+		// Session Post
 		const sessionRequest = await sessionPost(stubResponse.data.clientId, "");
 		expect(sessionRequest.status).toBe(401);
 		expect(sessionRequest.data.message).toBe("Unauthorized");
