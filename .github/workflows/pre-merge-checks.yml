@@ -17,7 +17,7 @@ jobs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get output variables
         id: vars
@@ -37,7 +37,7 @@ jobs:
       ipv_stub_url: ${{ steps.ipv_stub_url.outputs.ipv_stub_url }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -124,11 +124,15 @@ jobs:
       id-token: write
       contents: read
     env:
-      PRE_MERGE_API_URL: ${{ needs.deploy.outputs.api_url }}
-      PRE_MERGE_TEST_HARNESS_URL: ${{ needs.deploy.outputs.test_harness_url }}
+      DEV_CRI_CIC_API_URL: ${{ needs.deploy.outputs.api_url }}
+      DEV_IPV_STUB_URL: ${{ needs.deploy.outputs.ipv_stub_url}}
+      DEV_CIC_TEST_HARNESS_URL: ${{ needs.deploy.outputs.test_harness_url}}
+      VC_SIGNING_KEY_ID: ${{ secrets.DEV_VC_SIGNING_KEY_ID }}   
+      DNS_SUFFIX: ${{ secrets.DEV_DNS_SUFFIX }}
+      DEV_CIC_SESSION_TABLE_NAME: ${{ secrets.DEV_CIC_SESSION_TABLE_NAME }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: true
 
@@ -138,11 +142,18 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Placeholder for tests
-        run: |
-          echo "Test execution will be added"
-          echo "API URL: $PRE_MERGE_API_URL"
-          echo "Test Harness URL: $PRE_MERGE_TEST_HARNESS_URL"
+      - name: Setup nodeJS v22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      
+      - name: Install dependencies
+        working-directory: ./src
+        run: npm ci
+
+      - name: Run API tests
+        working-directory: ./src
+        run: npm run test:api
 
   cleanup:
     runs-on: ubuntu-latest
