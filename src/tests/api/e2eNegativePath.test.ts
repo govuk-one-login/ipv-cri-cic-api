@@ -8,6 +8,7 @@ import dataSpaceEnd from "../data/dataSpaceEnd.json";
 
 //QualityGateIntegrationTest 
 //QualityGateRegressionTest
+//QualityGateStackTest
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	let stubResponse: any;
 	beforeAll(async () => {
