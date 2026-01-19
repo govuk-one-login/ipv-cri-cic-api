@@ -157,7 +157,7 @@ jobs:
 
   cleanup:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 40
     if: always()
     needs: [setup, test]
     permissions:
