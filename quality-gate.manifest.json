@@ -62,7 +62,7 @@
           }
         },
         {
-          "check-types": ["code style and linting", "regression"],
+          "check-types": ["code style and linting", "regression", "stack"],
           "provider": "GitHub",
           "phase": "pre-merge",
           "config": {
@@ -82,7 +82,7 @@
           }
         },
         {
-          "check-types": ["code style and linting", "regression", "unit"],
+          "check-types": ["code style and linting", "regression", "unit", "stack"],
           "provider": "GitHub",
           "phase": "pre-merge",
           "config": {
@@ -102,7 +102,7 @@
           }
         },
         {
-          "check-types": ["code style and linting", "regression"],
+          "check-types": ["code style and linting", "regression", "stack"],
           "provider": "GitHub",
           "phase": "pre-merge",
           "config": {
