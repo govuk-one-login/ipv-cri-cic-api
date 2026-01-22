@@ -15,6 +15,7 @@ export default {
     "!./tests/**/*.ts",
     "!./jest.config.ts",
   ],
+  setupFiles: ["./jest.setup.ts"],
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",

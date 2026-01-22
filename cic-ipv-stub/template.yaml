@@ -48,10 +48,12 @@ Mappings:
       IPVStubID: "5C584572"
       AUD: "https://review-c.dev.account.gov.uk"
       IPVSTUBURL: "ipvstub.review-c.dev.account.gov.uk"
+      DNSSUFFIX: review-c.dev.account.gov.uk
     build:
       IPVStubID: "BD7B2A5D"
       AUD: "https://review-c.build.account.gov.uk"
       IPVSTUBURL: "ipvstub.review-c.build.account.gov.uk"
+      DNSSUFFIX: review-c.build.account.gov.uk
     staging:
       IPVStubID: "9CDA6F61"
       IPVSTUBURL: "ipvstub.review-c.staging.account.gov.uk"
@@ -239,23 +241,32 @@ Resources:
       - IPVStubApiGwStage
 
   # Redirect ---------------------------------------
-  RedirectPath:
+  CredentialIssuerPath:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref IPVStubApiGw
       ParentId: !GetAtt IPVStubApiGw.RootResourceId
-      PathPart: redirect
+      PathPart: credential-issuer
+
+  CallbackPath:
+    DependsOn:
+      - CredentialIssuerPath
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref IPVStubApiGw
+      ParentId: !Ref CredentialIssuerPath
+      PathPart: callback
 
   RedirectMethodGet:
     DependsOn:
-      - RedirectPath
+      - CallbackPath
       - IPVStubRedirectFunction
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref IPVStubApiGw
-      ResourceId: !Ref RedirectPath
-      HttpMethod: POST
+      ResourceId: !Ref CallbackPath
+      HttpMethod: GET
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
@@ -434,11 +445,11 @@ Resources:
           REDIRECT_URI: !If
             - CreateDevResources
             - !Sub
-              - "https://${AWS::StackName}-${IPVSTUBURL}/redirect"
+              - "https://${AWS::StackName}-${IPVSTUBURL}/credential-issuer/callback?id=claimedIdentity"
               - IPVSTUBURL:
                   !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
             - !Sub
-              - "https://${IPVSTUBURL}/redirect"
+              - "https://${IPVSTUBURL}/credential-issuer/callback?id=claimedIdentity"
               - IPVSTUBURL:
                   !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
           JWKS_URI: !Sub 
@@ -598,6 +609,16 @@ Resources:
       FunctionName: !Sub "IPVStubRedirect-${AWS::StackName}"
       Handler: callback.handler
       CodeUri: src/
+      Environment:
+        Variables:
+          DEV_IPV_CIC_STUB_URL: !Sub
+              - "https://${AWS::StackName}-${IPVSTUBURL}"
+              - IPVSTUBURL:
+                  !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+          DEV_CRI_CIC_API_URL: !Sub
+              - "https://api-${BackendStack}.${DNSSUFFIX}"
+              - DNSSUFFIX:
+                  !FindInMap [ Configuration, !Ref Environment, DNSSUFFIX ]
       Role: !GetAtt IPVStubLambdaRole.Arn
     Metadata:
       BuildMethod: esbuild
