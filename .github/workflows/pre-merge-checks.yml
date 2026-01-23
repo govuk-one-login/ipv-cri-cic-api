@@ -45,7 +45,7 @@ jobs:
           use-installer: true
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
@@ -137,7 +137,7 @@ jobs:
           submodules: true
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
@@ -165,7 +165,7 @@ jobs:
       contents: read
     steps:
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
