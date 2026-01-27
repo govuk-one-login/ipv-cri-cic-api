@@ -6,7 +6,9 @@ import dataDoubleSpace from "../data/dataDoubleSpace.json";
 import dataSpaceStart from "../data/dataSpaceStart.json";
 import dataSpaceEnd from "../data/dataSpaceEnd.json";
 
-
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
+//QualityGateStackTest
 describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	let stubResponse: any;
 	beforeAll(async () => {
@@ -14,7 +16,7 @@ describe("E2E Negative Path Tests - Sessions Endpoint", () => {
 	});
 
 	it("E2E Negative Path Journey - Sessions: Empty Request Body", async () => {
-		// Session Post      
+		// Session Post
 		const sessionRequest = await sessionPost(stubResponse.data.clientId, "");
 		expect(sessionRequest.status).toBe(401);
 		expect(sessionRequest.data.message).toBe("Unauthorized");
