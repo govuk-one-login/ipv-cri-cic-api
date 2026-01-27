@@ -1,9 +1,11 @@
 # ipv-cri-cic-api
 
-Claimed Identity Collector (CIC) CRI service for GOV.UK One Login. This repo contains the CIC API, an IPV stub for end-to-end testing, and a test harness. The CIC API is deployed to AWS using AWS SAM (`deploy/template.yaml`) as **nodejs20.x** Lambda functions (built from TypeScript in `src/`). The OpenAPI contract is in `deploy/cic-spec.yaml` (OpenAPI 3.0.1).
+Claimed Identity Collector (CIC) CRI service for GOV.UK One Login. This repository contains the CIC API, an IPV stub for end-to-end testing, and a test harness.
+
+The CIC API is deployed to AWS using AWS SAM (`deploy/template.yaml`) as **nodejs20.x** Lambda functions (built from TypeScript in `src/`). The OpenAPI contract is `deploy/cic-spec.yaml` (OpenAPI 3.0.1).
 
 > [!IMPORTANT]
-> This repository is **public**. Do **not** commit secrets, credentials, internal URLs, account identifiers, template IDs, or sensitive configuration values. Document **names** and **purposes** only. Use placeholders in examples.
+> This repository is **public**. Do **not** commit secrets, credentials, internal URLs, account identifiers, template IDs, or sensitive configuration values. Document **names** and **purposes** only and use placeholders in examples.
 
 ---
 
@@ -25,6 +27,8 @@ Claimed Identity Collector (CIC) CRI service for GOV.UK One Login. This repo con
 - [Authentication and required headers](#authentication-and-required-headers)
 - [Curl examples (sanitised)](#curl-examples-sanitised)
 - [Deployment](#deployment)
+  - [Dev and personal stack naming](#dev-and-personal-stack-naming)
+  - [Local and ephemeral deployment (exceptional)](#local-and-ephemeral-deployment-exceptional)
 - [JWKS](#jwks)
 - [Code owners](#code-owners)
 - [Pre-commit and security checks](#pre-commit-and-security-checks)
@@ -47,18 +51,21 @@ Claimed Identity Collector (CIC) CRI service for GOV.UK One Login. This repo con
 ## What this service does
 CIC supports the “claimed identity” part of the One Login IPV journey.
 
-Service context: CIC collects a user's claimed **name** and **date of birth** and issues a Verifiable Credential (VC) that downstream services can use (for example, F2F or low-confidence routes). It does **not** verify attributes, assign a GPG45 score, or raise contra indicators.
-
 At a high level it:
 - Creates and manages **sessions** for users.
-- Accepts and persists the user’s **claimed identity** (captured by a frontend).
-- Issues an **authorization code** and **access token** (OAuth2-style flow used by IPV components).
+- Accepts and persists a user’s **claimed identity** attributes (captured by a frontend).
+- Implements an OAuth2-style flow used by IPV components:
+  - `GET /authorization` issues an authorization code for a session.
+  - `POST /token` exchanges an authorization code for a Bearer access token (`application/x-www-form-urlencoded`).
 - Provides a **userinfo** endpoint used downstream in the IPV journey.
-- Publishes service **JWKS** for token verification and cryptographic operations.
-- Provides endpoints used operationally (e.g. aborting a session) and configuration endpoints used by the frontend.
+- Publishes **JWKS** for token verification and related cryptographic operations.
+- Provides operational/config endpoints (for example aborting a session, and session configuration for the frontend).
 
 > [!TIP]
-> The **spec is the source of truth**. Use `deploy/cic-spec.yaml` for request/response shapes and per-endpoint requirements.
+> `deploy/cic-spec.yaml` is the source of truth for request/response shapes, required headers, and error responses.
+
+> [!NOTE]
+> CIC captures claimed identity information and supports issuance/return of the CIC credential material as defined by the contract and implementation. It does **not** itself perform in-person checks.
 
 ---
 
@@ -68,7 +75,7 @@ At a high level it:
 - `src/tests/` – unit, API, contract, infra tests
 - `cic-ipv-stub/` – IPV stub for driving journeys (test-only)
 - `test-harness/` – harness utilities used in tests
-- `infra-l2-*` – shared infra templates (e.g. Dynamo/KMS)
+- `infra-l2-*` – shared infra templates (for example Dynamo/KMS)
 - `adr/` – architecture decision records
 
 ---
@@ -94,12 +101,13 @@ At a high level it:
 ## Getting started
 
 ### Prerequisites
-- **Node.js 22** for local development (see `src/package.json` `engines.node`)
+- Node.js version per `src/package.json` (`engines.node`)
+- AWS Lambda runtime: nodejs20.x (see `deploy/template.yaml`)
 - npm
 - (Optional) AWS SAM CLI for building/deploying stacks
-- Docker + AWS credentials (only required if you run the containerised tests against a deployed stack)
+- Docker + AWS credentials (only required to run the containerised tests against a deployed stack)
 
-### Install & run common local checks
+### Install and run common local checks
 ```sh
 cd src
 npm ci
@@ -109,7 +117,7 @@ npm run test:unit
 ```
 
 > [!NOTE]
-> Lambdas run on nodejs20.x in AWS, but local development uses Node 22.
+> Lambdas run on nodejs20.x in AWS, but local development uses the Node version defined in `src/package.json`.
 
 ---
 
@@ -163,7 +171,7 @@ npm run test:pii
 This repo includes provider verification tests that validate the provider against a published Pact and (in CI) publish results to the Pact Broker. See `src/package.json` scripts for the exact workflows.
 
 > [!IMPORTANT]
-> Keep broker credentials and URLs out of this public repo. Document names only and use placeholders in examples.
+> Keep broker credentials and broker URLs out of this public repo. Document names only and use placeholders in examples.
 
 #### Environment variables (names only)
 - `PACT_BROKER_USER`
@@ -186,34 +194,35 @@ This repo includes a Docker-based runner for executing tests against a deployed 
 - `Dockerfile`
 
 Run:
+
 ```sh
 ./run-tests-locally.sh <stack-name>
 ```
 
+What it typically does:
+- Queries CloudFormation outputs for the target stack and exports them as `CFN_*`.
+- Writes temporary env/output files for Docker and runs tests inside a container.
+- Writes results to `./results`.
+
 > [!CAUTION]
-> Review `run-tests-locally.sh` before use. These runners typically:
-> - query CloudFormation outputs for a stack,
-> - write temporary env files (often including AWS credentials),
-> - and run tests inside a Docker container.
->
-> Ensure any generated files (e.g. `docker_vars.env`, `cf-output.txt`, `results/`) are not committed.
+> These runners may write AWS credential environment variables into temporary files (for example `docker_vars.env`) and may write stack outputs to files (for example `cf-output.txt`). Ensure these generated files are not committed.
 
 > [!TIP]
-> The authoritative mapping of CloudFormation outputs → test environment variables is in `run-tests.sh`. Document names only in PRs unless your team explicitly approves publishing more detail.
+> The authoritative mapping of CloudFormation outputs → test environment variables is defined in `run-tests.sh`. Document names only in public-facing docs.
 
 ---
 
 ## Authentication and required headers
 Per `deploy/cic-spec.yaml`, endpoints typically rely on a combination of:
-- Session headers (e.g. `session-id`, `x-govuk-signin-session-id` for some endpoints)
-- Authorization header for Bearer access token calls:
+- Session headers (for example `session-id` and/or `x-govuk-signin-session-id` depending on the endpoint)
+- Bearer access token for protected endpoints:
 
 ```
 Authorization: Bearer <token>
 ```
 
 > [!TIP]
-> Use `deploy/cic-spec.yaml` to confirm the exact header names and whether they are `required: true` per path.
+> Confirm exact header names and `required: true` flags in `deploy/cic-spec.yaml` under each path’s `parameters:` section.
 
 ---
 
@@ -253,28 +262,32 @@ Deployment definition/config:
 
 The standard deployment route is via the CI/CD pipeline for this repository. Use local SAM deployments only when explicitly required by your team/process.
 
-### Dev / personal stack naming
-Deploy with a custom stack name (include your initials) to avoid overwriting a shared API stack. Set the stack name in `deploy/samconfig.toml` (for example, `cic-cri-api-<initials>` or similar). After deploying, update the test harness SAM config in `test-harness/deploy/samconfig.toml` to reference the custom API stack name so the harness targets the correct stack.
+> [!NOTE]
+> Parameter overrides and environment-specific deployment values are intentionally not documented here (public repo hygiene). Use your organisation’s internal runbooks for environment-specific instructions.
 
-### Local / ephemeral deployment (exceptional)
+### Dev and personal stack naming
+Deploy with a custom stack name (include your initials) to avoid overwriting shared stacks (for example `cic-cri-api-<initials>`).
+
+Set the stack name in `deploy/samconfig.toml`, or provide it explicitly via `sam deploy --stack-name`.
+
+After deploying, update the test harness SAM config in `test-harness/deploy/samconfig.toml` (if used) to reference the custom API stack name so the harness targets the correct stack.
+
+### Local and ephemeral deployment (exceptional)
 ```sh
 cd deploy
 sam build --parallel
 sam deploy --resolve-s3 --stack-name "YOUR_STACK_NAME" --confirm-changeset --config-env dev
 ```
 
-> [!NOTE]
-> Parameter overrides and environment-specific deployment values are intentionally not documented here (public repo hygiene). Use your organisation’s internal runbooks for environment-specific instructions.
-
 ---
 
 ## JWKS
-JWKS published at `/.well-known/jwks.json`; see `deploy/cic-spec.yaml`.
+JWKS is published at `/.well-known/jwks.json`. See `deploy/cic-spec.yaml` for details.
 
 ---
 
 ## Code owners
-If `CODEOWNERS` is present, it defines review requirements.
+If a `CODEOWNERS` file is present at the repo root, PRs require review by code owners.
 
 ---
 
@@ -284,11 +297,13 @@ This repo uses pre-commit configuration:
 - `.secrets.baseline`
 
 Install hooks:
+
 ```sh
 pre-commit install
 ```
 
 Run hooks manually (optional):
+
 ```sh
 pre-commit run --all-files
 ```
@@ -299,6 +314,7 @@ pre-commit run --all-files
 
 ### “Lint” or “compile” failures
 Run from `src/`:
+
 ```sh
 npm ci
 npm run compile
@@ -307,6 +323,7 @@ npm run lint
 
 ### Tests failing unexpectedly
 Run the relevant suite explicitly:
+
 ```sh
 cd src
 npm run test:unit
@@ -316,16 +333,9 @@ npm run test:e2e
 ```
 
 ### Contract tests won’t start
-Ensure required Pact environment variables are set (names listed above).
+Ensure required Pact environment variables are set (names listed above) and required ports used by local test tooling are available. See scripts under `src/tests/contract/`.
 
-Ensure the ports referenced in `tests/contract` scripts are available.
-
-Use the helper scripts:
-```sh
-cd src
-npm run start:dynamodblocal
-npm run test:pactconnection
-```
+---
 
 ## Licence
-This repository does not currently publish a `LICENSE`/`LICENCE` file. If you need reuse/distribution terms, consult the owning organisation’s guidance before redistributing.
+This repository does not currently publish a LICENSE/LICENCE file. If you need reuse/distribution terms, consult the owning organisation’s guidance before redistributing.
