@@ -59,7 +59,7 @@ jobs:
         run: |
           sam deploy \
             --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" \
-            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ARTIFACT_SOURCE_BUCKET_NAME }} \
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
@@ -80,7 +80,7 @@ jobs:
         run: |
           sam deploy \
             --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}" \
-            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ARTIFACT_SOURCE_BUCKET_NAME }} \
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
@@ -101,7 +101,7 @@ jobs:
         run: |
           sam deploy \
             --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" \
-            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ARTIFACT_SOURCE_BUCKET_NAME }} \
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
