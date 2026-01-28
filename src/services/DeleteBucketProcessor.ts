@@ -91,26 +91,3 @@ export class DeleteBucketProcessor {
 			);
 		}
 	}
-
-	private async sendResponse(event: any, status: "SUCCESS" | "FAILED", data: any): Promise<any> {
-
-		const body = JSON.stringify({
-			Status: status,
-			PhysicalResourceId: `${event.ResourceProperties.BucketName}-${event.StackId}`,
-			StackId: event.StackId,
-			RequestId: event.RequestId,
-			LogicalResourceId: event.LogicalResourceId,
-			Data: data,
-		});
-
-		try {
-			await fetch(event.ResponseURL, {
-				method: "PUT",
-				headers: { "Content-Type": "", "Content-Length": body.length.toString() },
-				body,
-			});
-		} catch(error: any) {
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, `fetch request failed with error: ${error}`);
-		}
-	}
-}
