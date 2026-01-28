@@ -121,12 +121,12 @@ jobs:
       id-token: write
       contents: read
     env:
-      DEV_CRI_CIC_API_URL: ${{ needs.deploy.outputs.api_url }}
-      DEV_IPV_STUB_URL: ${{ needs.deploy.outputs.ipv_stub_url}}
-      DEV_CIC_TEST_HARNESS_URL: ${{ needs.deploy.outputs.test_harness_url}}
-      VC_SIGNING_KEY_ID: ${{ secrets.DEV_VC_SIGNING_KEY_ID }}   
-      DNS_SUFFIX: ${{ secrets.DEV_DNS_SUFFIX }}
-      DEV_CIC_SESSION_TABLE_NAME: ${{ secrets.DEV_CIC_SESSION_TABLE_NAME }}
+      # DEV_CRI_CIC_API_URL: ${{ needs.deploy.outputs.api_url }}
+      # DEV_IPV_STUB_URL: ${{ needs.deploy.outputs.ipv_stub_url}}
+      # DEV_CIC_TEST_HARNESS_URL: ${{ needs.deploy.outputs.test_harness_url}}
+      # VC_SIGNING_KEY_ID: ${{ secrets.DEV_VC_SIGNING_KEY_ID }}   
+      # DNS_SUFFIX: ${{ secrets.DEV_DNS_SUFFIX }}
+      # DEV_CIC_SESSION_TABLE_NAME: ${{ secrets.DEV_CIC_SESSION_TABLE_NAME }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
