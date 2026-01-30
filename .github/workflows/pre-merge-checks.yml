@@ -45,7 +45,7 @@ jobs:
           use-installer: true
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
@@ -55,12 +55,11 @@ jobs:
         run: sam build -t template.yaml
 
       - name: SAM Deploy API stack
-        if: ${{ github.actor != 'dependabot[bot]' }}
         working-directory: ./deploy
         run: |
           sam deploy \
             --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" \
-            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ARTIFACT_SOURCE_BUCKET_NAME }} \
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
@@ -77,12 +76,11 @@ jobs:
         run: sam build -t template.yaml
 
       - name: SAM Deploy test harness stack
-        if: ${{ github.actor != 'dependabot[bot]' }}
         working-directory: ./test-harness
         run: |
           sam deploy \
             --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}" \
-            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ARTIFACT_SOURCE_BUCKET_NAME }} \
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
@@ -99,12 +97,11 @@ jobs:
         run: sam build -t template.yaml
 
       - name: SAM Deploy IPV stub
-        if: ${{ github.actor != 'dependabot[bot]' }}
         working-directory: ./cic-ipv-stub
         run: |
           sam deploy \
             --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" \
-            --s3-bucket ${{ secrets.DEV_CRI_CIC_ARTIFACT_SOURCE_BUCKET_NAME }} \
+            --s3-bucket ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ARTIFACT_SOURCE_BUCKET_NAME }} \
             --template-file .aws-sam/build/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
@@ -137,13 +134,13 @@ jobs:
           submodules: true
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Setup nodeJS v22
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
       
@@ -165,7 +162,7 @@ jobs:
       contents: read
     steps:
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2

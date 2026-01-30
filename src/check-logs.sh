@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+@QualityGateSensitiveDataScanning
+
 test_data="./tests/data/happyPathSlim.json"
 firstName=$(jq -r '.firstName' "$test_data")
 lastName=$(jq -r '.lastName' "$test_data")
