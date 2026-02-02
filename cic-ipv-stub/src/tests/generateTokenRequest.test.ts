@@ -24,7 +24,7 @@ process.env.JWT_AUDIENCE = "aud";
 
 const kmsClient = mockClient(KMSClient);
 
-describe("Start BAV Check Endpoint", () => {
+describe("Start CIC Check Endpoint", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
