@@ -18,7 +18,7 @@
         "ajv": "8.12.0",
         "aws-xray-sdk-core": "3.10.3",
         "axios": "1.13.5",
-        "body-parser": "2.2.0",
+        "body-parser": "2.2.2",
         "class-validator": "0.14.1",
         "dotenv-cli": "7.4.4",
         "ecdsa-sig-formatter": "1.0.11",
