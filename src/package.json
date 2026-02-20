@@ -15,7 +15,7 @@
         "@aws-sdk/credential-providers": "3.984.0",
         "@aws-sdk/lib-dynamodb": "3.984.0",
         "@smithy/node-http-handler": "4.0.4",
-        "ajv": "8.12.0",
+        "ajv": "8.18.0",
         "aws-xray-sdk-core": "3.10.3",
         "axios": "1.13.5",
         "body-parser": "2.2.2",
