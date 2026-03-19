@@ -338,9 +338,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: S3BucketActivityEventChanges
       Namespace: AWS/S3
@@ -381,9 +381,9 @@ Resources:
       Threshold: '1'
       ComparisonOperator: GreaterThanOrEqualToThreshold
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       TreatMissingData: notBreaching
 
   # Log metric filter and alarm for route table changes
@@ -413,9 +413,9 @@ Resources:
       Threshold: '1'
       ComparisonOperator: GreaterThanOrEqualToThreshold
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       TreatMissingData: notBreaching
 
   # Log metric filter and alarm when changes are made to VPC.
@@ -446,9 +446,9 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       TreatMissingData: notBreaching
 
   # Log metric and alarm when changes are made to AWS Organisations.
@@ -479,9 +479,9 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       TreatMissingData: notBreaching
 
   LambdaEgressSecurityGroup:
@@ -748,9 +748,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: CICAPIGateway-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -915,9 +915,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: ClaimedIdentityFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1057,9 +1057,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: UserInfoFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1204,9 +1204,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: SessionFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1326,9 +1326,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: TokenFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1450,9 +1450,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: AuthorizationFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1670,9 +1670,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: JsonWebKeysFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1782,9 +1782,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: SessionConfigFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -1885,9 +1885,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -1937,9 +1937,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -1989,9 +1989,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2053,11 +2053,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2119,9 +2119,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2183,11 +2183,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2249,9 +2249,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2313,11 +2313,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2379,9 +2379,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2443,11 +2443,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2509,9 +2509,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2573,11 +2573,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2639,9 +2639,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2703,11 +2703,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2769,9 +2769,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2833,11 +2833,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2901,9 +2901,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -2965,9 +2965,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3029,9 +3029,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3093,9 +3093,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3157,9 +3157,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3221,9 +3221,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3285,9 +3285,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3351,9 +3351,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: false  # disabled until we're ready for alarm actions to fire
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
       EvaluationPeriods: 5
@@ -3401,9 +3401,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: ApproximateAgeOfOldestMessage
       Namespace: AWS/SQS
@@ -3428,9 +3428,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: ApproximateNumberOfMessagesVisible
       Namespace: AWS/SQS
@@ -3453,9 +3453,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
@@ -3480,9 +3480,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
@@ -3507,9 +3507,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
@@ -3534,9 +3534,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
@@ -3561,9 +3561,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
@@ -3588,9 +3588,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of reserved concurrency is used. ${RunbookUrl}"
@@ -3615,9 +3615,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if over 80% of JsonWeb Keys concurrency is used. ${RunbookUrl}"
@@ -3644,9 +3644,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${ClaimedIdentityFunction} lambda throttles. ${RunbookUrl}"
@@ -3671,9 +3671,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${SessionFunction} lambda throttles. ${RunbookUrl}"
@@ -3698,9 +3698,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${JsonWebKeysFunction} lambda throttles. ${RunbookUrl}"
@@ -3725,9 +3725,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${AuthorizationFunction} lambda throttles. ${RunbookUrl}"
@@ -3752,9 +3752,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${SessionConfigFunction} lambda throttles. ${RunbookUrl}"
@@ -3779,9 +3779,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${TokenFunction} lambda throttles. ${RunbookUrl}"
@@ -3806,9 +3806,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger if the ${UserInfoFunction} lambda throttles. ${RunbookUrl}"
@@ -3834,9 +3834,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: Trigger the alarm if any lambda in the account timesout 5 times within 5 minutes.
       AlarmName: !Sub "${AWS::StackName}-LambdaTimeoutAlarm"
@@ -3913,9 +3913,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: []
       AlarmDescription: !Sub 
         - "Trigger the alarm if any lambda in the account throttles. ${RunbookUrl}"
