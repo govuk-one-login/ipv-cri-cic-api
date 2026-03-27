@@ -3957,9 +3957,9 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
+        - !ImportValue build-notifications-WarningAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: CICJWTVerificationErrors
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -3984,11 +3984,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-pagerduty-alert-topic
-        - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       MetricName: CICJWTVerificationErrors
       Namespace: !Sub "${AWS::StackName}/LogMessages"
@@ -4027,11 +4027,11 @@ Resources:
         - RunbookUrl: !FindInMap [StaticVariables, urls, CICSupportManual]
       ActionsEnabled: true
       OKActions:
-        - !ImportValue platform-alarm-topic-critical-alert
-        - !ImportValue platform-alarm-pagerduty-alert-topic
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
       AlarmActions:
-        - !ImportValue platform-alarm-topic-critical-alert
-        - !ImportValue platform-alarm-pagerduty-alert-topic
+        - !ImportValue build-notifications-CriticalAlertsTopicArn
+        - !ImportValue build-notifications-PagerDutySNSTopicArn
       InsufficientDataActions: [ ]
       MetricName: KeyAliasesUnavailable
       Namespace: !Sub "${AWS::StackName}/LogMessages"
