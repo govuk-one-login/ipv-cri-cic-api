@@ -47,7 +47,7 @@
         "test:contract:ci": "dotenv -e.env.contract -- bash -c 'npm run start:contract & npm run test:contract && kill $!'"
     },
     "devDependencies": {
-        "@types/aws-lambda": "8.10.148",
+        "@types/aws-lambda": "8.10.161",
         "@types/express": "4.17.21",
         "@types/jest": "29.5.14",
         "@types/js-yaml": "4.0.9",
