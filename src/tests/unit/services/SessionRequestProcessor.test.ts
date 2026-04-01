@@ -2,7 +2,7 @@
 /* eslint @typescript-eslint/unbound-method: 0 */
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
 import { VALID_SESSION, SESSION_WITH_INVALID_CLIENT } from "../data/session-events";
@@ -20,8 +20,8 @@ const logger = mock<Logger>();
 const metrics = mock<Metrics>();
 const mockValidationHelper = mock<ValidationHelper>();
 
-jest.mock("crypto", () => ({
-	...jest.requireActual("crypto"),
+vi.mock("crypto", async () => ({
+	...(await vi.importActual("crypto")),
 	randomUUID: () => "sessionId",
 }));
 
@@ -271,9 +271,9 @@ describe("SessionRequestProcessor", () => {
 			mockValidationHelper.isJwtValid.mockReturnValue("");
 			mockCicService.getSessionById.mockResolvedValue(undefined);
 			mockCicService.createAuthSession.mockResolvedValue();
-			jest.useFakeTimers();
+			vi.useFakeTimers();
 			const fakeTime = 1684933200;
-			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+			vi.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
 			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -305,9 +305,9 @@ describe("SessionRequestProcessor", () => {
 			mockValidationHelper.isJwtValid.mockReturnValue("");
 			mockCicService.getSessionById.mockResolvedValue(undefined);
 			mockCicService.createAuthSession.mockResolvedValue();
-			jest.useFakeTimers();
+			vi.useFakeTimers();
 			const fakeTime = 1684933200;
-			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+			vi.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
 			const job = await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { "txma-audit-encoded": "ABCDEFG" } });
 			console.log("job", job);
@@ -339,9 +339,9 @@ describe("SessionRequestProcessor", () => {
 			mockValidationHelper.isJwtValid.mockReturnValue("");
 			mockCicService.getSessionById.mockResolvedValue(undefined);
 			mockCicService.createAuthSession.mockResolvedValue();
-			jest.useFakeTimers();
+			vi.useFakeTimers();
 			const fakeTime = 1684933200;
-			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+			vi.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
 			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -373,9 +373,9 @@ describe("SessionRequestProcessor", () => {
 			mockValidationHelper.isJwtValid.mockReturnValue("");
 			mockCicService.getSessionById.mockResolvedValue(undefined);
 			mockCicService.createAuthSession.mockResolvedValue();
-			jest.useFakeTimers();
+			vi.useFakeTimers();
 			const fakeTime = 1684933200;
-			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+			vi.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
 			await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -408,9 +408,9 @@ describe("SessionRequestProcessor", () => {
 		mockValidationHelper.isJwtValid.mockReturnValue("");
 		mockCicService.getSessionById.mockResolvedValue(undefined);
 		mockCicService.createAuthSession.mockResolvedValue();
-		jest.useFakeTimers();
+		vi.useFakeTimers();
 		const fakeTime = 1684933200;
-		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
+		vi.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.000Z
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -424,6 +424,6 @@ describe("SessionRequestProcessor", () => {
 		// this will break in the year 2286!
 		const actualExpiryDate = mockCicService.createAuthSession.mock.calls[0][0].expiryDate;
 		expect(actualExpiryDate).toBeLessThan(10000000000);
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 });

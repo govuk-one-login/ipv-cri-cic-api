@@ -155,7 +155,12 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        Banner:
+          - "js=import { createRequire } from 'module';import { fileURLToPath } from 'url';import { dirname } from 'path';const require = createRequire(import.meta.url);const __filename = fileURLToPath(import.meta.url);const __dirname = dirname(__filename);"
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - DequeueHandler.ts
@@ -211,7 +216,12 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        Banner:
+          - "js=import { createRequire } from 'module';import { fileURLToPath } from 'url';import { dirname } from 'path';const require = createRequire(import.meta.url);const __filename = fileURLToPath(import.meta.url);const __dirname = dirname(__filename);"
         Sourcemap: false
         EntryPoints:
           - DeleteBucketHandler.ts
