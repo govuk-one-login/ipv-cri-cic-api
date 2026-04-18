@@ -11,12 +11,12 @@ let cicService: CicService;
 const tableName = "MYTABLE";
 const sessionId = "SESSID";
 const expiryDate = 9999999999999;
-const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
+const mockDynamoDbClient = vi.mocked(createDynamoDbClient());
 import SESSION_RECORD from "../data/db_record.json";
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { TxmaEventNames } from "../../../models/enums/TxmaEvents";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { Constants } from "../../../utils/Constants";
 import { AppError } from "../../../utils/AppError";
@@ -40,39 +40,39 @@ const getTXMAEventPayload = (): TxmaEvent => ({
 
 const logger = mock<Logger>();
 
-jest.mock('@aws-sdk/client-sqs', () => ({
-    SQSClient: jest.fn(),
-    SendMessageCommand: jest.fn(),
+vi.mock("@aws-sdk/client-sqs", () => ({
+    SQSClient: vi.fn(),
+    SendMessageCommand: vi.fn(),
 }));
 
 describe("Cic Service", () => {
 
-	let mockSend: jest.Mock;
+	let mockSend: ReturnType<typeof vi.fn>;
 	let txmaEventPayload: TxmaEvent;
 
 	beforeEach(() => {
-		jest.resetAllMocks();
 		txmaEventPayload = getTXMAEventPayload();
 		cicService = new CicService(tableName, logger, mockDynamoDbClient);
-		mockSend = jest.fn();
-		(SQSClient as jest.Mock).mockImplementation(() => ({
-			send: mockSend,
-		}));
-
+		mockSend = vi.fn();
+		vi.mocked(SQSClient).mockImplementation(function () {
+			return {
+				send: mockSend,
+			} as any;
+  		});
 	});
 	it("Should return a session item when passed a valid session Id", async () => {
-		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: SESSION_RECORD });
 		const result = await cicService.getSessionById(sessionId);
 		expect(result).toEqual({ sessionId: "SESSID" });
 	});
 
 	it("Should not throw an error and return undefined when session doesn't exist", async () => {
-		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
-		expect(cicService.getSessionById("1234")).resolves.toBeUndefined();
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
+		await expect(cicService.getSessionById("1234")).resolves.toBeUndefined();
 	});
 
 	it("Should not throw an AppError when Dynamo errors", async () => {
-		mockDynamoDbClient.send = jest.fn().mockImplementation(() => {
+		mockDynamoDbClient.send = vi.fn().mockImplementation(() => {
 	 		throw new AppError(HttpCodesEnum.SERVER_ERROR, "getItem - failed: got error getting session");
 	 	});
 		await expect(cicService.getSessionById("1234")).rejects.toThrow(
@@ -81,18 +81,18 @@ describe("Cic Service", () => {
 	});
 
 	it("Should return a person item when passed a valid session Id", async () => {
-		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: SESSION_RECORD });
 		const result = await cicService.getPersonIdentityBySessionId(sessionId);
 		expect(result).toEqual({ sessionId: "SESSID" });
 	});
 
 	it("Should not throw an error and return undefined when person doesn't exist", async () => {
-		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
-		expect(cicService.getPersonIdentityBySessionId("1234")).resolves.toBeUndefined();
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
+		await expect(cicService.getPersonIdentityBySessionId("1234")).resolves.toBeUndefined();
 	});
 
 	it("Should not throw an AppError when Dynamo errors gettting person details", async () => {
-		mockDynamoDbClient.send = jest.fn().mockImplementation(() => {
+		mockDynamoDbClient.send = vi.fn().mockImplementation(() => {
 	 		throw new AppError(HttpCodesEnum.SERVER_ERROR, "getItem - failed: got error getting session");
 	 	});
 		await expect(cicService.getPersonIdentityBySessionId("1234")).rejects.toThrow(
@@ -105,12 +105,12 @@ describe("Cic Service", () => {
 			...SESSION_RECORD,
 			expiryDate: absoluteTimeNow() - 500,
 		};
-		mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: expiredSession });
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: expiredSession });
 		await expect(cicService.getSessionById("1234")).rejects.toThrow("Session with session id: 1234 has expired");
 	});
 
 	it("should throw 500 if request fails during save CIC data", async () => {
-		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		mockDynamoDbClient.send = vi.fn().mockRejectedValue({});
 		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: "Family name", date_of_birth: "1970-01-01" });
 
 		await expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
@@ -119,7 +119,7 @@ describe("Cic Service", () => {
 	});
 
 	it("should throw 500 if request fails during save Auth state data", async () => {
-		mockDynamoDbClient.send = jest.fn().mockReturnValueOnce({}).mockImplementation(() => {
+		mockDynamoDbClient.send = vi.fn().mockReturnValueOnce({}).mockImplementation(() => {
 	 		throw new AppError(HttpCodesEnum.SERVER_ERROR, "getItem - failed: got error getting session");
 	 	});
 		const cicSess = new CicSession({ given_names: ["Test", "user"], family_names: "Family name", date_of_birth: "1970-01-01" });
@@ -132,14 +132,14 @@ describe("Cic Service", () => {
 
 
 	it("should resolve if given_names and family_names correctly provided in CicSession", async () => {
-		mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 		const cicSess = new CicSession({ given_names: ["Geralt", "Rivia"], family_names: "Maximus Dec'mus", date_of_birth: "1970-01-01" });
 
-		expect(cicService.saveCICData("1234", cicSess, expiryDate)).resolves.not.toThrow();
+		await expect(cicService.saveCICData("1234", cicSess, expiryDate)).resolves.not.toThrow();
 	});
 
 	it("should throw bad request if given_name has a symbol in CicSession", async () => {
-		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		mockDynamoDbClient.send = vi.fn().mockRejectedValue({});
 		const cicSess = new CicSession({ given_names: ["Ger#lt", "Ri%ia"], family_names: "Family name", date_of_birth: "1970-01-01" });
 
 		await expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
@@ -148,7 +148,7 @@ describe("Cic Service", () => {
 	});
 
 	it("should throw bad request error if given_name has a space in CicSession", async () => {
-		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		mockDynamoDbClient.send = vi.fn().mockRejectedValue({});
 		const cicSess = new CicSession({ given_names: ["Cairne ", " Bloodhoof "], family_names: "Hammerfell", date_of_birth: "1970-01-01" });
 
 		await expect(cicService.saveCICData(FAILURE_VALUE, cicSess, expiryDate)).rejects.toThrow(expect.objectContaining({
@@ -157,18 +157,19 @@ describe("Cic Service", () => {
 	});
 
 	it("Should not throw an error and return undefined when set AuthorizationCode CIC data doesn't exist", async () => {
-		expect(cicService.setAuthorizationCode("SESSID", randomUUID())).resolves.toBeUndefined();
+		mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
+		await expect(cicService.setAuthorizationCode("SESSID", randomUUID())).resolves.toBeUndefined();
 	});
 
 	it("should throw 500 if request fails when setting AuthorizationCode", async () => {
-		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		mockDynamoDbClient.send = vi.fn().mockRejectedValue({});
 		await expect(cicService.setAuthorizationCode(FAILURE_VALUE, randomUUID())).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,
 		}));
 	});
 
 	it("should throw 500 if request fails during update Session data with access token details", async () => {
-		mockDynamoDbClient.send = jest.fn().mockRejectedValue({});
+		mockDynamoDbClient.send = vi.fn().mockRejectedValue({});
 
 		await expect(cicService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
 			statusCode: HttpCodesEnum.SERVER_ERROR,
@@ -355,7 +356,7 @@ describe("Cic Service", () => {
 				authSessionState: ""
 			};
 
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [mockSessionItem] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [mockSessionItem] });
 
 			const session = await cicService.getSessionByAuthorizationCode('testAuthorizationCode');
 
@@ -369,7 +370,7 @@ describe("Cic Service", () => {
 		});
 
 		it('should throw an error if no session is found', async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [] });
 
 			await expect(cicService.getSessionByAuthorizationCode('testAuthorizationCode')).rejects.toThrow(
 			new AppError(HttpCodesEnum.SERVER_ERROR, 'Error retrieving Session by authorization code')
@@ -377,7 +378,7 @@ describe("Cic Service", () => {
 		});
 
 		it('should throw an error if multiple sessions are found', async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [{}, {}] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [{}, {}] });
 
 			await expect(cicService.getSessionByAuthorizationCode('testAuthorizationCode')).rejects.toThrow(
 			new AppError(HttpCodesEnum.SERVER_ERROR, 'Error retrieving Session by authorization code')
@@ -400,7 +401,7 @@ describe("Cic Service", () => {
 				attemptCount: 0,
 				authSessionState: ""
 			}
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [mockSessionItem] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [mockSessionItem] });
 
 			await expect(cicService.getSessionByAuthorizationCode('testAuthorizationCode')).rejects.toThrow(
 			new AppError(HttpCodesEnum.UNAUTHORIZED, `Session with session id: testSessionId has expired`)
@@ -408,14 +409,14 @@ describe("Cic Service", () => {
 		});
 
 		it('should handle undefined authorization code', async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [] });
 			await expect(cicService.getSessionByAuthorizationCode(undefined)).rejects.toThrow(
 			new AppError(HttpCodesEnum.SERVER_ERROR, 'Error retrieving Session by authorization code')
 			);
 		});
 
 		it('should handle DynamoDB query error', async () => {
-			mockDynamoDbClient.query = jest.fn().mockRejectedValue(new Error('DynamoDB query failed'));
+			mockDynamoDbClient.query = vi.fn().mockRejectedValue(new Error('DynamoDB query failed'));
 
 			await expect(cicService.getSessionByAuthorizationCode('testAuthorizationCode')).rejects.toThrow('DynamoDB query failed');
 		});
@@ -444,6 +445,7 @@ describe("Cic Service", () => {
 		});
 
 		it("should successfully create a session", async () => {
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await cicService.createAuthSession(mockSessionItem);
 
 			expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
@@ -460,7 +462,7 @@ describe("Cic Service", () => {
 		it("should handle errors during session creation", async () => {
 
 			const mockError = new Error("createItem - failed: got error creating session");
-			mockDynamoDbClient.send = jest.fn().mockImplementation(() => {
+			mockDynamoDbClient.send = vi.fn().mockImplementation(() => {
 	 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "createItem - failed: got error creating session");
 	 		});
 

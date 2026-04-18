@@ -1,6 +1,6 @@
  
 import { lambdaHandler, logger, metrics } from "../../SessionHandler";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { SessionRequestProcessor } from "../../services/SessionRequestProcessor";
 import { VALID_SESSION } from "./data/session-events";
 import { CONTEXT } from "./data/context";
@@ -9,23 +9,23 @@ import { Response } from "../../utils/Response";
 import { MessageCodes } from "../../models/enums/MessageCodes";
 
 const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();
-jest.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: jest.fn().mockImplementation(() => ({
-		setPersistentLogAttributes: jest.fn(),
-		addContext: jest.fn(),
-		info: jest.fn(),
-		error: jest.fn(),
+vi.mock("@aws-lambda-powertools/logger", () => ({
+	Logger: vi.fn().mockImplementation(() => ({
+		setPersistentLogAttributes: vi.fn(),
+		addContext: vi.fn(),
+		info: vi.fn(),
+		error: vi.fn(),
 	})),
 }));
-jest.mock("../../services/SessionRequestProcessor", () => {
+vi.mock("../../services/SessionRequestProcessor", () => {
 	return {
-		SessionRequestProcessor: jest.fn(() => mockedSessionRequestProcessor),
+		SessionRequestProcessor: vi.fn(() => mockedSessionRequestProcessor),
 	};
 });
 
 describe("SessionHandler", () => {
 	it("return success response for session", async () => {
-		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
+		SessionRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedSessionRequestProcessor);
 
 		await lambdaHandler(VALID_SESSION, CONTEXT);
 
@@ -34,9 +34,9 @@ describe("SessionHandler", () => {
 	});
 
 	it("returns server error where SessionRequestProcessor fails", async () => {
-		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
+		SessionRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedSessionRequestProcessor);
 		const instance  = SessionRequestProcessor.getInstance(logger, metrics);
-		instance.processRequest = jest.fn().mockRejectedValueOnce({});
+		instance.processRequest = vi.fn().mockRejectedValueOnce({});
 
 		await expect(lambdaHandler(VALID_SESSION, CONTEXT)).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
 		expect(logger.error).toHaveBeenCalledWith("An error has occurred.", {

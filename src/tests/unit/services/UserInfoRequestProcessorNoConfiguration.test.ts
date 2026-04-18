@@ -1,5 +1,5 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 
 // arrange test data before importing the class under test

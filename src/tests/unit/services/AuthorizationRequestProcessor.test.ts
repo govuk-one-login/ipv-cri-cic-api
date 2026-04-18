@@ -1,6 +1,6 @@
  
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -48,7 +48,7 @@ describe("AuthorizationRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 	});
 
 	it("Return successful response with 200 OK when auth code", async () => {
