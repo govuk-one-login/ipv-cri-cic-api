@@ -4,17 +4,21 @@ import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
 
 vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn().mockImplementation(() => ({
-		info: vi.fn(),
-		error: vi.fn(),
-		warn: vi.fn(),
-	})),
+	Logger: vi.fn().mockImplementation(function () {
+		return {
+			info: vi.fn(),
+			error: vi.fn(),
+			warn: vi.fn(),
+		};	
+	}),
 }));
 
 vi.mock("@aws-sdk/client-kms", () => ({
-	KMS: vi.fn().mockImplementation(() => ({
-		getPublicKey: vi.fn(),
-	})),
+	KMS: vi.fn().mockImplementation(function () {
+		return {
+			getPublicKey: vi.fn(),
+		};
+	}),
 }));
 
 vi.mock("crypto", async (importOriginal) => {
@@ -33,16 +37,25 @@ vi.mock("crypto", async (importOriginal) => {
 });
 
 vi.mock("@aws-sdk/client-s3", () => ({
-	S3Client: vi.fn().mockImplementation(() => ({
-		send: vi.fn(),
-	})),
-	PutObjectCommand: vi.fn().mockImplementation((args) => args),
-	CopyObjectCommand: vi.fn().mockImplementation((args) => args),
+	S3Client: vi.fn().mockImplementation(function () {
+		return {
+			send: vi.fn(),
+		};
+  	}),
+	PutObjectCommand: vi.fn().mockImplementation(function (args) {
+		return args;
+	}),
+	CopyObjectCommand: vi.fn().mockImplementation(function (args) {
+		return args;
+	}),
 }));
+
 
 vi.mock("../../utils/JwtUtils", () => ({
 	jwtUtils: {
-		getHashedKid: vi.fn().mockImplementation((args) => {return args;}),
+		getHashedKid: vi.fn().mockImplementation(function (args) {
+			return args;
+		}),
 	},
 }));
 
