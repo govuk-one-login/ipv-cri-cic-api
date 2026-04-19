@@ -9,13 +9,16 @@ import { Response } from "../../utils/Response";
 import { MessageCodes } from "../../models/enums/MessageCodes";
 
 const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();
+
 vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn().mockImplementation(() => ({
-		setPersistentLogAttributes: vi.fn(),
-		addContext: vi.fn(),
-		info: vi.fn(),
-		error: vi.fn(),
-	})),
+	Logger: vi.fn(function () {
+		return {
+			setPersistentLogAttributes: vi.fn(),
+			addContext: vi.fn(),
+			info: vi.fn(),
+			error: vi.fn(),
+		};
+	}),
 }));
 vi.mock("../../services/SessionRequestProcessor", () => {
 	return {
