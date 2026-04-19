@@ -1,5 +1,7 @@
+import dotenv from "dotenv";
 import { defineConfig } from "vitest/config";
 
+dotenv.config();
 export default defineConfig({
   test: {
     globals: true,
@@ -8,6 +10,7 @@ export default defineConfig({
     include: ["**/tests/**/*.test.ts"],
     clearMocks: true,
     coverage: {
+      enabled: true,
       provider: "v8",
       include: ["**/*.ts"],
       exclude: [
