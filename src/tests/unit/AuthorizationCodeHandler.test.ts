@@ -8,13 +8,15 @@ import { MessageCodes } from "../../models/enums/MessageCodes";
 import { AuthorizationRequestProcessor } from "../../services/AuthorizationRequestProcessor";
 
 vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn().mockImplementation(() => ({
-		setPersistentLogAttributes: vi.fn(),
-		addContext: vi.fn(),
-		appendKeys: vi.fn(),
-		info: vi.fn(),
-		error: vi.fn(),
-	})),
+	Logger: vi.fn().mockImplementation(function () {
+		return {
+			setPersistentLogAttributes: vi.fn(),
+			addContext: vi.fn(),
+			appendKeys: vi.fn(),
+			info: vi.fn(),
+			error: vi.fn(),
+		};
+	}),
 }));
 
 const mockedAuthorizationRequestProcessor = mock<AuthorizationRequestProcessor>();
