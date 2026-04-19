@@ -11,7 +11,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./build/",
-    "module": "commonjs"
+    "module": "commonjs",
+    "types": ["vitest/globals"]
   },
   "exclude": ["node_modules"]
 }

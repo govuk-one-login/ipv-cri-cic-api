@@ -27,7 +27,7 @@
         "node-jose": "2.2.0"
     },
     "scripts": {
-        "unit": "./node_modules/.bin/vitest run tests/unit/",
+        "unit": "./node_modules/.bin/vitest run tests/unit/ --reporter=default",
         "test:unit": "npm run compile && npm run unit",
         "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c eslint.config.mjs --ext *.ts .",
         "compile": "./node_modules/.bin/tsc",
