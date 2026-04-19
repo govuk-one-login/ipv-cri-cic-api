@@ -8,13 +8,15 @@ import { SessionConfigRequestProcessor } from "../../services/SessionConfigReque
 import { INVALID_SESSION_ID, MISSING_SESSION_ID, VALID_SESSIONCONFIG } from "./data/session-config-events";
 
 vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn().mockImplementation(() => ({
-		setPersistentLogAttributes: vi.fn(),
-		addContext: vi.fn(),
-		appendKeys: vi.fn(),
-		info: vi.fn(),
-		error: vi.fn(),
-	})),
+	Logger: vi.fn().mockImplementation(function () {
+		return {
+			setPersistentLogAttributes: vi.fn(),
+			addContext: vi.fn(),
+			appendKeys: vi.fn(),
+			info: vi.fn(),
+			error: vi.fn(),
+		};	
+	}),
 }));
 
 const mockedSessionConfigRequestProcessor = mock<SessionConfigRequestProcessor>();
