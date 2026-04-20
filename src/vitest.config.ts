@@ -23,8 +23,9 @@ export default defineConfig({
         "config.ts",
       ],
       reportsDirectory: "coverage",
+      reporter: ["text", "lcov"],
     },
-    reporters: ["default", "junit", "html", "lcov"],
+    reporters: ["default", "junit", "html"],
     outputFile: {
       junit: "results/report.xml",
       html: "results/test-report.html",
