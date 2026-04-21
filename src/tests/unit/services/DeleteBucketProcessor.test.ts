@@ -1,24 +1,31 @@
 import { DeleteBucketProcessor } from "../../../services/DeleteBucketProcessor";
 import { VALID_DELETE_REQUEST, VALID_CREATE_REQUEST, VALID_UPDATE_REQUEST } from "../data/delete-bucket-events";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
-import { DeleteObjectsCommand, ListObjectVersionsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { ListObjectVersionsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
-const mockSend = jest.fn();
+const mockSend = vi.fn();
 
-jest.mock("@aws-sdk/client-s3", () => ({
-  S3Client: jest.fn().mockImplementation(() => ({
-    send: mockSend,
-  })),
-  ListObjectVersionsCommand: jest.fn().mockImplementation((args) => {
-  return Object.setPrototypeOf(args, ListObjectVersionsCommand.prototype);
-  }),
-  ListObjectsV2Command: jest.fn().mockImplementation((args) => {
-    return Object.setPrototypeOf(args, ListObjectsV2Command.prototype);
-  }),
-  DeleteObjectsCommand: jest.fn().mockImplementation((args) => {
-    return Object.setPrototypeOf(args, DeleteObjectsCommand.prototype);
-  })
-}));
+vi.mock("@aws-sdk/client-s3", () => {
+  class MockS3Client {
+    send = mockSend;
+  }
+  class MockListObjectVersionsCommand {
+    constructor(public input: any) {}
+  }
+  class MockListObjectsV2Command {
+    constructor(public input: any) {}
+  }
+  class MockDeleteObjectsCommand {
+    constructor(public input: any) {}
+  }
+
+  return {
+    S3Client: MockS3Client,
+    ListObjectVersionsCommand: MockListObjectVersionsCommand,
+    ListObjectsV2Command: MockListObjectsV2Command,
+    DeleteObjectsCommand: MockDeleteObjectsCommand,
+  };
+});
 
 let deleteBucketProcessor: DeleteBucketProcessor;
 describe("DeleteBucketProcessor", () => {
@@ -38,7 +45,7 @@ describe("DeleteBucketProcessor", () => {
           });
         }
       });
-      global.fetch = jest.fn().mockResolvedValue({ status: 200 });
+      global.fetch = vi.fn().mockResolvedValue({ status: 200 });
       const response = await deleteBucketProcessor.processRequest(VALID_DELETE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Bucket deleted" })
     });
@@ -57,24 +64,24 @@ describe("DeleteBucketProcessor", () => {
         });
       }
     });
-      global.fetch = jest.fn().mockResolvedValue({ status: 200 });
+      global.fetch = vi.fn().mockResolvedValue({ status: 200 });
       const response = await deleteBucketProcessor.processRequest(VALID_DELETE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Bucket deleted" })
     });
 
     it("throws error when sendResponse fetch request fails", async () => {
-      global.fetch = jest.fn().mockRejectedValue({});
+      global.fetch = vi.fn().mockRejectedValue({});
       await expect(deleteBucketProcessor.processRequest(VALID_DELETE_REQUEST)).rejects.toThrow();
     });
 
     it("returns SUCCESS when Create RequestType received", async () => {
-      global.fetch = jest.fn().mockResolvedValue({ status: 200 });
+      global.fetch = vi.fn().mockResolvedValue({ status: 200 });
       const response = await deleteBucketProcessor.processRequest(VALID_CREATE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Create success" })
     })
 
     it("returns SUCCESS when Update RequestType received", async () => {
-      global.fetch = jest.fn().mockResolvedValue({ status: 200 });
+      global.fetch = vi.fn().mockResolvedValue({ status: 200 });
       const response = await deleteBucketProcessor.processRequest(VALID_UPDATE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Update success" })
     })

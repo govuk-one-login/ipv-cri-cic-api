@@ -1,7 +1,7 @@
  
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
 import { CicService } from "../../../services/CicService";
@@ -85,17 +85,17 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000));
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(1585695600000));
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {

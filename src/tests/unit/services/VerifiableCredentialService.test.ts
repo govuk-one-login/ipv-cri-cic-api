@@ -1,6 +1,6 @@
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { CicService } from "../../../services/CicService";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -90,7 +90,7 @@ describe("Issuing verified credentials", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
