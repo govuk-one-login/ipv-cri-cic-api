@@ -1,69 +1,42 @@
 import { DeleteBucketProcessor } from "../../../services/DeleteBucketProcessor";
 import { VALID_DELETE_REQUEST, VALID_CREATE_REQUEST, VALID_UPDATE_REQUEST } from "../data/delete-bucket-events";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
-import { ListObjectVersionsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectVersionsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { mockClient } from "aws-sdk-client-mock";
 
-const mockSend = vi.fn();
-
-vi.mock("@aws-sdk/client-s3", () => {
-  class MockS3Client {
-    send = mockSend;
-  }
-  class MockListObjectVersionsCommand {
-    constructor(public input: any) {}
-  }
-  class MockListObjectsV2Command {
-    constructor(public input: any) {}
-  }
-  class MockDeleteObjectsCommand {
-    constructor(public input: any) {}
-  }
-
-  return {
-    S3Client: MockS3Client,
-    ListObjectVersionsCommand: MockListObjectVersionsCommand,
-    ListObjectsV2Command: MockListObjectsV2Command,
-    DeleteObjectsCommand: MockDeleteObjectsCommand,
-  };
-});
-
+const s3Mock = mockClient(S3Client);
 let deleteBucketProcessor: DeleteBucketProcessor;
+
 describe("DeleteBucketProcessor", () => {
     beforeEach(() => {
       deleteBucketProcessor = new DeleteBucketProcessor();
-      mockSend.mockReset();
+      s3Mock.reset();
     });
 
     it("successfully empties buckets", async () => {
-      mockSend.mockImplementation((command) => {
-        if (command instanceof ListObjectsV2Command) {
-          return Promise.resolve({
-            Contents: [
-              { Key: "remaining1.txt" },
-              { Key: "remaining2.txt" },
-            ],
-          });
-        }
+      s3Mock.on(ListObjectsV2Command).resolves({
+        Contents: [
+          { Key: "remaining1.txt" },
+          { Key: "remaining2.txt" },
+        ],
       });
+
       global.fetch = vi.fn().mockResolvedValue({ status: 200 });
       const response = await deleteBucketProcessor.processRequest(VALID_DELETE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Bucket deleted" })
     });
     
     it("successfully empties bucket versions", async () => {
-      mockSend.mockImplementation((command) => {
-      if (command instanceof ListObjectVersionsCommand) {
-        return Promise.resolve({
-          Versions: [
-            { Key: "file1.txt", VersionId: "1" },
-            { Key: "file2.txt", VersionId: "2" },
-          ],
-          DeleteMarkers: [
-            { Key: "file3.txt", VersionId: "3" },
-          ],
-        });
-      }
-    });
+      s3Mock.on(ListObjectVersionsCommand).resolves({
+        Versions: [
+          { Key: "file1.txt", VersionId: "1" },
+          { Key: "file2.txt", VersionId: "2" },
+        ],
+        DeleteMarkers: [
+          { Key: "file3.txt", VersionId: "3" },
+        ],
+      });
+
       global.fetch = vi.fn().mockResolvedValue({ status: 200 });
       const response = await deleteBucketProcessor.processRequest(VALID_DELETE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Bucket deleted" })

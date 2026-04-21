@@ -6,12 +6,6 @@ import { randomUUID } from "crypto";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
-
-let cicService: CicService;
-const tableName = "MYTABLE";
-const sessionId = "SESSID";
-const expiryDate = 9999999999999;
-const mockDynamoDbClient = vi.mocked(createDynamoDbClient());
 import SESSION_RECORD from "../data/db_record.json";
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
@@ -21,6 +15,11 @@ import { ISessionItem } from "../../../models/ISessionItem";
 import { Constants } from "../../../utils/Constants";
 import { AppError } from "../../../utils/AppError";
 
+let cicService: CicService;
+const tableName = "MYTABLE";
+const sessionId = "SESSID";
+const expiryDate = 9999999999999;
+const mockDynamoDbClient = vi.mocked(createDynamoDbClient());
 const FAILURE_VALUE = "throw_me";
 
 const getTXMAEventPayload = (): TxmaEvent => ({

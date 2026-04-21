@@ -1,19 +1,10 @@
 import { SQSEvent } from "aws-lambda";
 import { lambdaHandler, logger, s3Client } from "../../DequeueHandler";
 import { BatchItemFailure } from "../../utils/BatchItemFailure";
+import { mockClient } from "aws-sdk-client-mock";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
-
-vi.mock("@aws-sdk/client-s3", () => ({
-  S3Client: vi.fn().mockImplementation(function () {
-    return {
-			send: vi.fn(),
-		};
-  }),
-	PutObjectCommand: vi.fn().mockImplementation(function (args) {
-    return args;
-  }),
-}));
 
 vi.mock("@aws-lambda-powertools/logger", () => ({
 	Logger: vi.fn().mockImplementation(function () {
@@ -23,6 +14,8 @@ vi.mock("@aws-lambda-powertools/logger", () => ({
     };
   }),
 }));
+
+const s3Mock = mockClient(S3Client);
 
 describe("DequeueHandler", () => {
   const body1 = JSON.stringify({
@@ -44,10 +37,11 @@ describe("DequeueHandler", () => {
     process.env.BUCKET_FOLDER_PREFIX = "txma/";
     process.env.EVENT_TEST_BUCKET_NAME = "test-bucket";
     process.env.PROPERTY_NAME = "sub";
+    s3Mock.reset();
   });
 
   it("Returns no batchItemFailures if all events were successfully sent to S3 where property name is sub", async () => {
-    vi.spyOn(s3Client, "send").mockReturnValueOnce();
+    s3Mock.on(PutObjectCommand).resolves({});
 
     const result = await lambdaHandler(event as SQSEvent);
     expect(logger.info).toHaveBeenCalledWith("Starting to process records");
@@ -82,7 +76,7 @@ describe("DequeueHandler", () => {
       ],
     };
 
-    vi.spyOn(s3Client, "send").mockReturnValueOnce();
+    s3Mock.on(PutObjectCommand).resolves({});
 
     const result = await lambdaHandler(txmaEvent as SQSEvent);
     expect(logger.info).toHaveBeenCalledWith("Starting to process records");
@@ -98,9 +92,7 @@ describe("DequeueHandler", () => {
 
   it("Returns batchItemFailures if events failed to send to S3", async () => {
     const error = new Error("Failed to send to S3");
-    vi.spyOn(s3Client, "send").mockImplementationOnce(() => {
-			throw error;
-		});
+    s3Mock.on(PutObjectCommand).rejectsOnce(error).resolves({});
 
     const result = await lambdaHandler(event as SQSEvent);
     expect(logger.error).toHaveBeenCalledWith({

@@ -2,6 +2,8 @@ import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
+import { mockClient } from "aws-sdk-client-mock";
+import { CopyObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 vi.mock("@aws-lambda-powertools/logger", () => ({
 	Logger: vi.fn().mockImplementation(function () {
@@ -36,21 +38,6 @@ vi.mock("crypto", async (importOriginal) => {
 	};
 });
 
-vi.mock("@aws-sdk/client-s3", () => ({
-	S3Client: vi.fn().mockImplementation(function () {
-		return {
-			send: vi.fn(),
-		};
-  	}),
-	PutObjectCommand: vi.fn().mockImplementation(function (args) {
-		return args;
-	}),
-	CopyObjectCommand: vi.fn().mockImplementation(function (args) {
-		return args;
-	}),
-}));
-
-
 vi.mock("../../utils/JwtUtils", () => ({
 	jwtUtils: {
 		getHashedKid: vi.fn().mockImplementation(function (args) {
@@ -59,12 +46,15 @@ vi.mock("../../utils/JwtUtils", () => ({
 	},
 }));
 
+const s3Mock = mockClient(S3Client);
+
 describe("JwksHandler", () => {
 	describe("#handler", () => {
 		beforeEach(() => {
 			process.env.SIGNING_KEY_IDS = "cic-cri-api-vc-signing-key";
 			process.env.ENCRYPTION_KEY_IDS = "cic-cri-api-encryption-key";
 			process.env.JWKS_BUCKET_NAME = "cic-cri-api-jwks-dev";
+			s3Mock.reset();
 		});
 
 		it("throws error if environment variables are missing", async () => {
@@ -87,7 +77,8 @@ describe("JwksHandler", () => {
 			await lambdaHandler();
 
 			expect(logger.info).toHaveBeenCalledWith({ message:"Building wellknown JWK endpoint with keys" + ["cic-cri-api-vc-signing-key", "cic-cri-api-encryption-key"] });
-			expect(handlerClass.s3Client.send).toHaveBeenCalledWith({
+			expect(s3Mock.commandCalls(PutObjectCommand));
+			expect(s3Mock.commandCalls(PutObjectCommand)[0].args[0].input).toEqual({
 				Bucket: "cic-cri-api-jwks-dev",
 				Key: ".well-known/jwks.json",
 				Body: JSON.stringify(body),
@@ -101,10 +92,11 @@ describe("JwksHandler", () => {
 			await lambdaHandler();
 
 			expect(logger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
-			expect(handlerClass.s3Client.send).toHaveBeenCalledWith({
+			expect(s3Mock.commandCalls(CopyObjectCommand));	
+			expect(s3Mock.commandCalls(CopyObjectCommand)[0].args[0].input).toEqual({
 				Bucket: "published-keys-bucket",
 				Key: "jwks.json",
-				CopySource: "cic-cri-api-jwks-dev/.well-known/jwks.json",
+				CopySource: "cic-cri-api-jwks-dev/.well-known/jwks.json"
 			});
 			expect(logger.info).toHaveBeenCalledWith({ message: "Keys copied to published keys bucket" });
 		});
