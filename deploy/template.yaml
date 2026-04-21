@@ -620,7 +620,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false
         EntryPoints:
           - DeleteBucketHandler.ts
@@ -858,7 +861,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - ClaimedIdentityHandler.ts
@@ -1001,7 +1007,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - UserInfoHandler.ts
@@ -1147,7 +1156,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionHandler.ts
@@ -1269,7 +1281,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AccessTokenHandler.ts
@@ -1393,7 +1408,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AuthorizationCodeHandler.ts
@@ -1622,7 +1640,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: true
         EntryPoints:
           - JwksHandler.ts
@@ -1725,7 +1746,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - SessionConfigHandler.ts
@@ -1845,7 +1869,10 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: "es2022"
+        Format: esm
+        OutExtension:
+          - .js=.mjs
         Sourcemap: false
         EntryPoints:
           - AbortHandler.ts

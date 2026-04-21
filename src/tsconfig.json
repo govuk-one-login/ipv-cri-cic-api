@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "experimentalDecorators": true,
-    "target": "es2020",
+    "target": "es2022",
     "strict": true,
     "preserveConstEnums": true,
     "sourceMap": true,
@@ -11,8 +11,15 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./build/",
-    "module": "commonjs",
-    "types": ["vitest/globals"]
+    "module": "es2022",
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "tests",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ]
 }
