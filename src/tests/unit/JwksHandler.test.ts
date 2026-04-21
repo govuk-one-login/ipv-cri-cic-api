@@ -1,5 +1,5 @@
 import { mockLogger, mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
-import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
+import { handlerClass, lambdaHandler } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
