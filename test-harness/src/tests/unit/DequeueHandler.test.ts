@@ -1,5 +1,5 @@
 import { SQSEvent } from "aws-lambda";
-import { lambdaHandler, logger, s3Client } from "../../DequeueHandler";
+import { lambdaHandler, logger } from "../../DequeueHandler";
 import { BatchItemFailure } from "../../utils/BatchItemFailure";
 import { mockClient } from "aws-sdk-client-mock";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";

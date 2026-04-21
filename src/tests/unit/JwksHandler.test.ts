@@ -1,3 +1,4 @@
+import { mockLogger, mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
 import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
@@ -5,15 +6,7 @@ import crypto from "crypto";
 import { mockClient } from "aws-sdk-client-mock";
 import { CopyObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn().mockImplementation(function () {
-		return {
-			info: vi.fn(),
-			error: vi.fn(),
-			warn: vi.fn(),
-		};	
-	}),
-}));
+mockPowertoolsLogger();
 
 vi.mock("@aws-sdk/client-kms", () => ({
 	KMS: vi.fn().mockImplementation(function () {
@@ -66,7 +59,7 @@ describe("JwksHandler", () => {
 				message: "Service incorrectly configured",
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Environment variable SIGNING_KEY_IDS or ENCRYPTION_KEY_IDS or JWKS_BUCKET_NAME is not configured" });
+			expect(mockLogger.error).toHaveBeenCalledWith({ message: "Environment variable SIGNING_KEY_IDS or ENCRYPTION_KEY_IDS or JWKS_BUCKET_NAME is not configured" });
 		});
 
 		it("uploads keys to s3", async () => {
@@ -76,7 +69,7 @@ describe("JwksHandler", () => {
     
 			await lambdaHandler();
 
-			expect(logger.info).toHaveBeenCalledWith({ message:"Building wellknown JWK endpoint with keys" + ["cic-cri-api-vc-signing-key", "cic-cri-api-encryption-key"] });
+			expect(mockLogger.info).toHaveBeenCalledWith({ message:"Building wellknown JWK endpoint with keys" + ["cic-cri-api-vc-signing-key", "cic-cri-api-encryption-key"] });
 			expect(s3Mock.commandCalls(PutObjectCommand));
 			expect(s3Mock.commandCalls(PutObjectCommand)[0].args[0].input).toEqual({
 				Bucket: "cic-cri-api-jwks-dev",
@@ -91,14 +84,14 @@ describe("JwksHandler", () => {
 		it("copies keys from jwks bucket to published keys bucket", async () => {
 			await lambdaHandler();
 
-			expect(logger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
+			expect(mockLogger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
 			expect(s3Mock.commandCalls(CopyObjectCommand));	
 			expect(s3Mock.commandCalls(CopyObjectCommand)[0].args[0].input).toEqual({
 				Bucket: "published-keys-bucket",
 				Key: "jwks.json",
 				CopySource: "cic-cri-api-jwks-dev/.well-known/jwks.json"
 			});
-			expect(logger.info).toHaveBeenCalledWith({ message: "Keys copied to published keys bucket" });
+			expect(mockLogger.info).toHaveBeenCalledWith({ message: "Keys copied to published keys bucket" });
 		});
 	});
 
@@ -136,7 +129,7 @@ describe("JwksHandler", () => {
 
 			const result = await handlerClass.getAsJwk(keyId);
 
-			expect(logger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, undefined);
+			expect(mockLogger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, undefined);
 			expect(result).toBeNull();
 		});
 
@@ -152,7 +145,7 @@ describe("JwksHandler", () => {
 
 			const result = await handlerClass.getAsJwk(keyId);
 
-			expect(logger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, undefined);
+			expect(mockLogger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, undefined);
 			expect(result).toBeNull();
 		});
 
@@ -167,7 +160,7 @@ describe("JwksHandler", () => {
 
 			const result = await handlerClass.getAsJwk(keyId);
 
-			expect(logger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, JSON.stringify({
+			expect(mockLogger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, JSON.stringify({
 				keySpec: "ECC_NIST_P256",
 				algorithm: "ES256" as Algorithm,
 			}));
@@ -184,7 +177,7 @@ describe("JwksHandler", () => {
 
 			const result = await handlerClass.getAsJwk(keyId);
 
-			expect(logger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, JSON.stringify({
+			expect(mockLogger.error).toHaveBeenCalledWith({ message: "Failed to build JWK from key" + keyId }, JSON.stringify({
 				keySpec: "ECC_NIST_P256",
 				algorithm: "ES256" as Algorithm,
 			}));

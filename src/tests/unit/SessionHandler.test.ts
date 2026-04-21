@@ -1,4 +1,5 @@
  
+import { mockLogger, mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
 import { lambdaHandler, logger, metrics } from "../../SessionHandler";
 import { mock } from "vitest-mock-extended";
 import { SessionRequestProcessor } from "../../services/SessionRequestProcessor";
@@ -8,18 +9,10 @@ import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Response } from "../../utils/Response";
 import { MessageCodes } from "../../models/enums/MessageCodes";
 
+mockPowertoolsLogger();
+
 const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();
 
-vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn(function () {
-		return {
-			setPersistentLogAttributes: vi.fn(),
-			addContext: vi.fn(),
-			info: vi.fn(),
-			error: vi.fn(),
-		};
-	}),
-}));
 vi.mock("../../services/SessionRequestProcessor", () => {
 	return {
 		SessionRequestProcessor: vi.fn(() => mockedSessionRequestProcessor),
@@ -32,7 +25,7 @@ describe("SessionHandler", () => {
 
 		await lambdaHandler(VALID_SESSION, CONTEXT);
 
-		expect(logger.info).toHaveBeenCalledWith("Received session request", { requestId: VALID_SESSION.requestContext.requestId });
+		expect(mockLogger.info).toHaveBeenCalledWith("Received session request", { requestId: VALID_SESSION.requestContext.requestId });
 		expect(mockedSessionRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
 	});
 
@@ -42,7 +35,7 @@ describe("SessionHandler", () => {
 		instance.processRequest = vi.fn().mockRejectedValueOnce({});
 
 		await expect(lambdaHandler(VALID_SESSION, CONTEXT)).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));
-		expect(logger.error).toHaveBeenCalledWith("An error has occurred.", {
+		expect(mockLogger.error).toHaveBeenCalledWith("An error has occurred.", {
 			error: {},
 			messageCode: MessageCodes.SERVER_ERROR,
 		});
