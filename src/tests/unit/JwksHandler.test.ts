@@ -70,7 +70,6 @@ describe("JwksHandler", () => {
 			await lambdaHandler();
 
 			expect(mockLogger.info).toHaveBeenCalledWith({ message:"Building wellknown JWK endpoint with keys" + ["cic-cri-api-vc-signing-key", "cic-cri-api-encryption-key"] });
-			expect(s3Mock.commandCalls(PutObjectCommand));
 			expect(s3Mock.commandCalls(PutObjectCommand)[0].args[0].input).toEqual({
 				Bucket: "cic-cri-api-jwks-dev",
 				Key: ".well-known/jwks.json",
@@ -85,7 +84,6 @@ describe("JwksHandler", () => {
 			await lambdaHandler();
 
 			expect(mockLogger.info).toHaveBeenCalledWith({ message: "Copying keys to published keys bucket" });
-			expect(s3Mock.commandCalls(CopyObjectCommand));	
 			expect(s3Mock.commandCalls(CopyObjectCommand)[0].args[0].input).toEqual({
 				Bucket: "published-keys-bucket",
 				Key: "jwks.json",
