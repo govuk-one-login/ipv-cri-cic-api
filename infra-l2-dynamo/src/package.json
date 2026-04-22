@@ -1,6 +1,6 @@
 {
     "name": "l2-dynamo-test",
-    "description": "Nodejs package configuration for the platform jest tests",
+    "description": "Nodejs package configuration for the platform vitest tests",
     "version": "0.0.1",
     "private": true,
     "dependencies": {
