@@ -2,8 +2,7 @@ name: Pre-merge checks
 on:
   workflow_call:
     secrets:
-      DEV_CRI_CIC_PRE_MERGE_ROLE_ARN:
-        required: true
+      DEV_CRI_CIC_PRE_MERGE_ROLE_ARN: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
 
 concurrency:
   group: pre-merge-check${{ github.head_ref || github.ref_name }}
