@@ -129,3 +129,5 @@ jobs:
   pre-merge-checks:
     uses: ./.github/workflows/pre-merge-checks.yml
     # secrets: inherit
+    secrets:
+      DEV_CRI_CIC_PRE_MERGE_ROLE_ARN: ${{ secrets.DEV_CRI_CIC_PRE_MERGE_ROLE_ARN }}
