@@ -128,4 +128,4 @@ jobs:
   
   pre-merge-checks:
     uses: ./.github/workflows/pre-merge-checks.yml
-    secrets: inherit
+    # secrets: inherit
