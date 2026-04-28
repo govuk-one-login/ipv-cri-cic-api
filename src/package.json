@@ -32,8 +32,8 @@
         "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c eslint.config.mjs --ext *.ts .",
         "compile": "./node_modules/.bin/tsc",
         "lint": "eslint -c eslint.config.mjs *.ts .",
-        "test:e2e": "./node_modules/.bin/vitest run tests/api/e2e*.test.ts --reporter=default --reporter=junit --outputFile.junit=results/e2e-report.xml",
-        "test:infra": "./node_modules/.bin/vitest run tests/infra/  --reporter=default",
+        "test:e2e": "./node_modules/.bin/vitest run tests/api/e2e --reporter=default",
+        "test:infra": "./node_modules/.bin/vitest run tests/infra/ --reporter=default",
         "api": "./node_modules/.bin/vitest run tests/api/ --reporter=default",
         "test:api": "npm run compile && npm run api",
         "test:pii": "bash ./check-logs.sh",
@@ -41,7 +41,7 @@
         "start:dynamodblocal": "cd tests/contract; ./scripts/setup-dynamodb-local.sh",
         "test:pactconnection": "cd tests/contract; ./scripts/test-pact-connection.sh",
         "start:contract": "npm run start:dynamodblocal && npm run test:pactconnection && npm run wait-start:contract",
-        "wait-start:contract": "wait-on tcp:127.0.0.1:8000 && cd tests/contract && ts-node ./app.ts",
+        "wait-start:contract": "wait-on tcp:127.0.0.1:8000 && cd tests/contract && tsx ./app.ts",
         "test:provider": "./node_modules/.bin/vitest run tests/contract/CicCriProvider.test.ts --reporter=default",
         "test:contract": "wait-on tcp:127.0.0.1:3000; cd tests/contract; npm run test:provider && npm run kill:dynamodblocal",
         "test:contract:ci": "dotenv -e.env.contract -- bash -c 'npm run start:contract & npm run test:contract && kill $!'"
@@ -56,14 +56,15 @@
         "@typescript-eslint/parser": "8.56.1",
         "@vitest/coverage-v8": "4.1.4",
         "aws-cdk-lib": "2.241.0",
-        "aws-sdk-client-mock": "4.1.0",
         "dotenv": "17.2.2",
         "eslint": "10.0.2",
         "fast-xml-parser": "5.7.1",
         "vitest": "4.1.4",
         "vitest-mock-extended": "4.0.0",
+        "aws-sdk-client-mock": "4.1.0",
         "ts-node": "10.9.2",
         "typescript": "4.9.5",
+        "tsx": "4.20.6",
         "wait-on": "9.0.5",
         "yaml-cfn": "0.3.2",
         "aws4-axios": "3.4.0",
@@ -76,5 +77,6 @@
     },
     "overrides": {
         "form-data": ">=4.0.4"
-    }
+    },
+    "type": "module"
 }
