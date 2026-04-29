@@ -1,6 +1,6 @@
 import express from "express";
-import { accessTokenRouter } from "./routes/AccessTokenRoute";
-import { userInfoRouter } from "./routes/UserInfoRoute";
+import { accessTokenRouter } from "./routes/AccessTokenRoute.js";
+import { userInfoRouter } from "./routes/UserInfoRoute.js";
 import bodyParser from "body-parser";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "./utils/Constants";
