@@ -76,5 +76,6 @@
     },
     "overrides": {
         "form-data": ">=4.0.4"
-    }
+    },
+    "type": "module"
 }
