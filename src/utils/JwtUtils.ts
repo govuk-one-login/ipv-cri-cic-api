@@ -5,7 +5,8 @@ export const jwtUtils = {
 
 	// convert non-base64 string or uint8array into base64 encoded string
 	base64Encode(value: string | Uint8Array): string {
-    	return jose.base64url.encode(value);
+		const inputValue = (Buffer. from(value),"utf8");
+    	return jose.base64url.encode(inputValue);
 	},
 
 	// convert base64 into uint8array
@@ -32,6 +33,8 @@ export const jwtUtils = {
 
 	// hash string then present output as UTF-8 encoded hexadecimal string
 	getHashedKid(keyId: string): string {
-		return crypto.createHash("sha256").update(keyId, "utf8").digest("hex");
+		const kidBytes = Buffer.from(keyId, "utf8");
+		const hash = crypto.createHash("sha256").update(kidBytes).digest();
+		return Buffer.from(hash).toString("hex");
 	},
 };
