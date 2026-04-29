@@ -1,7 +1,7 @@
  
 import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { VALID_CLAIMEDID } from "../data/cic-events";
 import { CicService } from "../../../services/CicService";
@@ -48,7 +48,7 @@ describe("ClaimedIdRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 	});
 
 	it("Return successful response with 200 OK when session is found", async () => {
