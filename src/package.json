@@ -41,7 +41,7 @@
         "start:dynamodblocal": "cd tests/contract; ./scripts/setup-dynamodb-local.sh",
         "test:pactconnection": "cd tests/contract; ./scripts/test-pact-connection.sh",
         "start:contract": "npm run start:dynamodblocal && npm run test:pactconnection && npm run wait-start:contract",
-        "wait-start:contract": "wait-on tcp:127.0.0.1:8000 && cd tests/contract && ts-node ./app.ts",
+        "wait-start:contract": "wait-on tcp:127.0.0.1:8000 && cd tests/contract && tsx ./app.ts",
         "test:provider": "./node_modules/.bin/vitest run tests/contract/CicCriProvider.test.ts --reporter=default",
         "test:contract": "wait-on tcp:127.0.0.1:3000; cd tests/contract; npm run test:provider && npm run kill:dynamodblocal",
         "test:contract:ci": "dotenv -e.env.contract -- bash -c 'npm run start:contract & npm run test:contract && kill $!'"
@@ -69,6 +69,7 @@
         "aws4-axios": "3.4.0",
         "@pact-foundation/pact": "12.1.3",
         "express": "4.22.1",
+        "tsx": "4.21.0",
         "express-asyncify": "2.1.2"
     },
     "engines": {
