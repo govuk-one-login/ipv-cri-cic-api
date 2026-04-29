@@ -16,7 +16,7 @@ export const jwtUtils = {
 
 	// convert base64 encoded string into non-base64 string
 	base64DecodeToString(value: string): string {
-  		return new TextDecoder().decode(jose.base64url.decode(value));
+		return Buffer.from(value, "base64url").toString();
 	},
 
 	// convert uint8array into string
