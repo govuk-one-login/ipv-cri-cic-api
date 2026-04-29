@@ -11,13 +11,13 @@ export const jwtUtils = {
 
 	// convert base64 into uint8array
 	base64DecodeToUint8Array(value: string): Uint8Array {
-        return jose.base64url.decode(value);
+  		return jose.base64url.decode(value);
 	},
 
 	// convert base64 encoded string into non-base64 string
 	base64DecodeToString(value: string): string {
-        return new TextDecoder().decode(jose.base64url.decode(value));
-  },
+  		return new TextDecoder().decode(jose.base64url.decode(value));
+	},
 
 	// convert uint8array into string
 	decode(value: Uint8Array): string {
