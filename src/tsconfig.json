@@ -12,7 +12,9 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./build/",
     "module": "es2022",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "exclude": ["node_modules"]
 }
