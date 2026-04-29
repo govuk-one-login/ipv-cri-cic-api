@@ -5,7 +5,7 @@ export const jwtUtils = {
 
 	// convert non-base64 string or uint8array into base64 encoded string
 	base64Encode(value: string | Uint8Array): string {
-		const inputValue = (Buffer. from(value),"utf8");
+		const inputValue = new Uint8Array(Buffer.from(value));
     	return jose.base64url.encode(inputValue);
 	},
 
