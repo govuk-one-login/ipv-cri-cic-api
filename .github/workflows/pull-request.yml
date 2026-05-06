@@ -24,12 +24,9 @@ permissions:
 
 env: # Only adding the variables in that are required for
   AWS_REGION: eu-west-2
-  DEV_CRI_CIC_API_URL: ${{ secrets.DEV_CRI_CIC_API_URL }}
-  DEV_IPV_STUB_URL: ${{ secrets.DEV_IPV_STUB_URL }}
   PACT_BROKER_USER: ${{ secrets.PACT_BROKER_USER }}
   PACT_BROKER_PASSWORD: ${{ secrets.PACT_BROKER_PASSWORD }}
   PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}?testSource=${{ secrets.PACT_BROKER_SOURCE_HEADER }}
-  PACT_PROVIDER_NAME: ${{ secrets.PACT_PROVIDER_NAME }}
   PACT_PROVIDER_VERSION: ${{ secrets.PACT_PROVIDER_VERSION }}
   CLIENT_CONFIG: ${{ secrets.DEV_CLIENT_CONFIG }}
 
