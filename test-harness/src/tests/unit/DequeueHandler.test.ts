@@ -1,22 +1,21 @@
 import { SQSEvent } from "aws-lambda";
-import { lambdaHandler, logger, s3Client } from "../../DequeueHandler";
+import { lambdaHandler, logger } from "../../DequeueHandler";
 import { BatchItemFailure } from "../../utils/BatchItemFailure";
+import { mockClient } from "aws-sdk-client-mock";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-jest.useFakeTimers().setSystemTime(new Date("2020-01-01"));
+vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
 
-jest.mock("@aws-sdk/client-s3", () => ({
-	S3Client: jest.fn().mockImplementation(() => ({
-		send: jest.fn(),
-	})),
-	PutObjectCommand: jest.fn().mockImplementation(() => ({})),
+vi.mock("@aws-lambda-powertools/logger", () => ({
+	Logger: vi.fn().mockImplementation(function () {
+    return {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
+  }),
 }));
 
-jest.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: jest.fn().mockImplementation(() => ({
-		info: jest.fn(),
-		error: jest.fn(),
-	})),
-}));
+const s3Mock = mockClient(S3Client);
 
 describe("DequeueHandler", () => {
   const body1 = JSON.stringify({
@@ -38,10 +37,11 @@ describe("DequeueHandler", () => {
     process.env.BUCKET_FOLDER_PREFIX = "txma/";
     process.env.EVENT_TEST_BUCKET_NAME = "test-bucket";
     process.env.PROPERTY_NAME = "sub";
+    s3Mock.reset();
   });
 
   it("Returns no batchItemFailures if all events were successfully sent to S3 where property name is sub", async () => {
-    jest.spyOn(s3Client, "send").mockReturnValueOnce();
+    s3Mock.on(PutObjectCommand).resolves({});
 
     const result = await lambdaHandler(event as SQSEvent);
     expect(logger.info).toHaveBeenCalledWith("Starting to process records");
@@ -76,7 +76,7 @@ describe("DequeueHandler", () => {
       ],
     };
 
-    jest.spyOn(s3Client, "send").mockReturnValueOnce();
+    s3Mock.on(PutObjectCommand).resolves({});
 
     const result = await lambdaHandler(txmaEvent as SQSEvent);
     expect(logger.info).toHaveBeenCalledWith("Starting to process records");
@@ -92,9 +92,7 @@ describe("DequeueHandler", () => {
 
   it("Returns batchItemFailures if events failed to send to S3", async () => {
     const error = new Error("Failed to send to S3");
-    jest.spyOn(s3Client, "send").mockImplementationOnce(() => {
-			throw error;
-		});
+    s3Mock.on(PutObjectCommand).rejectsOnce(error).resolves({});
 
     const result = await lambdaHandler(event as SQSEvent);
     expect(logger.error).toHaveBeenCalledWith({

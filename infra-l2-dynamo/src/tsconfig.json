@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es2022",
     "strict": true,
     "preserveConstEnums": true,
     "noEmit": true,
     "sourceMap": true,
-    "module": "es2015",
+    "module": "es2022",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vitest/globals", "node"]
   },
   "exclude": ["node_modules"]
 }
