@@ -9,7 +9,7 @@
     "devDependencies": {
         "@types/aws-lambda": "8.10.148",
         "@types/node": "20.14.8",
-        "aws-cdk-lib": "2.241.0",
+        "aws-cdk-lib": "2.253.1",
         "@types/js-yaml": "4.0.9",
         "@vitest/coverage-v8": "4.1.4",
         "vitest": "4.1.4",
