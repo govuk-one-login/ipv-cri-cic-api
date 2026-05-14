@@ -1,11 +1,12 @@
  
 import format from "ecdsa-sig-formatter";
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { Constants } from "../../../utils/Constants";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { jwtUtils } from "../../../utils/JwtUtils";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "vitest-mock-extended";
+
 import axios from "axios";
 import crypto from "crypto";
 import { DecryptCommandOutput } from "@aws-sdk/client-kms";
@@ -18,8 +19,6 @@ vi.mock('axios', () => ({
 	get: vi.fn(),
 	post: vi.fn(),
 }));
-
-const logger = mock<Logger>();
 
 vi.mock("ecdsa-sig-formatter", () => ({
 	default: {
@@ -46,7 +45,7 @@ describe("KmsJwtAdapter utils", () => {
 
 	beforeEach(() => {
 		process.env.USE_MOCKED="false";
-		kmsJwtAdapter = new KmsJwtAdapter(process.env.KMS_KEY_ARN!, logger);
+		kmsJwtAdapter = new KmsJwtAdapter(process.env.KMS_KEY_ARN!);
 		vi.spyOn(kmsJwtAdapter.kms, "sign").mockImplementation(() => ({
 			Signature: "signature",
 		}));

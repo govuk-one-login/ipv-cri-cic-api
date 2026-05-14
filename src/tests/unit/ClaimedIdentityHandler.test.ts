@@ -16,7 +16,6 @@ describe("ClaimedIdentityHandler", () => {
 		ClaimedIdRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedClaimedIdRequestProcessor);
 
 		await lambdaHandler(VALID_CLAIMEDID, "CIC");
-
 		 
 		expect(mockedClaimedIdRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
 	});

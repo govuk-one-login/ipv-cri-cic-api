@@ -1,5 +1,5 @@
-import { Logger } from "@aws-lambda-powertools/logger";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { logger } from "@govuk-one-login/cri-logger";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { CicService } from "./CicService";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -24,8 +24,6 @@ interface ClientConfig {
 export class AccessTokenRequestProcessor {
 	private static instance: AccessTokenRequestProcessor;
 
-	private readonly logger: Logger;
-
 	private readonly metrics: Metrics;
 
 	private readonly accessTokenRequestValidationHelper: AccessTokenRequestValidationHelper;
@@ -38,23 +36,22 @@ export class AccessTokenRequestProcessor {
 	
 	private readonly issuer: string;
 
-    constructor(logger: Logger, metrics: Metrics) {
-    	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
-  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
+    constructor(metrics: Metrics) {
+    	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
+  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN);
     	
-		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-    	this.logger = logger;
-    	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, logger);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
+    	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
     	this.metrics = metrics;
-    	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, logger);
+    	this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
+		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG);
     }
 
-    static getInstance(logger: Logger, metrics: Metrics): AccessTokenRequestProcessor {
+    static getInstance(metrics: Metrics): AccessTokenRequestProcessor {
 
     	if (!AccessTokenRequestProcessor.instance) {
-    		AccessTokenRequestProcessor.instance = new AccessTokenRequestProcessor(logger, metrics);
+    		AccessTokenRequestProcessor.instance = new AccessTokenRequestProcessor(metrics);
     	}
     	return AccessTokenRequestProcessor.instance;
     }
@@ -66,7 +63,7 @@ export class AccessTokenRequestProcessor {
 				requestPayload = this.accessTokenRequestValidationHelper.validatePayload(event.body);
 			} catch (error: any) {
 				const statusCode = error instanceof AppError ? error.statusCode : HttpCodesEnum.UNAUTHORIZED;
-				this.logger.error("Failed validating the Access token request body.", { messageCode: MessageCodes.FAILED_VALIDATING_ACCESS_TOKEN_REQUEST_BODY, error: error.message });
+				logger.error("Failed validating the Access token request body.", { messageCode: MessageCodes.FAILED_VALIDATING_ACCESS_TOKEN_REQUEST_BODY, error: error.message });
 				return Response(statusCode, error.message);
 			}
 
@@ -74,12 +71,12 @@ export class AccessTokenRequestProcessor {
 
 				session = await this.cicService.getSessionByAuthorizationCode(requestPayload.code);
 				if (!session) {
-					this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
+					logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
 					return Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
 				}
-				this.logger.appendKeys({ sessionId: session.sessionId });
-				this.logger.info({ message: "Found Session" });
-				this.logger.appendKeys({
+				logger.appendKeys({ sessionId: session.sessionId });
+				logger.info({ message: "Found Session" });
+				logger.appendKeys({
 					govuk_signin_journey_id: session?.clientSessionId,
 				});
 				let configClient: ClientConfig | undefined;
@@ -87,7 +84,7 @@ export class AccessTokenRequestProcessor {
 					const config = JSON.parse(this.clientConfig) as ClientConfig[];
 					configClient = config.find(c => c.clientId === session?.clientId);
 				} catch (error: any) {
-					this.logger.error("Invalid or missing client configuration table", {
+					logger.error("Invalid or missing client configuration table", {
 						error,
 						messageCode: MessageCodes.MISSING_CONFIGURATION,
 					});
@@ -95,7 +92,7 @@ export class AccessTokenRequestProcessor {
 				}
 		
 				if (!configClient) {
-					this.logger.error("Unrecognised client in request", {
+					logger.error("Unrecognised client in request", {
 						messageCode: MessageCodes.UNRECOGNISED_CLIENT,
 					});
 					return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
@@ -107,7 +104,7 @@ export class AccessTokenRequestProcessor {
 				try {
 					parsedJwt = this.kmsJwtAdapter.decode(jwt);
 				} catch (error: any) {
-					this.logger.error("Failed to decode supplied JWT", {
+					logger.error("Failed to decode supplied JWT", {
 						error,
 						messageCode: MessageCodes.FAILED_DECODING_JWT,
 					});
@@ -119,19 +116,19 @@ export class AccessTokenRequestProcessor {
 						const payload = await this.kmsJwtAdapter.verifyWithJwks(jwt, configClient.jwksEndpoint, parsedJwt.header.kid);
 
 						if (!payload) {
-							this.logger.error("Failed to verify JWT", {
+							logger.error("Failed to verify JWT", {
 								messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 							});
 							return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 						}
 					} else {
-						this.logger.error("Incomplete Client Configuration", {
+						logger.error("Incomplete Client Configuration", {
 							messageCode: MessageCodes.MISSING_CONFIGURATION,
 						});
 						return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 					}
 				} catch (error: any) {
-					this.logger.error("Invalid request: Could not verify JWT", {
+					logger.error("Invalid request: Could not verify JWT", {
 						error,
 						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 					});
@@ -148,10 +145,10 @@ export class AccessTokenRequestProcessor {
 				};
 				let accessToken;
 				try {
-					const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, this.logger);
+					const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX);
 					accessToken = await this.kmsJwtAdapter.sign(jwtPayload, dns_suffix);
 				} catch (error) {
-					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
+					logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
 					if (error instanceof AppError) {
 						return Response(error.statusCode, error.message);
 					}
@@ -161,7 +158,7 @@ export class AccessTokenRequestProcessor {
 				// Update the sessionTable with accessTokenExpiryDate and AuthSessionState.
 				await this.cicService.updateSessionWithAccessTokenDetails(session.sessionId, jwtPayload.exp);
 
-				this.logger.info({ message: "Access token generated successfully" });
+				logger.info({ message: "Access token generated successfully" });
 
 				return {
 					statusCode: HttpCodesEnum.OK,
@@ -172,13 +169,13 @@ export class AccessTokenRequestProcessor {
 					}),
 				};
 			} else {
-				this.metrics.addMetric("AccessToken_error_user_state_incorrect", MetricUnits.Count, 1);
-				this.logger.warn(`Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.CIC_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
+				this.metrics.addMetric("AccessToken_error_user_state_incorrect", MetricUnit.Count, 1);
+				logger.warn(`Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.CIC_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.CIC_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`);
 			}
 		} catch (err: any) {
 			const statusCode = err instanceof AppError ? err.statusCode : HttpCodesEnum.UNAUTHORIZED;
-			this.logger.error({ message: "Error processing access token request", err });
+			logger.error({ message: "Error processing access token request", err });
 			return Response(statusCode, err.message);
 		}
     }

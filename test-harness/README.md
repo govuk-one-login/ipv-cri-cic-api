@@ -1,6 +1,6 @@
 # Test Harness
 
-This is a test harness that listens to events from TxMA SQS queue and puts it in the `${AWS::StackName}-cic-event-test-${Environment}` bucket which can then be accessed using and API.
+This is a test harness that listens to events from TxMA SQS queue and puts it in the `${AWS::StackName}-cic-event-test-${Environment}` bucket which can then be accessed using an API.
 
 This test harness is only to be used in dev and build environments
 

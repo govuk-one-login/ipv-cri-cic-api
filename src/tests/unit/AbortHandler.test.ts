@@ -1,7 +1,8 @@
- 
- 
+import { mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
+import { logger } from "@govuk-one-login/cri-logger";  
 import { mock } from "vitest-mock-extended";
-import { lambdaHandler, logger } from "../../AbortHandler";
+import { lambdaHandler } from "../../AbortHandler";
 import { AbortRequestProcessor } from "../../services/AbortRequestProcessor";
 import { VALID_REQUEST, INVALID_SESSION_ID, MISSING_SESSION_ID } from "./data/abort-events";
 import { Constants } from "../../utils/Constants";
@@ -10,12 +11,6 @@ import { MessageCodes } from "../../models/enums/MessageCodes";
 const mockAbortRequestProcessor = mock<AbortRequestProcessor>();
 
 describe("AbortHandler", () => {
-	let loggerSpy: ReturnType<typeof vi.spyOn>;
-
-	beforeEach(() => {
-		loggerSpy = vi.spyOn(logger, "error");
-	});
-
 	it("return Unauthorized when x-govuk-signin-session-id header is missing", async () => {
 		const message = `Missing header: ${Constants.X_SESSION_ID} is required`;
 		AbortRequestProcessor.getInstance = vi.fn().mockReturnValue(mockAbortRequestProcessor);
@@ -23,7 +18,7 @@ describe("AbortHandler", () => {
 
 		expect(response.statusCode).toBe(401);
 		expect(response.body).toBe(message);
-		expect(loggerSpy).toHaveBeenCalledWith({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
+		expect(logger.error).toHaveBeenCalledWith({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
 	});
 
 	it("return Unauthorized when x-govuk-signin-session-id header is invalid", async () => {
@@ -33,7 +28,7 @@ describe("AbortHandler", () => {
 		const response = await lambdaHandler(INVALID_SESSION_ID, "");
 		expect(response.statusCode).toBe(401);
 		expect(response.body).toBe(message);
-		expect(loggerSpy).toHaveBeenCalledWith({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
+		expect(logger.error).toHaveBeenCalledWith({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
 	});
 
 	it("return success for valid request", async () => {

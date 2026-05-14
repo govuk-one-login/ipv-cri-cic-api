@@ -1,11 +1,7 @@
 import { ValidationHelper } from "../../../utils/ValidationHelper";
 import { CicSession } from "../../../models/CicSession";
-import { Logger } from "@aws-lambda-powertools/logger";
-
-const logger = new Logger({
-	logLevel: "ERROR",
-	serviceName: "CIC",
-});
+import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
 
 describe("CicSession", () => {
 	it("should validate CicSession model", async () => {
@@ -15,7 +11,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if given_names contain . in CicSession model", async () => {
@@ -25,7 +21,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if given_names contain ' in CicSession model", async () => {
@@ -35,7 +31,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if given_names contain - in CicSession model", async () => {
@@ -45,7 +41,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if given_names are in CAPITALS in CicSession model", async () => {
@@ -55,7 +51,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if given_names are in upper and lower case in CicSession model", async () => {
@@ -65,7 +61,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if family_names is joined by - in CicSession model", async () => {
@@ -75,7 +71,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 		
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if family_names contains ' in CicSession model", async () => {
@@ -85,7 +81,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 		
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if family_names contains . in CicSession model", async () => {
@@ -95,7 +91,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 		
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if family_names contains . and ' in CicSession model", async () => {
@@ -105,7 +101,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 		
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if family_names contains is in CAPITALS in CicSession model", async () => {
@@ -115,7 +111,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 		
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should validate if family_names contains upper and lower case in CicSession model", async () => {
@@ -125,7 +121,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 		
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).resolves.not.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).resolves.not.toThrow();
 	});
 
 	it("should throw error if family_names has multiple spaces in name", async () => {
@@ -135,7 +131,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).rejects.toThrow();
 	});
 
 	it("should throw error if given_names is empty in CicSession model", async () => {
@@ -145,7 +141,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).rejects.toThrow();
 	});
 	
 	it("should throw error if family_names is empty in CicSession model", async () => {
@@ -155,7 +151,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).rejects.toThrow();
 	});
 
 	it("should throw error if family_names contains symbols in CicSession model", async () => {
@@ -165,7 +161,7 @@ describe("CicSession", () => {
 			date_of_birth: "1970-01-01",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).rejects.toThrow();
 	});
 
 	it("should throw error if date_of_birth is empty in CicSession model", async () => {
@@ -175,7 +171,7 @@ describe("CicSession", () => {
 			date_of_birth: "",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).rejects.toThrow();
 	});
 
 	it("should throw error if date_of_birth is invalid in CicSession model", async () => {
@@ -185,7 +181,7 @@ describe("CicSession", () => {
 			date_of_birth: "date_of_birth",
 		});
 
-		await expect(new ValidationHelper().validateModel(cicSession, logger)).rejects.toThrow();
+		await expect(new ValidationHelper().validateModel(cicSession)).rejects.toThrow();
 	});
 
 });

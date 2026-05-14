@@ -4,23 +4,15 @@ export class Constants {
 
     static readonly SESSION_ID = "session-id";
 
-    static readonly CLAIMEDID_METRICS_SVC_NAME = "ClaimedIdentity";
-
     static readonly CLAIMEDID_LOGGER_SVC_NAME = "ClaimedIdHandler";
 
     static readonly CIC_METRICS_NAMESPACE = "CIC-CRI";
 
     static readonly USERINFO_LOGGER_SVC_NAME = "UserInfoHandler";
 
-    static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
-
     static readonly AUTHORIZATION_LOGGER_SVC_NAME = "AuthorizationCodeHandler";
 
     static readonly SESSION_CONFIG_LOGGER_SVC_NAME = "SessionConfigHandler";
-
-    static readonly ABORT_LOGGER_SVC_NAME = "AbortHandler";
-
-    static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
 
     static readonly DEBUG = "DEBUG";
 
