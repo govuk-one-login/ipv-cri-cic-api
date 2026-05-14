@@ -1,19 +1,19 @@
+import { vi } from "vitest";
+import { logger } from "@govuk-one-login/cri-logger";
 import { SQSEvent } from "aws-lambda";
-import { lambdaHandler, logger } from "../../DequeueHandler";
+import { lambdaHandler } from "../../DequeueHandler";
 import { BatchItemFailure } from "../../utils/BatchItemFailure";
 import { mockClient } from "aws-sdk-client-mock";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
-
-vi.mock("@aws-lambda-powertools/logger", () => ({
-	Logger: vi.fn().mockImplementation(function () {
-    return {
-      info: vi.fn(),
-      error: vi.fn(),
-    };
-  }),
+vi.mock("@govuk-one-login/cri-logger", () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn()
+  },
 }));
+
+vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
 
 const s3Mock = mockClient(S3Client);
 

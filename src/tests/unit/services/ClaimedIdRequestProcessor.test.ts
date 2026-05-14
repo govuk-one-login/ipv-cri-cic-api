@@ -1,8 +1,11 @@
  
+import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
+import { logger } from "@govuk-one-login/cri-logger";
 import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
-import { Logger } from "@aws-lambda-powertools/logger";
+
 import { VALID_CLAIMEDID } from "../data/cic-events";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -13,8 +16,6 @@ import { APIGatewayProxyResult } from "aws-lambda";
 
 let claimedIdRequestProcessorTest: ClaimedIdRequestProcessor;
 const mockCicService = mock<CicService>();
-
-const logger = mock<Logger>();
 
 const metrics = new Metrics({ namespace: "CIC" });
 
@@ -42,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 
 describe("ClaimedIdRequestProcessor", () => {
 	beforeAll(() => {
-		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor(logger, metrics);
+		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor(metrics);
 		// @ts-expect-error private access manipulation used for testing
 		claimedIdRequestProcessorTest.cicService = mockCicService;
 	});

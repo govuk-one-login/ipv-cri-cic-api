@@ -1,6 +1,7 @@
- 
+import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
+import { logger } from "@govuk-one-login/cri-logger";  
 import { CicService } from "../../../services/CicService";
-import { Logger } from "@aws-lambda-powertools/logger";
 import { CicSession } from "../../../models/CicSession";
 import { randomUUID } from "crypto";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
@@ -37,8 +38,6 @@ const getTXMAEventPayload = (): TxmaEvent => ({
 	component_id: "issuer",
 });
 
-const logger = mock<Logger>();
-
 vi.mock("@aws-sdk/client-sqs", () => ({
     SQSClient: vi.fn(),
     SendMessageCommand: vi.fn(),
@@ -51,7 +50,7 @@ describe("Cic Service", () => {
 
 	beforeEach(() => {
 		txmaEventPayload = getTXMAEventPayload();
-		cicService = new CicService(tableName, logger, mockDynamoDbClient);
+		cicService = new CicService(tableName, mockDynamoDbClient);
 		mockSend = vi.fn();
 		vi.mocked(SQSClient).mockImplementation(function () {
 			return {

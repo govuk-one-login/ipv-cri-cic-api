@@ -1641,6 +1641,7 @@ Resources:
 
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: JwksHandler
           JWKS_BUCKET_NAME: !Ref JsonWebKeysBucket
           PUBLISHED_KEYS_BUCKET_NAME: !Sub "govuk-one-login-cic-published-keys-${Environment}"
           BACKEND_URL: !Sub "https://api-${AWS::StackName}.review-c.${Environment}.account.gov.uk"

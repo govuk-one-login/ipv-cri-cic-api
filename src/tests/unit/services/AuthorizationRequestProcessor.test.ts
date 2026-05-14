@@ -1,7 +1,9 @@
  
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
+import { logger } from "@govuk-one-login/cri-logger"; 
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
@@ -15,7 +17,6 @@ import { APIGatewayProxyResult } from "aws-lambda";
 let authorizationRequestProcessorTest: AuthorizationRequestProcessor;
 const mockCicService = mock<CicService>();
 
-const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem(): ISessionItem {
@@ -42,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 
 describe("AuthorizationRequestProcessor", () => {
 	beforeAll(() => {
-		authorizationRequestProcessorTest = new AuthorizationRequestProcessor(logger, metrics);
+		authorizationRequestProcessorTest = new AuthorizationRequestProcessor(metrics);
 		// @ts-expect-error private access manipulation used for testing
 		authorizationRequestProcessorTest.cicService = mockCicService;
 	});

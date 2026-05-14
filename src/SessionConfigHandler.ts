@@ -1,20 +1,15 @@
  
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Constants } from "./utils/Constants";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { SessionConfigRequestProcessor } from "./services/SessionConfigRequestProcessor";
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.CIC_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = Constants.DEBUG, POWERTOOLS_SERVICE_NAME = Constants.SESSION_CONFIG_LOGGER_SVC_NAME } = process.env;
-
-export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
-	serviceName: POWERTOOLS_SERVICE_NAME,
-});
 
 export const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
@@ -39,7 +34,7 @@ class SessionConfigHandler implements LambdaInterface {
 						return Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
 					}
 
-					return await SessionConfigRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
+					return await SessionConfigRequestProcessor.getInstance(metrics).processRequest(sessionId);
 				} else {
 					logger.error(`Missing header: ${Constants.X_SESSION_ID} is required`, { messageCode: MessageCodes.MISSING_HEADER });
 					return Response(HttpCodesEnum.BAD_REQUEST, `Missing header: ${Constants.X_SESSION_ID} is required`);

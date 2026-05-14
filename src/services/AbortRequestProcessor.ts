@@ -1,8 +1,8 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { AppError } from "../utils/AppError";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
@@ -18,8 +18,6 @@ export class AbortRequestProcessor {
 
   private static instance: AbortRequestProcessor;
 
-  private readonly logger: Logger;
-
   private readonly issuer: string;
 
   private readonly txmaQueueUrl: string;
@@ -28,36 +26,34 @@ export class AbortRequestProcessor {
 
   private readonly cicService: CicService;
 
-  constructor(logger: Logger, metrics: Metrics) {
-  	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-  	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, logger);
-  	const sessionTableName = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
+  constructor(metrics: Metrics) {
+  	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
+  	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL);
+  	const sessionTableName = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
 
-  	this.logger = logger;
   	this.metrics = metrics;
-  	this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+  	this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 	
   }
 
   static getInstance(
-  	logger: Logger,
   	metrics: Metrics,
   ): AbortRequestProcessor {
   	if (!AbortRequestProcessor.instance) {
   		AbortRequestProcessor.instance =
-        new AbortRequestProcessor(logger, metrics);
+        new AbortRequestProcessor(metrics);
   	}
   	return AbortRequestProcessor.instance;
   }
 
   async processRequest(sessionId: string, encodedHeader: string): Promise<APIGatewayProxyResult> {
   	const cicSessionInfo = await this.cicService.getSessionById(sessionId);
-  	this.logger.appendKeys({
+  	logger.appendKeys({
   		govuk_signin_journey_id: cicSessionInfo?.clientSessionId,
   	});
 
   	if (!cicSessionInfo) {
-  		this.logger.error("Missing details in SESSION TABLE", {
+  		logger.error("Missing details in SESSION TABLE", {
   			messageCode: MessageCodes.SESSION_NOT_FOUND,
   		});
   		throw new AppError(HttpCodesEnum.BAD_REQUEST, "Missing details in SESSION table");
@@ -68,16 +64,16 @@ export class AbortRequestProcessor {
   	const redirectUri = `${decodedRedirectUri}${hasQuestionMark ? "&" : "?"}error=access_denied&state=${cicSessionInfo.state}`;
 
   	if (cicSessionInfo.authSessionState === AuthSessionState.CIC_CRI_SESSION_ABORTED) {
-  		this.logger.info("Session has already been aborted");
+  		logger.info("Session has already been aborted");
   		return Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
   	}
 
   	try {
   	  await this.cicService.updateSessionAuthState(cicSessionInfo.sessionId, AuthSessionState.CIC_CRI_SESSION_ABORTED);
-	  this.metrics.addMetric("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1);
+	  this.metrics.addMetric("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1);
 
 	} catch (error) {
-  		this.logger.error("Error occurred while aborting the session", {
+  		logger.error("Error occurred while aborting the session", {
   			error,
   			messageCode: MessageCodes.SERVER_ERROR,
   		});
@@ -94,7 +90,7 @@ export class AbortRequestProcessor {
   			...buildCoreEventFields(cicSessionInfo, this.issuer, cicSessionInfo.clientIpAddress),
   		}, encodedHeader);
   	} catch (error) {
-  		this.logger.error("Auth session successfully aborted. Failed to send CIC_CRI_SESSION_ABORTED event to TXMA", {
+  		logger.error("Auth session successfully aborted. Failed to send CIC_CRI_SESSION_ABORTED event to TXMA", {
   			error,
   			messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
   		});

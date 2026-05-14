@@ -121,6 +121,7 @@ Resources:
       CodeUri: ./src/
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: DequeueHandler
           EVENT_TEST_BUCKET_NAME: !Ref EventTestBucket
           PROPERTY_NAME: "user.session_id"
           BUCKET_FOLDER_PREFIX: "txma/"

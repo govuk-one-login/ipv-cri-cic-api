@@ -1,6 +1,6 @@
 import { SQSEvent } from "aws-lambda";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
+import { logger } from "@govuk-one-login/cri-logger";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { Constants } from "./utils/Constants";
@@ -12,11 +12,6 @@ const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME
 	? process.env.POWERTOOLS_SERVICE_NAME
 	: Constants.DEQUEUE_LOGGER_SVC_NAME;
-
-export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
-	serviceName: POWERTOOLS_SERVICE_NAME,
-});
 
 export const s3Client = new S3Client({
 	region: process.env.REGION,
