@@ -1,8 +1,7 @@
 import { ValidationHelper } from "../../../utils/ValidationHelper";
 import { CicSession } from "../../../models/CicSession";
-import { logger } from "@govuk-one-login/cri-logger";
-
-logger.setLogLevel("ERROR");
+import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
 
 describe("CicSession", () => {
 	it("should validate CicSession model", async () => {

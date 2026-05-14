@@ -9,7 +9,7 @@ import { Constants } from "./utils/Constants";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { SessionConfigRequestProcessor } from "./services/SessionConfigRequestProcessor";
 
-const { POWERTOOLS_METRICS_NAMESPACE = Constants.CIC_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = Constants.DEBUG, POWERTOOLS_SERVICE_NAME = Constants.SESSION_CONFIG_LOGGER_SVC_NAME } = process.env;
+const { POWERTOOLS_METRICS_NAMESPACE = Constants.CIC_METRICS_NAMESPACE, POWERTOOLS_SERVICE_NAME = Constants.SESSION_CONFIG_LOGGER_SVC_NAME } = process.env;
 
 export const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 

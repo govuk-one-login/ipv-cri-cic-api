@@ -3,7 +3,6 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
 mockPowertoolsLogger();
-import { logger } from "@govuk-one-login/cri-logger"; 
 import { CicService } from "../../../services/CicService";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";

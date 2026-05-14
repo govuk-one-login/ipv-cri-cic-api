@@ -1,7 +1,6 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
 mockPowertoolsLogger();
-import { logger } from "@govuk-one-login/cri-logger"; 
 
 // arrange test data before importing the class under test
 process.env.SESSION_TABLE = "";

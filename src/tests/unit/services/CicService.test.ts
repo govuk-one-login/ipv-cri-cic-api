@@ -1,6 +1,5 @@
-import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
-mockPowertoolsLogger();
-import { logger } from "@govuk-one-login/cri-logger";  
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger(); 
 import { CicService } from "../../../services/CicService";
 import { CicSession } from "../../../models/CicSession";
 import { randomUUID } from "crypto";
@@ -11,7 +10,6 @@ import SESSION_RECORD from "../data/db_record.json";
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { TxmaEventNames } from "../../../models/enums/TxmaEvents";
-import { mock } from "vitest-mock-extended";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { Constants } from "../../../utils/Constants";
 import { AppError } from "../../../utils/AppError";

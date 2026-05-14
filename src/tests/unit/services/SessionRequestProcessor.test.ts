@@ -1,8 +1,7 @@
  
 /* eslint @typescript-eslint/unbound-method: 0 */
-import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
 mockPowertoolsLogger();
-import { logger } from "@govuk-one-login/cri-logger"; 
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";

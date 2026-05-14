@@ -1,6 +1,5 @@
-import { mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
 mockPowertoolsLogger();
-import { logger } from "@govuk-one-login/cri-logger"; 
 
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { checkEnvironmentVariable } from "../../../utils/EnvironmentVariables";
