@@ -56,7 +56,7 @@
         "aws-cdk-lib": "2.253.1",
         "aws-sdk-client-mock": "4.1.0",
         "dotenv": "17.2.2",
-        "eslint": "10.0.2",
+        "eslint": "10.3.0",
         "fast-xml-parser": "5.7.3",
         "vitest": "4.1.4",
         "vitest-mock-extended": "4.0.0",
