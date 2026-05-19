@@ -3,8 +3,8 @@ import crypto from "crypto";
 
 export const jwtUtils = {
 
-	// convert non-base64 string or uint8array into base64 encoded string
-	base64Encode(value: string | Uint8Array): string {
+	// convert non-base64 string into base64 encoded string
+	base64Encode(value: string): string {
 		const inputValue = new Uint8Array(Buffer.from(value));
     	return jose.base64url.encode(inputValue);
 	},
