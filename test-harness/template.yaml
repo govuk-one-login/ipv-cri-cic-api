@@ -35,12 +35,6 @@ Mappings:
       logretentionindays: 3
       apiTracingEnabled: true
 
-  PlatformConfiguration:
-    dev:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-    build:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       SESSIONTABLEENCRYPTIONKEYARN: "0ba88bed-fd6d-4417-be38-c8c0491d5541"
@@ -121,6 +115,7 @@ Resources:
       CodeUri: ./src/
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: DequeueHandler
           EVENT_TEST_BUCKET_NAME: !Ref EventTestBucket
           PROPERTY_NAME: "user.session_id"
           BUCKET_FOLDER_PREFIX: "txma/"

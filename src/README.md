@@ -8,7 +8,7 @@ From `src` folder run `sam build`
 
 ## How to run tests
 
-To run all tests, run `npm test:unit`. This will compile and run all tests in the `/tests` directory.
+To run all tests, run `npm run test:unit`. This will compile and run all tests in the `/tests` directory.
 
 ## How to run contract tests
 

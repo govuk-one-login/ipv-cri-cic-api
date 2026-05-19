@@ -1,8 +1,8 @@
  
-import { Metrics } from "@aws-lambda-powertools/metrics";
-import { MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
 import { CicService } from "../../../services/CicService";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -26,7 +26,6 @@ let mockSession: ISessionItem;
 let request: APIGatewayProxyEvent;
 
 vi.mock("../../../utils/KmsJwtAdapter");
-const logger = mock<Logger>();
 const metrics = mock<Metrics>();
 const mockCicService = mock<CicService>();
 const mockAccessTokenRequestValidationHelper = mock<AccessTokenRequestValidationHelper>();
@@ -65,7 +64,7 @@ const clientAssertionJwt = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjVkNmVj
 describe("AccessTokenRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
-		accessTokenRequestProcessorTest = new AccessTokenRequestProcessor(logger, metrics);
+		accessTokenRequestProcessorTest = new AccessTokenRequestProcessor(metrics);
 		//@ts-expect-error linting to be updated
 		accessTokenRequestProcessorTest.cicService = mockCicService;
 		request = VALID_ACCESSTOKEN;
@@ -106,7 +105,7 @@ describe("AccessTokenRequestProcessor", () => {
 	 });
 
 	it("Returns 401 Unauthorized response when body is invalid", async () => {
-		const tempAccessTokenRequestProcessorTest = new AccessTokenRequestProcessor(logger, metrics);
+		const tempAccessTokenRequestProcessorTest = new AccessTokenRequestProcessor(metrics);
 		//@ts-expect-error linting to be updated
 		tempAccessTokenRequestProcessorTest.cicService = mockCicService;
 		//@ts-expect-error linting to be updated
@@ -163,7 +162,7 @@ describe("AccessTokenRequestProcessor", () => {
 	 	expect(logger.warn).toHaveBeenCalledWith(
 	 				"Session for journey sdfssg is in the wrong Auth state: expected state - CIC_AUTH_CODE_ISSUED, actual state - CIC_ACCESS_TOKEN_ISSUED", { messageCode: MessageCodes.INCORRECT_SESSION_STATE },
 	 	);
-	 	expect(metrics.addMetric).toHaveBeenNthCalledWith(1, "AccessToken_error_user_state_incorrect", MetricUnits.Count, 1);	
+	 	expect(metrics.addMetric).toHaveBeenNthCalledWith(1, "AccessToken_error_user_state_incorrect", MetricUnit.Count, 1);	
 
 	 	expect(out.body).toBe("Session for journey sdfssg is in the wrong Auth state: expected state - CIC_AUTH_CODE_ISSUED, actual state - CIC_ACCESS_TOKEN_ISSUED");
 	 	expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);

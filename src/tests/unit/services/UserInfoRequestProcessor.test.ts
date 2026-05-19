@@ -1,8 +1,8 @@
- 
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger(); 
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
-import { Logger } from "@aws-lambda-powertools/logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
 import { CicService } from "../../../services/CicService";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -21,8 +21,6 @@ const passingKmsJwtAdapterFactory = () => new MockKmsJwtAdapter(true);
 const failingKmsJwtAdapterFactory = () => new MockKmsJwtAdapter(false);
 const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAdapter();
 
-
-const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem(): ISessionItem {
@@ -79,7 +77,7 @@ describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics);
+		userInforequestProcessorTest = new UserInfoRequestProcessor(metrics);
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.cicService = mockCicService;
 	});

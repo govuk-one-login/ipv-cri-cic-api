@@ -1,6 +1,6 @@
  
 import { mockLogger, mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
-import { lambdaHandler, logger, metrics } from "../../SessionConfigHandler";
+import { lambdaHandler, metrics } from "../../SessionConfigHandler";
 import { mock } from "vitest-mock-extended";
 import { Response } from "../../utils/Response";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
@@ -48,7 +48,7 @@ describe("SessionConfigHandler", () => {
 
 	it("returns server error where SessionConfigRequestProcessor fails", async () => {
 		SessionConfigRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedSessionConfigRequestProcessor);
-		const instance  = SessionConfigRequestProcessor.getInstance(logger, metrics);
+		const instance  = SessionConfigRequestProcessor.getInstance(metrics);
 		instance.processRequest = vi.fn().mockRejectedValueOnce({});
 
 		await expect(lambdaHandler(VALID_SESSIONCONFIG, "SESSION_CONFIG")).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "Server Error"));

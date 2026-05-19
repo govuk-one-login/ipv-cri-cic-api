@@ -1,14 +1,14 @@
  
 import { mockLogger, mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
-import { lambdaHandler, logger, metrics } from "../../AuthorizationCodeHandler";
+mockPowertoolsLogger();
+
+import { lambdaHandler, metrics } from "../../AuthorizationCodeHandler";
 import { mock } from "vitest-mock-extended";
 import { VALID_AUTHCODE, INVALID_SESSION_ID, MISSING_SESSION_ID } from "./data/auth-events";
 import { Response } from "../../utils/Response";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { MessageCodes } from "../../models/enums/MessageCodes";
 import { AuthorizationRequestProcessor } from "../../services/AuthorizationRequestProcessor";
-
-mockPowertoolsLogger();
 
 vi.mock("../../services/AuthorizationRequestProcessor", () => {
 	return {
@@ -48,7 +48,7 @@ describe("AuthorizationCodeHandler", () => {
 
 	it("returns server error where AuthorizationRequestProcessor fails", async () => {
 		AuthorizationRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
-		const instance  = AuthorizationRequestProcessor.getInstance(logger, metrics);
+		const instance  = AuthorizationRequestProcessor.getInstance(metrics);
 		instance.processRequest = vi.fn().mockRejectedValueOnce({});
 
 		await expect(lambdaHandler(VALID_AUTHCODE, "AUTH_CODE")).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred"));

@@ -1,18 +1,11 @@
 import { vi } from "vitest";
+import { mock } from "vitest-mock-extended";
+import { Logger } from "@aws-lambda-powertools/logger";
 
-export const mockLogger = {
-  setPersistentLogAttributes: vi.fn(),
-  addContext: vi.fn(),
-  appendKeys: vi.fn(),
-  info: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
-};
+export const mockLogger = mock<Logger>();
 
 export function mockPowertoolsLogger() {
-  vi.mock("@aws-lambda-powertools/logger", () => ({
-    Logger: vi.fn().mockImplementation(function () {
-      return mockLogger;
-    }),
+  vi.mock("@govuk-one-login/cri-logger", () => ({
+    logger: mockLogger,
   }));
 }

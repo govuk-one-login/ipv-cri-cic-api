@@ -2,9 +2,9 @@
  
 import { Response, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
@@ -28,7 +28,6 @@ interface ClientConfig {
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
 
-	private readonly logger: Logger;
 
 	private readonly metrics: Metrics;
 
@@ -46,27 +45,26 @@ export class SessionRequestProcessor {
 
 	private readonly txmaQueueUrl: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
+	constructor(metrics: Metrics) {
 
-		this.logger = logger;
 		this.metrics = metrics;
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
-		this.metrics.addMetric("Called", MetricUnits.Count, 1);
+		this.metrics.addMetric("Called", MetricUnit.Count, 1);
 		
-		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
-  		const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);
-		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
-		this.authSessionTtlInSecs = checkEnvironmentVariable(EnvironmentVariables.AUTH_SESSION_TTL, this.logger);
-		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, this.logger);
-		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
+  		const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
+		this.authSessionTtlInSecs = checkEnvironmentVariable(EnvironmentVariables.AUTH_SESSION_TTL);
+		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG);
+		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL);
   		
-		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger);
+		this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
+		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
 		this.validationHelper = new ValidationHelper();
 	}
-	static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
+	static getInstance(metrics: Metrics): SessionRequestProcessor {
 		if (!SessionRequestProcessor.instance) {
-			SessionRequestProcessor.instance = new SessionRequestProcessor(logger, metrics);
+			SessionRequestProcessor.instance = new SessionRequestProcessor(metrics);
 		}
 		return SessionRequestProcessor.instance;
 	}
@@ -88,14 +86,14 @@ export class SessionRequestProcessor {
 			const config = JSON.parse(this.clientConfig) as ClientConfig[];
 			configClient = config.find(c => c.clientId === requestBodyClientId);
 		} catch (error) {
-			this.logger.error("Invalid or missing client configuration table", {
+			logger.error("Invalid or missing client configuration table", {
 				error,
 				messageCode: MessageCodes.MISSING_CONFIGURATION,
 			});
 			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 		if (!configClient) {
-			this.logger.error("Unrecognised client in request", {
+			logger.error("Unrecognised client in request", {
 				messageCode: MessageCodes.UNRECOGNISED_CLIENT,
 			});
 			return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
@@ -106,7 +104,7 @@ export class SessionRequestProcessor {
 		try {
 			urlEncodedJwt = await this.kmsDecryptor.decrypt(deserialisedRequestBody.request);
 		} catch (error) {
-			this.logger.error("Failed to decrypt supplied JWE request", {
+			logger.error("Failed to decrypt supplied JWE request", {
 				error,
 				messageCode: MessageCodes.FAILED_DECRYPTING_JWE,
 			});
@@ -117,7 +115,7 @@ export class SessionRequestProcessor {
 		try {
 			parsedJwt = this.kmsDecryptor.decode(urlEncodedJwt);
 		} catch (error) {
-			this.logger.error("Failed to decode supplied JWT", {
+			logger.error("Failed to decode supplied JWT", {
 				error,
 				messageCode: MessageCodes.FAILED_DECODING_JWT,
 			});
@@ -126,7 +124,7 @@ export class SessionRequestProcessor {
 
 		const jwtPayload : JwtPayload = parsedJwt.payload;
 		const jwtTargetKid: string | undefined = parsedJwt.header?.kid; 
-		this.logger.appendKeys({
+		logger.appendKeys({
 			sessionId,
 			govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
 		});
@@ -134,19 +132,19 @@ export class SessionRequestProcessor {
 			if (configClient?.jwksEndpoint) {
 				const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint, jwtTargetKid);
 				if (!payload) {
-					this.logger.error("Failed to verify JWT", {
+					logger.error("Failed to verify JWT", {
 						messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 					});
 					return this.unauthorizedResponse();
 				}
 			} else {
-				this.logger.error("Incomplete Client Configuration", {
+				logger.error("Incomplete Client Configuration", {
 					messageCode: MessageCodes.MISSING_CONFIGURATION,
 				});
 				return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 			}
 		} catch (error) {
-			this.logger.error("Invalid request: Could not verify JWT", {
+			logger.error("Invalid request: Could not verify JWT", {
 				error,
 				messageCode: MessageCodes.FAILED_VERIFYING_JWT,
 			});
@@ -157,7 +155,7 @@ export class SessionRequestProcessor {
 			jwtPayload, requestBodyClientId, configClient.redirectUri);
 
 		if (JwtErrors.length > 0) {
-			this.logger.error(JwtErrors, {
+			logger.error(JwtErrors, {
 				messageCode: MessageCodes.FAILED_VALIDATING_JWT,
 			});
 			return this.unauthorizedResponse();		
@@ -165,13 +163,13 @@ export class SessionRequestProcessor {
 
 		try {
 			if (await this.cicService.getSessionById(sessionId)) {
-				this.logger.error("sessionId already exists in the database", {
+				logger.error("sessionId already exists in the database", {
 					messageCode: MessageCodes.SESSION_ALREADY_EXISTS,
 				});
 				return this.genericErrorResponse();
 			}
 		} catch (error) {
-			this.logger.error("Unexpected error accessing session table", {
+			logger.error("Unexpected error accessing session table", {
 				error,
 				messageCode: MessageCodes.UNEXPECTED_ERROR_SESSION_EXISTS,
 			});
@@ -199,7 +197,7 @@ export class SessionRequestProcessor {
 		try {
 			await this.cicService.createAuthSession(session);
 		} catch (error) {
-			this.logger.error("Failed to create session in session table", {
+			logger.error("Failed to create session in session table", {
 				error,
 				messageCode: MessageCodes.FAILED_CREATING_SESSION,
 			});
@@ -210,7 +208,7 @@ export class SessionRequestProcessor {
 			try {
 				await this.cicService.savePersonIdentity(jwtPayload.shared_claims, sessionId, session.expiryDate);
 			} catch (error) {
-				this.logger.error("Failed to create session in person identity table", {
+				logger.error("Failed to create session in person identity table", {
 					error,
 					messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
 				});
@@ -229,7 +227,7 @@ export class SessionRequestProcessor {
 				} },
 			}, encodedHeader);
 		} catch (error) {
-			this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
+			logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
 				error,
 				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
 			});

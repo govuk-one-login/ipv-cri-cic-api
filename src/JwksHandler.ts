@@ -1,8 +1,7 @@
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
-import { Constants } from "./utils/Constants";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
 import { PutObjectCommand, CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
@@ -10,14 +9,7 @@ import crypto from "crypto";
 import * as AWS from "@aws-sdk/client-kms";
 import { jwtUtils } from "./utils/JwtUtils";
 
-const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
-const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
 const JWKS_BUCKET_NAME = process.env.JWKS_BUCKET_NAME;
-
-export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
-	serviceName: POWERTOOLS_SERVICE_NAME,
-});
 
 class JwksHandler implements LambdaInterface {
 	readonly s3Client = new S3Client({

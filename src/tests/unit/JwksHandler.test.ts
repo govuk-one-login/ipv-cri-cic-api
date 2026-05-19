@@ -1,12 +1,12 @@
 import { mockLogger, mockPowertoolsLogger} from "./helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
+
 import { handlerClass, lambdaHandler } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../utils/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../utils/IVeriCredential";
 import crypto from "crypto";
 import { mockClient } from "aws-sdk-client-mock";
 import { CopyObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-
-mockPowertoolsLogger();
 
 vi.mock("@aws-sdk/client-kms", () => ({
 	KMS: vi.fn().mockImplementation(function () {

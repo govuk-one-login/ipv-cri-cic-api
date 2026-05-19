@@ -2,9 +2,9 @@
  
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
 import { AppError } from "../utils/AppError";
 import { VerifiableCredentialService } from "../utils/VerifiableCredentialService";
@@ -26,7 +26,6 @@ export class UserInfoRequestProcessor {
   
 	private static instance: UserInfoRequestProcessor;
 
-	private readonly logger: Logger;
 
 	private readonly metrics: Metrics;
 
@@ -42,25 +41,24 @@ export class UserInfoRequestProcessor {
 
 	private readonly personIdentityTableName: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
-		this.logger = logger;
+	constructor(metrics: Metrics) {
 		this.validationHelper = new ValidationHelper();
 		this.metrics = metrics;
 		
-		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
-  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger);
-		const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX, logger);
-		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
+  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN);
+		const dns_suffix = checkEnvironmentVariable(EnvironmentVariables.DNS_SUFFIX);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
+		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME);
 		
-		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, logger);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, this.logger, dns_suffix);
+		this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
+		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, dns_suffix);
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
+	static getInstance(metrics: Metrics): UserInfoRequestProcessor {
 		if (!UserInfoRequestProcessor.instance) {
-			UserInfoRequestProcessor.instance = new UserInfoRequestProcessor(logger, metrics);
+			UserInfoRequestProcessor.instance = new UserInfoRequestProcessor(metrics);
 		}
 		return UserInfoRequestProcessor.instance;
 	}
@@ -72,13 +70,13 @@ export class UserInfoRequestProcessor {
 			sessionId = await this.validationHelper.eventToSubjectIdentifier(this.kmsJwtAdapter, event);
 		} catch (error) {
 			if (error instanceof AppError) {
-				this.logger.error("Error validating Authentication Access token from headers: ", {
+				logger.error("Error validating Authentication Access token from headers: ", {
 					error,
 					messageCode: MessageCodes.INVALID_AUTH_CODE,
 				});
 				return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 			}
-			this.logger.error("Unexpected error occurred", {
+			logger.error("Unexpected error occurred", {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
@@ -86,20 +84,20 @@ export class UserInfoRequestProcessor {
 		}
 
 		// add sessionId to all subsequent log messages
-		this.logger.appendKeys({ sessionId });
+		logger.appendKeys({ sessionId });
 
 		let session: ISessionItem | undefined;
 		let personInfo: PersonIdentityItem | undefined;
 		try {
 			session = await this.cicService.getSessionById(sessionId);
 			if (!session) {
-				this.logger.error("No session found", {
+				logger.error("No session found", {
 					messageCode: MessageCodes.SESSION_NOT_FOUND,
 				});
 				return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 			}
 		} catch (error) {
-			this.logger.error("Error finding session", {
+			logger.error("Error finding session", {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
@@ -107,9 +105,9 @@ export class UserInfoRequestProcessor {
 		}
 
 		// add govuk_signin_journey_id to all subsequent log messages
-		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+		logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-		this.logger.info("Found Session:", {
+		logger.info("Found Session:", {
 			// note: we only log specific non-PII attributes from the session object:
 			session: {
 				authSessionState: session.authSessionState,
@@ -122,31 +120,31 @@ export class UserInfoRequestProcessor {
 			},
 		});
   
-		this.metrics.addMetric("found session", MetricUnits.Count, 1);
+		this.metrics.addMetric("found session", MetricUnit.Count, 1);
 
 		try {
 			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
 			if (!personInfo) {
-				this.logger.error("No person found with this session ID", {
+				logger.error("No person found with this session ID", {
 					messageCode: MessageCodes.PERSON_NOT_FOUND,
 				});
 				return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 			}
 		} catch (error) {
-			this.logger.error("Error finding person", {
+			logger.error("Error finding person", {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
 			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
-		this.logger.info("Found person by session ID");
+		logger.info("Found person by session ID");
   
-		this.metrics.addMetric("found person", MetricUnits.Count, 1);
+		this.metrics.addMetric("found person", MetricUnit.Count, 1);
 		
 		// Validate the AuthSessionState to be "CIC_ACCESS_TOKEN_ISSUED"
 		if (session.authSessionState !== AuthSessionState.CIC_ACCESS_TOKEN_ISSUED) {
-			this.logger.error("Session is in wrong Auth state", {
+			logger.error("Session is in wrong Auth state", {
 				// note: we only log specific non-PII attributes from the session object:
 				expectedSessionState: AuthSessionState.CIC_ACCESS_TOKEN_ISSUED,
 				session: {
@@ -175,7 +173,7 @@ export class UserInfoRequestProcessor {
 				);
 			} catch (error) {
 				if (error instanceof AppError) {
-					this.logger.error("Error generating signed verifiable credential jwt", {
+					logger.error("Error generating signed verifiable credential jwt", {
 						error,
 						messageCode: MessageCodes.ERROR_SIGNING_VC,
 					});
@@ -184,7 +182,7 @@ export class UserInfoRequestProcessor {
 			}
 
 			// Add metric and send TXMA event to the sqsqueue
-			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
+			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnit.Count, 1);
 			try {
 				await this.cicService.sendToTXMA({
 					event_name: TxmaEventNames.CIC_CRI_VC_ISSUED,
@@ -198,7 +196,7 @@ export class UserInfoRequestProcessor {
 					},
 				});
 			} catch (error) {
-				this.logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
+				logger.error("Failed to write TXMA event CIC_CRI_VC_ISSUED to SQS queue.", {
 					error,
 					messageCode: MessageCodes.ERROR_WRITING_TXMA,
 				});
@@ -210,7 +208,7 @@ export class UserInfoRequestProcessor {
 					...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
 				});
 			} catch (error) {
-				this.logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
+				logger.error("Failed to write TXMA event CIC_CRI_END to SQS queue", {
 					error, 
 					messageCode: MessageCodes.ERROR_WRITING_TXMA,
 				});
@@ -222,7 +220,7 @@ export class UserInfoRequestProcessor {
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
 			}));
 		} else {
-			this.logger.error("Claimed Identity data invalid", {
+			logger.error("Claimed Identity data invalid", {
 				messageCode: MessageCodes.INVALID_CLAIMED_IDENTITY,
 			});
 			return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");

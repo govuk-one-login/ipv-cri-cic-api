@@ -1,6 +1,6 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "vitest-mock-extended";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { mockLogger as logger, mockPowertoolsLogger} from "../helpers/mockPowertoolsLogger";
+mockPowertoolsLogger();
 
 // arrange test data before importing the class under test
 process.env.SESSION_TABLE = "";
@@ -9,7 +9,6 @@ import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProce
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 
-const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "CIC" });
 
 describe("UserInfoRequestProcessor - invalid configuration", () => {
@@ -17,7 +16,7 @@ describe("UserInfoRequestProcessor - invalid configuration", () => {
 		process.env.SESSION_TABLE = "";
 
 		expect(() => {
-			new UserInfoRequestProcessor(logger, metrics);
+			new UserInfoRequestProcessor(metrics);
 		}).toThrow("Service incorrectly configured");
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
