@@ -53,7 +53,7 @@
         "@typescript-eslint/eslint-plugin": "8.56.1",
         "@typescript-eslint/parser": "8.56.1",
         "@vitest/coverage-v8": "4.1.4",
-        "aws-cdk-lib": "2.253.1",
+        "aws-cdk-lib": "2.257.0",
         "aws-sdk-client-mock": "4.1.0",
         "dotenv": "17.2.2",
         "eslint": "10.0.2",
