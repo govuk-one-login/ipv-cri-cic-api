@@ -5,10 +5,6 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import AWSXRay from "aws-xray-sdk-core";
 
 vi.mock("aws-xray-sdk-core", () => ({
-    default: {
-        captureAWSv3Client: vi.fn((client) => client),
-        setContextMissingStrategy: vi.fn(),
-    },
     captureAWSv3Client: vi.fn((client) => client),
     setContextMissingStrategy: vi.fn(),
 }));

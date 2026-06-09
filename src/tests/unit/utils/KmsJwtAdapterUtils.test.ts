@@ -11,10 +11,6 @@ import crypto from "crypto";
 import { DecryptCommandOutput } from "@aws-sdk/client-kms";
 
 vi.mock('axios', () => ({
-	default: {
-		get: vi.fn(),
-		post: vi.fn(),
-	},
 	get: vi.fn(),
 	post: vi.fn(),
 }));
@@ -22,10 +18,6 @@ vi.mock('axios', () => ({
 const logger = mock<Logger>();
 
 vi.mock("ecdsa-sig-formatter", () => ({
-	default: {
-		derToJose: vi.fn().mockImplementation(() => "JOSE-formatted signature"),
-		joseToDer: vi.fn().mockImplementation(() => "DER-formatted signature"),
-	},
 	derToJose: vi.fn().mockImplementation(() => "JOSE-formatted signature"),
 	joseToDer: vi.fn().mockImplementation(() => "DER-formatted signature"),
 }));
