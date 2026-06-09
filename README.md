@@ -196,12 +196,6 @@ cd src
 npm run test:api
 ```
 
-### E2E tests
-```sh
-cd src
-npm run test:e2e
-```
-
 ### Infra tests
 ```sh
 cd src
@@ -323,7 +317,6 @@ cd src
 npm run test:unit
 npm run test:api
 npm run test:infra
-npm run test:e2e
 ```
 ### Multiple Axios failures
 Check .env varibales using `run-tests.sh` as source of truth for required parameters

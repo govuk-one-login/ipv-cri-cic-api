@@ -4,7 +4,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
-import base64url from "base64url";
+import { base64url } from "jose";
 
 import testData from "../events/startEvents.js";
 
@@ -53,6 +53,8 @@ describe("Start CIC Check Endpoint", () => {
 
     vi.mocked(axios.get).mockResolvedValue({ data: mockJwks });
 
+    kmsClient.reset();
+
     kmsClient.on(SignCommand).resolves({
       Signature: new Uint8Array([
         197, 213, 5, 202, 58, 74, 45, 36, 122, 168, 27, 155, 70, 15, 9, 123, 11,
@@ -77,7 +79,9 @@ describe("Start CIC Check Endpoint", () => {
 
     const body = JSON.parse(response.body);
     const [protectedHeaderBase64] = body.request.split(".");
-    const protectedHeader = JSON.parse(base64url.decode(protectedHeaderBase64));
+    const protectedHeader = JSON.parse(
+      Buffer.from(base64url.decode(protectedHeaderBase64)).toString()
+    );
 
     expect(body.request).toBeDefined();
     expect(body.responseType).toBeDefined();
@@ -95,7 +99,9 @@ describe("Start CIC Check Endpoint", () => {
 
     const body = JSON.parse(response.body);
     const [protectedHeaderBase64] = body.request.split(".");
-    const protectedHeader = JSON.parse(base64url.decode(protectedHeaderBase64));
+    const protectedHeader = JSON.parse(
+      Buffer.from(base64url.decode(protectedHeaderBase64)).toString()
+    );
 
     expect(body.request).toBeDefined();
     expect(body.responseType).toBeDefined();
