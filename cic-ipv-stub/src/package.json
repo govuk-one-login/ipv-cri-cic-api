@@ -8,7 +8,7 @@
     "@smithy/node-http-handler": "4.0.4",
     "axios": "1.16.0",
     "ecdsa-sig-formatter": "1.0.11",
-    "esbuild": "0.25.2",
+    "esbuild": "0.28.1",
     "node-jose": "2.2.0"
   },
   "devDependencies": {
