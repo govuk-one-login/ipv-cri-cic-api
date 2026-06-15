@@ -4,7 +4,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
-import base64url from "jose";
+import { base64url } from "jose";
 
 import testData from "../events/startEvents.js";
 
@@ -77,7 +77,7 @@ describe("Start CIC Check Endpoint", () => {
 
     const body = JSON.parse(response.body);
     const [protectedHeaderBase64] = body.request.split(".");
-     const protectedHeader = JSON.parse(
+    const protectedHeader = JSON.parse(
       Buffer.from(base64url.decode(protectedHeaderBase64)).toString()
     );
 
@@ -97,7 +97,7 @@ describe("Start CIC Check Endpoint", () => {
 
     const body = JSON.parse(response.body);
     const [protectedHeaderBase64] = body.request.split(".");
-     const protectedHeader = JSON.parse(
+    const protectedHeader = JSON.parse(
       Buffer.from(base64url.decode(protectedHeaderBase64)).toString()
     );
 
