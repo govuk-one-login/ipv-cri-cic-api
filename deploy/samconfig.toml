@@ -2,10 +2,10 @@ version = 0.1
 [dev]
 [dev.deploy]
 [dev.deploy.parameters]
-stack_name = "cic-cri-api"
-s3_prefix = "cic-cri-api"
+stack_name = "cic-cri-api-2725c"
+s3_prefix = "cic-cri-api-2725c"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" L2DynamoStackName=\"cic-cri-ddb\" L2KMSStackName=\"cic-cri-kms\" IPVStubStackName=\"cic-ipv-stub\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" L2DynamoStackName=\"cic-cri-ddb\" L2KMSStackName=\"cic-cri-kms\" IPVStubStackName=\"cic-ipv-stub-2725c\""
 image_repositories = []
