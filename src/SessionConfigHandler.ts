@@ -1,10 +1,11 @@
  
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { LogLevel } from "@aws-lambda-powertools/logger/lib/esm/types/Logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Response } from "./utils/Response";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/lib/esm/types";
 import { Constants } from "./utils/Constants";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { SessionConfigRequestProcessor } from "./services/SessionConfigRequestProcessor";
@@ -12,7 +13,7 @@ import { SessionConfigRequestProcessor } from "./services/SessionConfigRequestPr
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.CIC_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = Constants.DEBUG, POWERTOOLS_SERVICE_NAME = Constants.SESSION_CONFIG_LOGGER_SVC_NAME } = process.env;
 
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 

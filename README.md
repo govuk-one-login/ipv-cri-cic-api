@@ -91,7 +91,7 @@ At a high level it:
 
 Prerequisites:
 - Node.js version per `src/package.json` (`engines.node`)
-- AWS Lambda runtime: nodejs20.x (see `deploy/template.yaml`)
+- AWS Lambda Runtime: nodejs24.x (see `deploy/template.yaml`)
 - npm
 - AWS SAM CLI for building/deploying stacks
 - AWS credentials (only required to run tests against a deployed stack)

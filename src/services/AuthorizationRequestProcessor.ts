@@ -1,7 +1,7 @@
  
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -57,7 +57,7 @@ export class AuthorizationRequestProcessor {
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.metrics.addMetric("found session", MetricUnits.Count, 1);
+			this.metrics.addMetric("found session", MetricUnit.Count, 1);
 
 			switch (session.authSessionState) {
 			  case AuthSessionState.CIC_DATA_RECEIVED:
@@ -84,7 +84,7 @@ export class AuthorizationRequestProcessor {
 
 			const authorizationCode = randomUUID();
 			await this.cicService.setAuthorizationCode(sessionId, authorizationCode);
-			this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
+			this.metrics.addMetric("Set authorization code", MetricUnit.Count, 1);
 
 			try {
 				await this.cicService.sendToTXMA({

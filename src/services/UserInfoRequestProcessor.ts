@@ -2,7 +2,7 @@
  
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
@@ -122,7 +122,7 @@ export class UserInfoRequestProcessor {
 			},
 		});
   
-		this.metrics.addMetric("found session", MetricUnits.Count, 1);
+		this.metrics.addMetric("found session", MetricUnit.Count, 1);
 
 		try {
 			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
@@ -142,7 +142,7 @@ export class UserInfoRequestProcessor {
 
 		this.logger.info("Found person by session ID");
   
-		this.metrics.addMetric("found person", MetricUnits.Count, 1);
+		this.metrics.addMetric("found person", MetricUnit.Count, 1);
 		
 		// Validate the AuthSessionState to be "CIC_ACCESS_TOKEN_ISSUED"
 		if (session.authSessionState !== AuthSessionState.CIC_ACCESS_TOKEN_ISSUED) {
@@ -184,7 +184,7 @@ export class UserInfoRequestProcessor {
 			}
 
 			// Add metric and send TXMA event to the sqsqueue
-			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
+			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnit.Count, 1);
 			try {
 				await this.cicService.sendToTXMA({
 					event_name: TxmaEventNames.CIC_CRI_VC_ISSUED,

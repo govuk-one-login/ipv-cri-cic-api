@@ -1,6 +1,6 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
@@ -40,7 +40,7 @@ export class SessionConfigRequestProcessor {
 		if (session) {
 			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-			this.metrics.addMetric("found session", MetricUnits.Count, 1);
+			this.metrics.addMetric("found session", MetricUnit.Count, 1);
 
 			return Response(HttpCodesEnum.OK, JSON.stringify({
 				journey_type: session?.journey ? session.journey : Constants.FACE_TO_FACE_JOURNEY,
