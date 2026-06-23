@@ -38,7 +38,7 @@
     "compile": "./node_modules/.bin/tsc"
   },
   "engines": {
-    "node": "22.*"
+    "node": "24.*"
   },
   "overrides": {
     "form-data": ">=4.0.4"

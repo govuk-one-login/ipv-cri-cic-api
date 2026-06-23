@@ -1,7 +1,7 @@
 import { CicSession } from "../models/CicSession";
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
@@ -71,7 +71,7 @@ export class ClaimedIdRequestProcessor {
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.metrics.addMetric("Found session", MetricUnits.Count, 1);
+			this.metrics.addMetric("Found session", MetricUnit.Count, 1);
 
 			switch (session.authSessionState) {
 			  case AuthSessionState.CIC_SESSION_CREATED:
