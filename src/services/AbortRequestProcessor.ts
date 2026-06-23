@@ -1,6 +1,6 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { AppError } from "../utils/AppError";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -74,7 +74,7 @@ export class AbortRequestProcessor {
 
   	try {
   	  await this.cicService.updateSessionAuthState(cicSessionInfo.sessionId, AuthSessionState.CIC_CRI_SESSION_ABORTED);
-	  this.metrics.addMetric("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1);
+	  this.metrics.addMetric("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1);
 
 	} catch (error) {
   		this.logger.error("Error occurred while aborting the session", {

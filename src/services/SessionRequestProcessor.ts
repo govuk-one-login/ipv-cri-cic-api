@@ -2,7 +2,7 @@
  
 import { Response, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -51,7 +51,7 @@ export class SessionRequestProcessor {
 		this.logger = logger;
 		this.metrics = metrics;
 		logger.debug("metrics is  " + JSON.stringify(this.metrics));
-		this.metrics.addMetric("Called", MetricUnits.Count, 1);
+		this.metrics.addMetric("Called", MetricUnit.Count, 1);
 		
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   		const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);

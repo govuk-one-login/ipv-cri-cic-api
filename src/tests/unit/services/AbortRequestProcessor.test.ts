@@ -1,5 +1,5 @@
 import { mock } from "vitest-mock-extended";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AbortRequestProcessor } from "../../../services/AbortRequestProcessor";
 import { CicService } from "../../../services/CicService";
@@ -88,7 +88,7 @@ describe("AbortRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
 		expect(out.headers?.Location).toBe(encodeURIComponent(`${cicSessionItem.redirectUri}?error=access_denied&state=${cicSessionItem.state}`));
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1)
+		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
 	});
 
 	it("Returns successful response if session has not been aborted and redirectUri contains cic id", async () => {
@@ -103,7 +103,7 @@ describe("AbortRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
 		expect(out.headers?.Location).toContain(encodeURIComponent(`${cicSessionItem.redirectUri}&error=access_denied&state=${cicSessionItem.state}`));
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1)
+		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
 	});
 
 	it("sends TxMA event after auth session state has been updated", async () => {
@@ -115,7 +115,7 @@ describe("AbortRequestProcessor", () => {
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith(expect.objectContaining({
 			event_name: TxmaEventNames.CIC_CRI_SESSION_ABORTED,
 		}), encodedHeader);
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1)
+		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
 	});
 
 	it("logs error if sending TxMA event fails, but successful response is still returned", async () => {
@@ -131,7 +131,7 @@ describe("AbortRequestProcessor", () => {
 		});
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnits.Count, 1)
+		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
 	});
 
 	it("returns failed response if auth session state cannot be updated", async () => {

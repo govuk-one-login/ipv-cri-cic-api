@@ -1,7 +1,8 @@
 import { Logger } from "@aws-lambda-powertools/logger";
+import { LogLevel } from "@aws-lambda-powertools/logger/lib/esm/types/Logger";
 import { AppError } from "./utils/AppError";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/lib/esm/types";
 import { Constants } from "./utils/Constants";
 import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
 import { PutObjectCommand, CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -15,7 +16,7 @@ const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.en
 const JWKS_BUCKET_NAME = process.env.JWKS_BUCKET_NAME;
 
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
