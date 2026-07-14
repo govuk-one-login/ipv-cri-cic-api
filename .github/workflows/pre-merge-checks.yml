@@ -170,16 +170,34 @@ jobs:
         run: |
           echo "Deleting IPV stub stack: pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
           aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
-          aws cloudformation wait stack-delete-complete --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
+          while aws cloudformation describe-stacks --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" >/dev/null 2>&1; do
+            echo "--- $(date -u +%H:%M:%S) UTC ---"
+            aws cloudformation describe-stack-events --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" \
+              --query "StackEvents[?ResourceStatus=='DELETE_IN_PROGRESS']" \
+              --output table
+            sleep 15
+          done
 
       - name: Delete test harness stack
         run: |
           echo "Deleting test harness stack: pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}"
           aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}"
-          aws cloudformation wait stack-delete-complete --region eu-west-2 --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}"
+          while aws cloudformation describe-stacks --region eu-west-2 --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}" >/dev/null 2>&1; do
+            echo "--- $(date -u +%H:%M:%S) UTC ---"
+            aws cloudformation describe-stack-events --region eu-west-2 --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}" \
+              --query "StackEvents[?ResourceStatus=='DELETE_IN_PROGRESS']" \
+              --output table
+            sleep 15
+          done
 
       - name: Delete API stack
         run: |
           echo "Deleting API stack: pre-merge-${{ needs.setup.outputs.sha_short }}"
           aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}"
-          aws cloudformation wait stack-delete-complete --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}"
+          while aws cloudformation describe-stacks --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" >/dev/null 2>&1; do
+            echo "--- $(date -u +%H:%M:%S) UTC ---"
+            aws cloudformation describe-stack-events --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" \
+              --query "StackEvents[?ResourceStatus=='DELETE_IN_PROGRESS']" \
+              --output table
+            sleep 15
+          done
