@@ -174,56 +174,12 @@ jobs:
 
       - name: Delete test harness stack
         run: |
-          echo "Deleting API stack: pre-merge-${{ needs.setup.outputs.sha_short }}"
-          aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}"
-
-          EVENTS_FILE="/tmp/stack_events.json"
-
-          while aws cloudformation describe-stacks --region eu-west-2 --stack-name "pre-merge-test-harness${{ needs.setup.outputs.sha_short }}" >/dev/null 2>&1; do
-            aws cloudformation describe-stack-events --region eu-west-2 --stack-name "pre-merge-test-harness${{ needs.setup.outputs.sha_short }}" \
-              --query "StackEvents[?ResourceStatus=='DELETE_IN_PROGRESS' || ResourceStatus=='DELETE_COMPLETE' || ResourceStatus=='DELETE_FAILED'].{Time:Timestamp,Resource:LogicalResourceId,Status:ResourceStatus}" \
-              --output json > "$EVENTS"
-            sleep 15
-          done
-
-          echo "Deleted resources:"
-          jq -r '
-            group_by(.Resource)
-            | map({
-                Resource: .[0].Resource,
-                Start: (map(select(.Status=="DELETE_IN_PROGRESS")) | min_by(.Time).Time),
-                End: (map(select(.Status=="DELETE_COMPLETE" or .Status=="DELETE_FAILED")) | if length > 0 then max_by(.Time).Time else null end)
-              })
-            | map(select(.End != null))
-            | map(. + {DurationSeconds: ((.End | fromdateiso8601) - (.Start | fromdateiso8601))})
-            | sort_by(-.DurationSeconds)
-            | .[] | "\(.DurationSeconds)s\t\(.Resource)\t(\(.Start) → \(.End))"
-          ' "$EVENTS"
+          echo "Deleting test harness stack: pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}"
+          aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}"
+          aws cloudformation wait stack-delete-complete --region eu-west-2 --stack-name "pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}"
 
       - name: Delete API stack
         run: |
           echo "Deleting API stack: pre-merge-${{ needs.setup.outputs.sha_short }}"
           aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}"
-
-          EVENTS_FILE="/tmp/stack_events.json"
-
-          while aws cloudformation describe-stacks --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" >/dev/null 2>&1; do
-            aws cloudformation describe-stack-events --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}" \
-              --query "StackEvents[?ResourceStatus=='DELETE_IN_PROGRESS' || ResourceStatus=='DELETE_COMPLETE' || ResourceStatus=='DELETE_FAILED'].{Time:Timestamp,Resource:LogicalResourceId,Status:ResourceStatus}" \
-              --output json > "$EVENTS"
-            sleep 15
-          done
-
-          echo "Deleted resources:"
-          jq -r '
-            group_by(.Resource)
-            | map({
-                Resource: .[0].Resource,
-                Start: (map(select(.Status=="DELETE_IN_PROGRESS")) | min_by(.Time).Time),
-                End: (map(select(.Status=="DELETE_COMPLETE" or .Status=="DELETE_FAILED")) | if length > 0 then max_by(.Time).Time else null end)
-              })
-            | map(select(.End != null))
-            | map(. + {DurationSeconds: ((.End | fromdateiso8601) - (.Start | fromdateiso8601))})
-            | sort_by(-.DurationSeconds)
-            | .[] | "\(.DurationSeconds)s\t\(.Resource)\t(\(.Start) → \(.End))"
-          ' "$EVENTS"
+          aws cloudformation wait stack-delete-complete --region eu-west-2 --stack-name "pre-merge-${{ needs.setup.outputs.sha_short }}"
