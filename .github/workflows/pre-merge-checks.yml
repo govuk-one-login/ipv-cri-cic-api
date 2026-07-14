@@ -4,6 +4,9 @@ on:
     secrets:
       DEV_CRI_CIC_PRE_MERGE_ROLE_ARN:
         required: true
+concurrency:
+  group: pre-merge-check${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
       
 jobs:
   setup:
@@ -167,13 +170,7 @@ jobs:
         run: |
           echo "Deleting IPV stub stack: pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
           aws cloudformation delete-stack --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
-          while aws cloudformation describe-stacks --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" >/dev/null 2>&1; do
-            echo "--- $(date -u +%H:%M:%S) UTC ---"
-            aws cloudformation describe-stack-events --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}" \
-              --query "StackEvents[?ResourceStatus=='DELETE_IN_PROGRESS']" \
-              --output table
-            sleep 15
-          done
+          aws cloudformation wait stack-delete-complete --region eu-west-2 --stack-name "pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}"
 
       - name: Delete test harness stack
         run: |
