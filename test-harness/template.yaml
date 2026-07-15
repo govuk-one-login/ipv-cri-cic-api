@@ -96,6 +96,7 @@ Globals:
         POWERTOOLS_METRICS_NAMESPACE: CIC-CRI
     AutoPublishAlias: live
 
+
 Resources:
   LambdaEgressSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
