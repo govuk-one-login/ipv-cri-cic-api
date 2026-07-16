@@ -4,6 +4,9 @@ on:
     secrets:
       DEV_CRI_CIC_PRE_MERGE_ROLE_ARN:
         required: true
+concurrency:
+  group: pre-merge-check${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
       
 jobs:
   setup:
@@ -153,9 +156,6 @@ jobs:
     timeout-minutes: 45
     if: always()
     needs: [setup, test]
-    concurrency:
-      group: cleanup-${{ github.head_ref || github.ref_name }}
-      cancel-in-progress: false
     permissions:
       id-token: write
       contents: read
