@@ -153,6 +153,9 @@ jobs:
     timeout-minutes: 45
     if: always()
     needs: [setup, test]
+    concurrency:
+      group: cleanup-${{ github.head_ref || github.ref_name }}
+      cancel-in-progress: true
     permissions:
       id-token: write
       contents: read
