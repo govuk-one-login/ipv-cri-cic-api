@@ -155,7 +155,7 @@ jobs:
     needs: [setup, test]
     concurrency:
       group: cleanup-${{ github.head_ref || github.ref_name }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     permissions:
       id-token: write
       contents: read
