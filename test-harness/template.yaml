@@ -73,9 +73,9 @@ Globals:
         - !GetAtt LambdaEgressSecurityGroup.GroupId
       SubnetIds:
         - Fn::ImportValue:
-            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdB"
+            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdA"
         - Fn::ImportValue:
-            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdC"
+            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdB"
     PermissionsBoundary: !If
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
