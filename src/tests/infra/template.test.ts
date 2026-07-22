@@ -25,7 +25,7 @@ describe("Infra", () => {
 	});
 
 	it.skip("API specification in the spec folder should match the DefinitionBody", () => {
-		const api_definition: any = load(readFileSync("../deploy/spec/private-api.yaml", "utf-8"), { schema });
+		const api_definition: any = load(readFileSync("../deploy/spec/private-api.yaml", "utf-8"));
 		template.hasResourceProperties("AWS::Serverless::Api", {
 			DefinitionBody: Match.objectEquals(api_definition),
 		});
