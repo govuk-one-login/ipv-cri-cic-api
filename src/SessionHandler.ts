@@ -27,8 +27,8 @@ class Session implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> {
 
-		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
-		logger.setPersistentLogAttributes({});
+		// clear logger state set by any previous invocation, and add lambda context for this invocation
+		logger.resetKeys();
 		logger.addContext(context);
 
 		try {

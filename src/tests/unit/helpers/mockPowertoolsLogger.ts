@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 export const mockLogger = {
-  setPersistentLogAttributes: vi.fn(),
+  resetKeys: vi.fn(),
   addContext: vi.fn(),
   appendKeys: vi.fn(),
   info: vi.fn(),
