@@ -22,12 +22,12 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.148",
     "@types/node": "20.14.8",
-    "@typescript-eslint/eslint-plugin": "8.56.1",
-    "@typescript-eslint/parser": "8.56.1",
-    "@vitest/coverage-v8": "4.1.9",
+    "@typescript-eslint/eslint-plugin": "8.65.0",
+    "@typescript-eslint/parser": "8.65.0",
+    "@vitest/coverage-v8": "4.1.10",
     "aws-sdk-client-mock": "4.1.0",
-    "eslint": "10.0.2",
-    "vitest": "4.1.9",
+    "eslint": "10.8.0",
+    "vitest": "4.1.10",
     "typescript": "5.1.6"
   },
   "engines": {
