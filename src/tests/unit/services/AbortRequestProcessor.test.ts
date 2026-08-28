@@ -1,6 +1,6 @@
 import { mock } from "vitest-mock-extended";
+import { logger } from "@govuk-one-login/cri-logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
-import { Logger } from "@aws-lambda-powertools/logger";
 import { AbortRequestProcessor } from "../../../services/AbortRequestProcessor";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -11,7 +11,7 @@ import { TxmaEventNames } from "../../../models/enums/TxmaEvents";
 import { APIGatewayProxyResult } from "aws-lambda";
 
 const mockCicService = mock<CicService>();
-const logger = mock<Logger>();
+vi.mock("@govuk-one-login/cri-logger");
 
 let abortRequestProcessor: AbortRequestProcessor;
 let cicSessionItem: ISessionItem;
@@ -43,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 
 describe("AbortRequestProcessor", () => {
 	beforeAll(() => {
-		abortRequestProcessor = new AbortRequestProcessor(logger, metrics);
+		abortRequestProcessor = new AbortRequestProcessor(metrics);
     		// @ts-expect-error linting to be updated
 		abortRequestProcessor.cicService = mockCicService;
 		cicSessionItem = getMockSessionItem();

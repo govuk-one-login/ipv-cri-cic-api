@@ -1,6 +1,6 @@
 import { SQSEvent } from "aws-lambda";
 import { LambdaInterface } from "@aws-lambda-powertools/commons/lib/esm/types";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { LogLevel } from "@aws-lambda-powertools/logger/lib/esm/types/Logger";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
