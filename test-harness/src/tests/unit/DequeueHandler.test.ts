@@ -7,14 +7,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
 
-vi.mock("@govuk-one-login/cri-logger", () => ({
-	Logger: vi.fn().mockImplementation(function () {
-    return {
-      info: vi.fn(),
-      error: vi.fn(),
-    };
-  }),
-}));
+vi.mock("@govuk-one-login/cri-logger");
 
 const s3Mock = mockClient(S3Client);
 
