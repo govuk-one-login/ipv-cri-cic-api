@@ -33,6 +33,8 @@
         "lint": "eslint -c eslint.config.mjs *.ts .",
         "test:e2e": "./node_modules/.bin/vitest run tests/api/e2e*.test.ts --reporter=default --reporter=junit --outputFile.junit=results/e2e-report.xml",
         "test:infra": "./node_modules/.bin/vitest run tests/infra/  --reporter=default",
+        "test:infra:dynamo": "./node_modules/.bin/vitest run --root ../infra-l2-dynamo/src --config ../../src/vitest.infra.config.ts",
+        "test:infra:kms": "./node_modules/.bin/vitest run --root ../infra-l2-kms/src --config ../../src/vitest.infra.config.ts",
         "api": "./node_modules/.bin/vitest run tests/api/ --reporter=default",
         "test:api": "npm run compile && npm run api",
         "test:pii": "bash ./check-logs.sh",
