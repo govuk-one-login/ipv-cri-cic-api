@@ -1,5 +1,5 @@
  
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { VerifiedCredential } from "./IVeriCredential";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
@@ -13,8 +13,6 @@ import { mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 export class VerifiableCredentialService {
 	readonly tableName: string;
 
-	readonly logger: Logger;
-
 	readonly issuer: string;
 
 	private readonly kmsJwtAdapter: KmsJwtAdapter;
@@ -23,17 +21,16 @@ export class VerifiableCredentialService {
 
 	private static instance: VerifiableCredentialService;
 
-	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger, dnsSuffix: string) {
+	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, dnsSuffix: string) {
 		this.issuer = issuer;
 		this.tableName = tableName;
-		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
 		this.dnsSuffix = dnsSuffix;
 	}
 
-	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string): VerifiableCredentialService {
+	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, dnsSuffix: string): VerifiableCredentialService {
 		if (!VerifiableCredentialService.instance) {
-			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger, dnsSuffix);
+			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, dnsSuffix);
 		}
 		return VerifiableCredentialService.instance;
 	}
@@ -50,7 +47,7 @@ export class VerifiableCredentialService {
 			.build();
 		let result;
 		if (process.env.USE_MOCKED === "true") {
-			this.logger.info("VcService: USING MOCKED");
+			logger.info("VcService: USING MOCKED");
 			result = {
 				...mockVcClaims,
 				iss: this.issuer,
@@ -68,14 +65,14 @@ export class VerifiableCredentialService {
 			};
 		}
 
-		this.logger.info("Generated VerifiableCredential jwt", {
+		logger.info("Generated VerifiableCredential jwt", {
     		jti: result.jti,
     	});
 		try {
 			// Sign the VC
 			return await this.kmsJwtAdapter.sign(result, this.dnsSuffix);
 		} catch (error) {
-			this.logger.error("Failed to sign Jwt", {
+			logger.error("Failed to sign Jwt", {
     			error,
     		});
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Server Error",);
