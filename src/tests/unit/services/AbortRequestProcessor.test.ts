@@ -1,6 +1,6 @@
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@govuk-one-login/cri-metrics";
 import { AbortRequestProcessor } from "../../../services/AbortRequestProcessor";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";

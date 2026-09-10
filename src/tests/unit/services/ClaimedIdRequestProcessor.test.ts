@@ -1,6 +1,6 @@
  
 import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
+import { metrics } from "@govuk-one-login/cri-metrics";
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
 import { VALID_CLAIMEDID } from "../data/cic-events";

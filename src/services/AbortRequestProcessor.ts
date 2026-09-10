@@ -1,6 +1,6 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { metrics as sharedMetrics, MetricUnit } from "@govuk-one-login/cri-metrics";
 import { AppError } from "../utils/AppError";
 import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -13,6 +13,7 @@ import { EnvironmentVariables } from "../utils/Constants";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { APIGatewayProxyResult } from "aws-lambda";
 
+type MetricsClient = typeof metrics;
 
 export class AbortRequestProcessor {
 
@@ -22,11 +23,11 @@ export class AbortRequestProcessor {
 
   private readonly txmaQueueUrl: string;
 
-  private readonly metrics: Metrics;
+  private readonly metrics: MetricsClient;
 
   private readonly cicService: CicService;
 
-  constructor(metrics: Metrics) {
+  constructor(metrics: MetricsClient) {
   	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
   	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL);
   	const sessionTableName = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
@@ -37,7 +38,7 @@ export class AbortRequestProcessor {
   }
 
   static getInstance(
-  	metrics: Metrics,
+  	metrics: MetricsClient,
   ): AbortRequestProcessor {
   	if (!AbortRequestProcessor.instance) {
   		AbortRequestProcessor.instance =
