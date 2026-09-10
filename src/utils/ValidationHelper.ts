@@ -1,7 +1,7 @@
  
 import { validateOrReject } from "class-validator";
 import { AppError } from "./AppError";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "./HttpCodesEnum";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
 import { APIGatewayProxyEvent } from "aws-lambda";
@@ -11,7 +11,7 @@ import { JwtPayload } from "./IVeriCredential";
 
 export class ValidationHelper {
 
-	async validateModel(model: object, logger: Logger): Promise<void> {
+	async validateModel(model: object): Promise<void> {
 		try {
 			await validateOrReject(model, { forbidUnknownValues: true });
 		} catch (errors) {

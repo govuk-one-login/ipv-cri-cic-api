@@ -4,7 +4,7 @@ import { CicService } from "./CicService";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
@@ -18,8 +18,6 @@ import { TxmaEventNames } from "../models/enums/TxmaEvents";
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
 
-	private readonly logger: Logger;
-
 	private readonly metrics: Metrics;
 
 	private readonly cicService: CicService;
@@ -28,19 +26,18 @@ export class AuthorizationRequestProcessor {
 
 	private readonly txmaQueueUrl: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
-		this.logger = logger;
+	constructor(metrics: Metrics) {
 		this.metrics = metrics;
-		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
-		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
+		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
+		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL);
   			
-		this.cicService = CicService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+		this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics): AuthorizationRequestProcessor {
+	static getInstance(metrics: Metrics): AuthorizationRequestProcessor {
 		if (!AuthorizationRequestProcessor.instance) {
-			AuthorizationRequestProcessor.instance = new AuthorizationRequestProcessor(logger, metrics);
+			AuthorizationRequestProcessor.instance = new AuthorizationRequestProcessor(metrics);
 		}
 		return AuthorizationRequestProcessor.instance;
 	}
@@ -50,10 +47,10 @@ export class AuthorizationRequestProcessor {
 		const session = await this.cicService.getSessionById(sessionId);
 		
 		if (session != null) {
-			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+			logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 			if (session.expiryDate < absoluteTimeNow()) {
-				this.logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
+				logger.error("Session has expired", { messageCode: MessageCodes.EXPIRED_SESSION });
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
@@ -64,7 +61,7 @@ export class AuthorizationRequestProcessor {
 					break;
 			  case AuthSessionState.CIC_AUTH_CODE_ISSUED:
 			  case AuthSessionState.CIC_ACCESS_TOKEN_ISSUED:
-					this.logger.info(`Duplicate request for session in state: ${session.authSessionState}, returning authCode from DB`, sessionId);
+					logger.info(`Duplicate request for session in state: ${session.authSessionState}, returning authCode from DB`, sessionId);
 					return Response(HttpCodesEnum.OK, JSON.stringify({
 						authorizationCode: {
 							value: session.authorizationCode,
@@ -73,14 +70,14 @@ export class AuthorizationRequestProcessor {
 						state: session?.state,
 					}));
 				default:
-					this.logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
+					logger.error(`Session is in an unexpected state: ${session.authSessionState}, expected state should be ${AuthSessionState.CIC_DATA_RECEIVED}, ${AuthSessionState.CIC_AUTH_CODE_ISSUED} or ${AuthSessionState.CIC_ACCESS_TOKEN_ISSUED}`, { 
 						messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 					});
 					return Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 
 			// add govuk_signin_journey_id to all subsequent log messages
-			this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+			logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 			const authorizationCode = randomUUID();
 			await this.cicService.setAuthorizationCode(sessionId, authorizationCode);
@@ -93,7 +90,7 @@ export class AuthorizationRequestProcessor {
 
 				});
 			} catch (error) {
-				this.logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", {
+				logger.error("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", {
 					error,
 					messageCode: MessageCodes.ERROR_WRITING_TXMA,
 				});
@@ -109,7 +106,7 @@ export class AuthorizationRequestProcessor {
 
 			return Response(HttpCodesEnum.OK, JSON.stringify(cicResp));
 		} else {
-			this.logger.error("No session found for session id", {
+			logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
 			return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
