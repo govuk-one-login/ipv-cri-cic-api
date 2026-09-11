@@ -2,8 +2,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { LambdaInterface } from "@aws-lambda-powertools/commons/lib/esm/types";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { LogLevel } from "@aws-lambda-powertools/logger/lib/esm/types/Logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import { Constants } from "./utils/Constants";
 import { Response } from "./utils/Response";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
@@ -11,12 +10,6 @@ import { AccessTokenRequestProcessor } from "./services/AccessTokenRequestProces
 import { MessageCodes } from "./models/enums/MessageCodes";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
-const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
-const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.ACCESSTOKEN_LOGGER_SVC_NAME;
-const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
-	serviceName: POWERTOOLS_SERVICE_NAME,
-});
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
 
@@ -31,7 +24,7 @@ export class AccessToken implements LambdaInterface {
 		
 		try {
 			logger.info("Received token request", { requestId: event.requestContext.requestId });
-			return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
+			return await AccessTokenRequestProcessor.getInstance(metrics).processRequest(event);
 		} catch (error: any) {
 			logger.error({ message: "AccessTokenRequestProcessor encountered an error.",
 				error,

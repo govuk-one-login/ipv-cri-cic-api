@@ -1,7 +1,7 @@
 import * as AWS from "@aws-sdk/client-kms";
 import { mockKmsClient } from "../../../tests/contract/mocks/kmsClient";
 import { createKmsClient } from "../../../utils/KMSClient";
-import { Logger } from "@aws-lambda-powertools/logger";
+import { logger } from "@govuk-one-login/cri-logger";
 import AWSXRay from "aws-xray-sdk-core";
 
 vi.mock("aws-xray-sdk-core", () => ({
@@ -18,7 +18,7 @@ describe("createKmsClient", () => {
 	let loggerSpy: ReturnType<typeof vi.spyOn>;
 
 	beforeEach(() => {
-		loggerSpy = vi.spyOn(Logger.prototype, 'info');
+		loggerSpy = vi.spyOn(logger, 'info');
 	});
 
     afterEach(() => {
