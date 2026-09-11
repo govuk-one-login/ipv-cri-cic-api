@@ -58,7 +58,7 @@
         "dotenv": "17.2.2",
         "eslint": "10.8.0",
         "fast-xml-parser": "5.7.3",
-        "js-yaml": "4.3.1",
+        "js-yaml": "4.3.2",
         "vitest": "5.0.0",
         "vitest-mock-extended": "5.0.0",
         "typescript": "4.9.5",
