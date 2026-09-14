@@ -1,6 +1,6 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { AppError } from "../utils/AppError";
 import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -22,26 +22,21 @@ export class AbortRequestProcessor {
 
   private readonly txmaQueueUrl: string;
 
-  private readonly metrics: Metrics;
-
   private readonly cicService: CicService;
 
-  constructor(metrics: Metrics) {
+  constructor() {
   	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
   	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL);
   	const sessionTableName = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
-
-  	this.metrics = metrics;
   	this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 	
   }
 
   static getInstance(
-  	metrics: Metrics,
   ): AbortRequestProcessor {
   	if (!AbortRequestProcessor.instance) {
   		AbortRequestProcessor.instance =
-        new AbortRequestProcessor(metrics);
+        new AbortRequestProcessor();
   	}
   	return AbortRequestProcessor.instance;
   }
@@ -70,7 +65,7 @@ export class AbortRequestProcessor {
 
   	try {
   	  await this.cicService.updateSessionAuthState(cicSessionInfo.sessionId, AuthSessionState.CIC_CRI_SESSION_ABORTED);
-	  this.metrics.addMetric("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1);
+	  captureMetric("state-CIC_CRI_SESSION_ABORTED");
 
 	} catch (error) {
   		logger.error("Error occurred while aborting the session", {

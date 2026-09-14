@@ -1,7 +1,7 @@
 import { CicSession } from "../models/CicSession";
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { logger } from "@govuk-one-login/cri-logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
@@ -16,26 +16,23 @@ import { EnvironmentVariables } from "../utils/Constants";
 export class ClaimedIdRequestProcessor {
 	private static instance: ClaimedIdRequestProcessor;
 
-	private readonly metrics: Metrics;
-
 	private readonly validationHelper: ValidationHelper;
 
 	private readonly cicService: CicService;
 
 	private readonly personIdentityTableName: string;
 
-	constructor(metrics: Metrics) {
+	constructor() {
 		this.validationHelper = new ValidationHelper();
-		this.metrics = metrics;
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
 		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME);
   			
 		this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 	}
 
-	static getInstance(metrics: Metrics): ClaimedIdRequestProcessor {
+	static getInstance(): ClaimedIdRequestProcessor {
 		if (!ClaimedIdRequestProcessor.instance) {
-			ClaimedIdRequestProcessor.instance = new ClaimedIdRequestProcessor(metrics);
+			ClaimedIdRequestProcessor.instance = new ClaimedIdRequestProcessor();
 		}
 		return ClaimedIdRequestProcessor.instance;
 	}
@@ -68,7 +65,7 @@ export class ClaimedIdRequestProcessor {
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.metrics.addMetric("Found session", MetricUnit.Count, 1);
+			captureMetric("Found session");
 
 			switch (session.authSessionState) {
 			  case AuthSessionState.CIC_SESSION_CREATED:

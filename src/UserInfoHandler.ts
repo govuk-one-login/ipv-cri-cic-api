@@ -1,17 +1,12 @@
  
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { logger } from "@govuk-one-login/cri-logger";
-import { Metrics } from "@aws-lambda-powertools/metrics";
+import { metrics } from "@govuk-one-login/cri-metrics";
 import { Response } from "./utils/Response";
 import { HttpCodesEnum } from "./utils/HttpCodesEnum";
 import { UserInfoRequestProcessor } from "./services/UserInfoRequestProcessor";
 import { LambdaInterface } from "@aws-lambda-powertools/commons/lib/esm/types";
-import { Constants } from "./utils/Constants";
 import { MessageCodes } from "./models/enums/MessageCodes";
-
-const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ? process.env.POWERTOOLS_METRICS_NAMESPACE : Constants.CIC_METRICS_NAMESPACE;
-
-const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE });
 
 class UserInfo implements LambdaInterface {
 
@@ -23,7 +18,7 @@ class UserInfo implements LambdaInterface {
 		logger.addContext(context);
 		try {
 			logger.info("Received userInfo request", { requestId: event.requestContext.requestId });
-			return await UserInfoRequestProcessor.getInstance(metrics).processRequest(event);
+			return await UserInfoRequestProcessor.getInstance().processRequest(event);
 		} catch (error: any) {
 			logger.error({
 				message: "An error has occurred when processing the request",
