@@ -1,5 +1,4 @@
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { CicService } from "../../../services/CicService";
 import { HttpCodesEnum } from "../../../utils/HttpCodesEnum";
@@ -20,7 +19,7 @@ let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
 const passingKmsJwtAdapterFactory = () => new MockKmsJwtAdapterForVc(true);
 
-const metrics = new Metrics({ namespace: "CIC" });
+vi.mock("@govuk-one-login/cri-metrics");
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -82,7 +81,7 @@ describe("Issuing verified credentials", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(metrics);
+		userInforequestProcessorTest = new UserInfoRequestProcessor();
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.cicService = mockCicService;
 	});

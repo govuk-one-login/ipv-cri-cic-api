@@ -1,6 +1,5 @@
  
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
@@ -23,7 +22,7 @@ const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAda
 
 
 vi.mock("@govuk-one-login/cri-logger");
-const metrics = new Metrics({ namespace: "CIC" });
+vi.mock("@govuk-one-login/cri-metrics");
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -79,7 +78,7 @@ describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(metrics);
+		userInforequestProcessorTest = new UserInfoRequestProcessor();
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.cicService = mockCicService;
 	});
