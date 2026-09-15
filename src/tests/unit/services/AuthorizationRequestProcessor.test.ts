@@ -10,6 +10,7 @@ import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { AuthorizationRequestProcessor } from "../../../services/AuthorizationRequestProcessor";
 import { VALID_AUTHCODE } from "../data/auth-events";
 import { APIGatewayProxyResult } from "aws-lambda";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 
 let authorizationRequestProcessorTest: AuthorizationRequestProcessor;
 const mockCicService = mock<CicService>();
@@ -184,6 +185,8 @@ describe("AuthorizationRequestProcessor", () => {
 
 		expect(mockCicService.setAuthorizationCode).toHaveBeenCalledTimes(1);
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledTimes(1);
+		expect(captureMetric).toHaveBeenCalledWith("found session");
+		expect(captureMetric).toHaveBeenCalledWith("Set authorization code");
 		expect(logger.error).toHaveBeenCalledWith("Failed to write TXMA event CIC_CRI_AUTH_CODE_ISSUED to SQS queue.", { error: {}, messageCode: MessageCodes.ERROR_WRITING_TXMA });
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		 
