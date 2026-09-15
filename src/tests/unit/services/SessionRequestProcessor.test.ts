@@ -1,7 +1,6 @@
  
 /* eslint @typescript-eslint/unbound-method: 0 */
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
 import { CicService } from "../../../services/CicService";
@@ -17,7 +16,7 @@ let sessionRequestProcessor: SessionRequestProcessor;
 const mockCicService = mock<CicService>();
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 vi.mock("@govuk-one-login/cri-logger");
-const metrics = mock<Metrics>();
+vi.mock("@govuk-one-login/cri-metrics");
 const mockValidationHelper = mock<ValidationHelper>();
 
 vi.mock("crypto", async () => ({
@@ -68,7 +67,7 @@ const sessionItemFactory = ():ISessionItem => {
 
 describe("SessionRequestProcessor", () => {
 	beforeAll(() => {
-		sessionRequestProcessor = new SessionRequestProcessor(metrics);
+		sessionRequestProcessor = new SessionRequestProcessor();
 		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.cicService = mockCicService;
 		// @ts-expect-error private access manipulation used for testing

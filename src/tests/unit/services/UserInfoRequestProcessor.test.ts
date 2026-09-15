@@ -1,6 +1,5 @@
  
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
@@ -10,6 +9,7 @@ import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 import { APIGatewayProxyResult } from "aws-lambda";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 
@@ -23,7 +23,7 @@ const failingKmsJwtSigningAdapterFactory = () => new MockFailingKmsSigningJwtAda
 
 
 vi.mock("@govuk-one-login/cri-logger");
-const metrics = new Metrics({ namespace: "CIC" });
+vi.mock("@govuk-one-login/cri-metrics");
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -79,7 +79,7 @@ describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(metrics);
+		userInforequestProcessorTest = new UserInfoRequestProcessor();
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.cicService = mockCicService;
 	});
@@ -243,6 +243,8 @@ describe("UserInfoRequestProcessor", () => {
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+		expect(captureMetric).toHaveBeenCalledWith("found session");
+		expect(captureMetric).not.toHaveBeenCalledWith("found person");
 		expect(out.body).toContain("Unauthorized");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -339,6 +341,9 @@ describe("UserInfoRequestProcessor", () => {
 
 		expect(mockCicService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockCicService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+		expect(captureMetric).toHaveBeenCalledWith("found session");
+		expect(captureMetric).toHaveBeenCalledWith("found person");
+		expect(captureMetric).not.toHaveBeenCalledWith("Generated signed verifiable credential jwt");
 		expect(out.body).toContain("Server Error");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 		expect(logger.error).toHaveBeenCalledTimes(2);

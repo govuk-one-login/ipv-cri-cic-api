@@ -1,6 +1,6 @@
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
@@ -12,19 +12,16 @@ import { APIGatewayProxyResult } from "aws-lambda";
 export class SessionConfigRequestProcessor {
 	private static instance: SessionConfigRequestProcessor;
 
-	private readonly metrics: Metrics;
-
 	private readonly cicService: CicService;
 
-	constructor(metrics: Metrics) {
-		this.metrics = metrics;
+	constructor() {
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
 		this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 	}
 
-	static getInstance(metrics: Metrics): SessionConfigRequestProcessor {
+	static getInstance(): SessionConfigRequestProcessor {
 		if (!SessionConfigRequestProcessor.instance) {
-			SessionConfigRequestProcessor.instance = new SessionConfigRequestProcessor(metrics);
+			SessionConfigRequestProcessor.instance = new SessionConfigRequestProcessor();
 		}
 		return SessionConfigRequestProcessor.instance;
 	}
@@ -36,7 +33,7 @@ export class SessionConfigRequestProcessor {
 		if (session) {
 			logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-			this.metrics.addMetric("found session", MetricUnit.Count, 1);
+			captureMetric("found session");
 
 			return Response(HttpCodesEnum.OK, JSON.stringify({
 				journey_type: session?.journey ? session.journey : Constants.FACE_TO_FACE_JOURNEY,

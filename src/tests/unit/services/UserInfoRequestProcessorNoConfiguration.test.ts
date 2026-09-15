@@ -1,4 +1,3 @@
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { logger } from "@govuk-one-login/cri-logger";
 
 // arrange test data before importing the class under test
@@ -9,14 +8,14 @@ import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProce
 /* eslint @typescript-eslint/unbound-method: 0 */
 
 vi.mock("@govuk-one-login/cri-logger");
-const metrics = new Metrics({ namespace: "CIC" });
+vi.mock("@govuk-one-login/cri-metrics");
 
 describe("UserInfoRequestProcessor - invalid configuration", () => {
 	it("should throw a fatal error if SESSION_TABLE not defined", () => {
 		process.env.SESSION_TABLE = "";
 
 		expect(() => {
-			new UserInfoRequestProcessor(metrics);
+			new UserInfoRequestProcessor();
 		}).toThrow("Service incorrectly configured");
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
