@@ -2,7 +2,7 @@
  
 import { Response, SECURITY_HEADERS } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { logger } from "@govuk-one-login/cri-logger";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -28,8 +28,6 @@ interface ClientConfig {
 export class SessionRequestProcessor {
 	private static instance: SessionRequestProcessor;
 
-	private readonly metrics: Metrics;
-
 	private readonly cicService: CicService;
 
 	private readonly kmsDecryptor: KmsJwtAdapter;
@@ -44,11 +42,9 @@ export class SessionRequestProcessor {
 
 	private readonly txmaQueueUrl: string;
 
-	constructor(metrics: Metrics) {
+	constructor() {
 
-		this.metrics = metrics;
-		logger.debug("metrics is  " + JSON.stringify(this.metrics));
-		this.metrics.addMetric("Called", MetricUnit.Count, 1);
+		captureMetric("Called");
 		
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
   		const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS);
@@ -61,9 +57,9 @@ export class SessionRequestProcessor {
 		this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
 		this.validationHelper = new ValidationHelper();
 	}
-	static getInstance(metrics: Metrics): SessionRequestProcessor {
+	static getInstance(): SessionRequestProcessor {
 		if (!SessionRequestProcessor.instance) {
-			SessionRequestProcessor.instance = new SessionRequestProcessor(metrics);
+			SessionRequestProcessor.instance = new SessionRequestProcessor();
 		}
 		return SessionRequestProcessor.instance;
 	}

@@ -1,5 +1,5 @@
  
-import { lambdaHandler, metrics } from "../../AuthorizationCodeHandler";
+import { lambdaHandler } from "../../AuthorizationCodeHandler";
 import { logger } from "@govuk-one-login/cri-logger";
 import { mock } from "vitest-mock-extended";
 import { VALID_AUTHCODE, INVALID_SESSION_ID, MISSING_SESSION_ID } from "./data/auth-events";
@@ -48,7 +48,7 @@ describe("AuthorizationCodeHandler", () => {
 
 	it("returns server error where AuthorizationRequestProcessor fails", async () => {
 		AuthorizationRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
-		const instance  = AuthorizationRequestProcessor.getInstance(metrics);
+		const instance  = AuthorizationRequestProcessor.getInstance();
 		instance.processRequest = vi.fn().mockRejectedValueOnce({});
 
 		await expect(lambdaHandler(VALID_AUTHCODE, "AUTH_CODE")).resolves.toEqual(Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred"));
