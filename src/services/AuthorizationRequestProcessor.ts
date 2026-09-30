@@ -1,7 +1,7 @@
  
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { logger } from "@govuk-one-login/cri-logger";
@@ -18,16 +18,13 @@ import { TxmaEventNames } from "../models/enums/TxmaEvents";
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
 
-	private readonly metrics: Metrics;
-
 	private readonly cicService: CicService;
 
 	private readonly issuer: string;
 
 	private readonly txmaQueueUrl: string;
 
-	constructor(metrics: Metrics) {
-		this.metrics = metrics;
+	constructor() {
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
 		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL);
@@ -35,9 +32,9 @@ export class AuthorizationRequestProcessor {
 		this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 	}
 
-	static getInstance(metrics: Metrics): AuthorizationRequestProcessor {
+	static getInstance(): AuthorizationRequestProcessor {
 		if (!AuthorizationRequestProcessor.instance) {
-			AuthorizationRequestProcessor.instance = new AuthorizationRequestProcessor(metrics);
+			AuthorizationRequestProcessor.instance = new AuthorizationRequestProcessor();
 		}
 		return AuthorizationRequestProcessor.instance;
 	}
@@ -54,7 +51,7 @@ export class AuthorizationRequestProcessor {
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionId} has expired`);
 			}
 
-			this.metrics.addMetric("found session", MetricUnit.Count, 1);
+			captureMetric("found session");
 
 			switch (session.authSessionState) {
 			  case AuthSessionState.CIC_DATA_RECEIVED:
@@ -81,7 +78,7 @@ export class AuthorizationRequestProcessor {
 
 			const authorizationCode = randomUUID();
 			await this.cicService.setAuthorizationCode(sessionId, authorizationCode);
-			this.metrics.addMetric("Set authorization code", MetricUnit.Count, 1);
+			captureMetric("Set authorization code");
 
 			try {
 				await this.cicService.sendToTXMA({

@@ -1,6 +1,6 @@
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { AbortRequestProcessor } from "../../../services/AbortRequestProcessor";
 import { CicService } from "../../../services/CicService";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -12,10 +12,10 @@ import { APIGatewayProxyResult } from "aws-lambda";
 
 const mockCicService = mock<CicService>();
 vi.mock("@govuk-one-login/cri-logger");
+vi.mock("@govuk-one-login/cri-metrics");
 
 let abortRequestProcessor: AbortRequestProcessor;
 let cicSessionItem: ISessionItem;
-const metrics = mock<Metrics>();
 const sessionId = "RandomCICSessionID";
 const encodedHeader = "ENCHEADER";
 function getMockSessionItem(): ISessionItem {
@@ -43,7 +43,7 @@ function getMockSessionItem(): ISessionItem {
 
 describe("AbortRequestProcessor", () => {
 	beforeAll(() => {
-		abortRequestProcessor = new AbortRequestProcessor(metrics);
+		abortRequestProcessor = new AbortRequestProcessor();
     		// @ts-expect-error linting to be updated
 		abortRequestProcessor.cicService = mockCicService;
 		cicSessionItem = getMockSessionItem();
@@ -75,7 +75,7 @@ describe("AbortRequestProcessor", () => {
 		expect(out.body).toBe("Session has already been aborted");
 		 
 		expect(logger.info).toHaveBeenCalledWith("Session has already been aborted");
-		expect(metrics.addMetric).not.toHaveBeenCalled();
+		expect(captureMetric).not.toHaveBeenCalled();
 	});
 
 	it("updates auth session state and returns successful response if session has not been aborted", async () => {
@@ -88,7 +88,7 @@ describe("AbortRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
 		expect(out.headers?.Location).toBe(encodeURIComponent(`${cicSessionItem.redirectUri}?error=access_denied&state=${cicSessionItem.state}`));
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
+		expect(captureMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED")
 	});
 
 	it("Returns successful response if session has not been aborted and redirectUri contains cic id", async () => {
@@ -103,7 +103,7 @@ describe("AbortRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
 		expect(out.headers?.Location).toContain(encodeURIComponent(`${cicSessionItem.redirectUri}&error=access_denied&state=${cicSessionItem.state}`));
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
+		expect(captureMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED")
 	});
 
 	it("sends TxMA event after auth session state has been updated", async () => {
@@ -115,7 +115,7 @@ describe("AbortRequestProcessor", () => {
 		expect(mockCicService.sendToTXMA).toHaveBeenCalledWith(expect.objectContaining({
 			event_name: TxmaEventNames.CIC_CRI_SESSION_ABORTED,
 		}), encodedHeader);
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
+		expect(captureMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED")
 	});
 
 	it("logs error if sending TxMA event fails, but successful response is still returned", async () => {
@@ -131,7 +131,7 @@ describe("AbortRequestProcessor", () => {
 		});
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
-		expect(metrics.addMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED", MetricUnit.Count, 1)
+		expect(captureMetric).toHaveBeenCalledWith("state-CIC_CRI_SESSION_ABORTED")
 	});
 
 	it("returns failed response if auth session state cannot be updated", async () => {
@@ -142,6 +142,16 @@ describe("AbortRequestProcessor", () => {
 
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 		expect(out.body).toBe("An error has occurred");
-		expect(metrics.addMetric).not.toHaveBeenCalled();
+		expect(captureMetric).not.toHaveBeenCalled();
+	});
+
+	describe("getInstance", () => {
+		it("returns the same AbortRequestProcessor singleton on subsequent calls", () => {
+			const firstInstance = AbortRequestProcessor.getInstance();
+			const secondInstance = AbortRequestProcessor.getInstance();
+
+			expect(firstInstance).toBeInstanceOf(AbortRequestProcessor);
+			expect(secondInstance).toBe(firstInstance);
+		});
 	});
 });

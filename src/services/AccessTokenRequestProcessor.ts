@@ -1,5 +1,5 @@
 import { logger } from "@govuk-one-login/cri-logger";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { CicService } from "./CicService";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { HttpCodesEnum } from "../utils/HttpCodesEnum";
@@ -24,8 +24,6 @@ interface ClientConfig {
 export class AccessTokenRequestProcessor {
 	private static instance: AccessTokenRequestProcessor;
 
-	private readonly metrics: Metrics;
-
 	private readonly accessTokenRequestValidationHelper: AccessTokenRequestValidationHelper;
 
     private readonly cicService: CicService;
@@ -36,22 +34,21 @@ export class AccessTokenRequestProcessor {
 	
 	private readonly issuer: string;
 
-    constructor(metrics: Metrics) {
+    constructor() {
     	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN);
     	
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER);
     	this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
     	this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
-    	this.metrics = metrics;
     	this.cicService = CicService.getInstance(sessionTableName, createDynamoDbClient());
 		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG);
     }
 
-    static getInstance(metrics: Metrics): AccessTokenRequestProcessor {
+    static getInstance(): AccessTokenRequestProcessor {
 
     	if (!AccessTokenRequestProcessor.instance) {
-    		AccessTokenRequestProcessor.instance = new AccessTokenRequestProcessor(metrics);
+    		AccessTokenRequestProcessor.instance = new AccessTokenRequestProcessor();
     	}
     	return AccessTokenRequestProcessor.instance;
     }
@@ -169,7 +166,7 @@ export class AccessTokenRequestProcessor {
 					}),
 				};
 			} else {
-				this.metrics.addMetric("AccessToken_error_user_state_incorrect", MetricUnit.Count, 1);
+				captureMetric("AccessToken_error_user_state_incorrect");
 				logger.warn(`Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.CIC_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
 				return Response(HttpCodesEnum.UNAUTHORIZED, `Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.CIC_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`);
 			}

@@ -1,5 +1,4 @@
  
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
 import { CicService } from "../../../services/CicService";
@@ -15,7 +14,6 @@ let sessionConfigRequestProcessorTest: SessionConfigRequestProcessor;
 const mockCicService = mock<CicService>();
 
 vi.mock("@govuk-one-login/cri-logger");
-const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem(): ISessionItem {
 	const session: ISessionItem = {
@@ -42,7 +40,7 @@ function getMockSessionItem(): ISessionItem {
 
 describe("SessionConfigRequestProcessor", () => {
 	beforeAll(() => {
-		sessionConfigRequestProcessorTest = new SessionConfigRequestProcessor(metrics);
+		sessionConfigRequestProcessorTest = new SessionConfigRequestProcessor();
 		// @ts-expect-error private access manipulation used for testing
 		sessionConfigRequestProcessorTest.cicService = mockCicService;
 	});
@@ -91,5 +89,14 @@ describe("SessionConfigRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledWith("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
 	});
-	
+
+	describe("getInstance", () => {
+		it("returns the same SessionConfigRequestProcessor singleton on subsequent calls", () => {
+			const firstInstance = SessionConfigRequestProcessor.getInstance();
+			const secondInstance = SessionConfigRequestProcessor.getInstance();
+
+			expect(firstInstance).toBeInstanceOf(SessionConfigRequestProcessor);
+			expect(secondInstance).toBe(firstInstance);
+		});
+	});
 });

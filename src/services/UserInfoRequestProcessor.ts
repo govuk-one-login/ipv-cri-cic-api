@@ -2,7 +2,7 @@
  
 import { Response } from "../utils/Response";
 import { CicService } from "./CicService";
-import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
+import { captureMetric } from "@govuk-one-login/cri-metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { logger } from "@govuk-one-login/cri-logger";
 import { ValidationHelper } from "../utils/ValidationHelper";
@@ -26,8 +26,6 @@ export class UserInfoRequestProcessor {
   
 	private static instance: UserInfoRequestProcessor;
 
-	private readonly metrics: Metrics;
-
 	private readonly validationHelper: ValidationHelper;
 
 	private readonly cicService: CicService;
@@ -40,9 +38,8 @@ export class UserInfoRequestProcessor {
 
 	private readonly personIdentityTableName: string;
 
-	constructor(metrics: Metrics) {
+	constructor() {
 		this.validationHelper = new ValidationHelper();
-		this.metrics = metrics;
 		
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN);
@@ -55,9 +52,9 @@ export class UserInfoRequestProcessor {
 		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsJwtAdapter, this.issuer, dns_suffix);
 	}
 
-	static getInstance(metrics: Metrics): UserInfoRequestProcessor {
+	static getInstance(): UserInfoRequestProcessor {
 		if (!UserInfoRequestProcessor.instance) {
-			UserInfoRequestProcessor.instance = new UserInfoRequestProcessor(metrics);
+			UserInfoRequestProcessor.instance = new UserInfoRequestProcessor();
 		}
 		return UserInfoRequestProcessor.instance;
 	}
@@ -119,7 +116,7 @@ export class UserInfoRequestProcessor {
 			},
 		});
   
-		this.metrics.addMetric("found session", MetricUnit.Count, 1);
+		captureMetric("found session");
 
 		try {
 			personInfo = await this.cicService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
@@ -139,8 +136,8 @@ export class UserInfoRequestProcessor {
 
 		logger.info("Found person by session ID");
   
-		this.metrics.addMetric("found person", MetricUnit.Count, 1);
-		
+		captureMetric("found person");
+
 		// Validate the AuthSessionState to be "CIC_ACCESS_TOKEN_ISSUED"
 		if (session.authSessionState !== AuthSessionState.CIC_ACCESS_TOKEN_ISSUED) {
 			logger.error("Session is in wrong Auth state", {
@@ -181,7 +178,7 @@ export class UserInfoRequestProcessor {
 			}
 
 			// Add metric and send TXMA event to the sqsqueue
-			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnit.Count, 1);
+			captureMetric("Generated signed verifiable credential jwt");
 			try {
 				await this.cicService.sendToTXMA({
 					event_name: TxmaEventNames.CIC_CRI_VC_ISSUED,

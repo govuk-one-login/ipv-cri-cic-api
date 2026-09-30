@@ -1,6 +1,5 @@
  
 import { ClaimedIdRequestProcessor } from "../../../services/ClaimedIdRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "vitest-mock-extended";
 import { logger } from "@govuk-one-login/cri-logger";
 import { VALID_CLAIMEDID } from "../data/cic-events";
@@ -16,7 +15,6 @@ const mockCicService = mock<CicService>();
 
 vi.mock("@govuk-one-login/cri-logger");
 
-const metrics = new Metrics({ namespace: "CIC" });
 
 function getMockSessionItem(): ISessionItem {
 	const session: ISessionItem = {
@@ -42,7 +40,7 @@ function getMockSessionItem(): ISessionItem {
 
 describe("ClaimedIdRequestProcessor", () => {
 	beforeAll(() => {
-		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor(metrics);
+		claimedIdRequestProcessorTest = new ClaimedIdRequestProcessor();
 		// @ts-expect-error private access manipulation used for testing
 		claimedIdRequestProcessorTest.cicService = mockCicService;
 	});
@@ -110,6 +108,16 @@ describe("ClaimedIdRequestProcessor", () => {
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledWith("No session found for session id", {
 			messageCode: MessageCodes.SESSION_NOT_FOUND,
+		});
+	});
+
+	describe("getInstance", () => {
+		it("returns the same ClaimedIdRequestProcessor singleton on subsequent calls", () => {
+			const firstInstance = ClaimedIdRequestProcessor.getInstance();
+			const secondInstance = ClaimedIdRequestProcessor.getInstance();
+
+			expect(firstInstance).toBeInstanceOf(ClaimedIdRequestProcessor);
+			expect(secondInstance).toBe(firstInstance);
 		});
 	});
 });
