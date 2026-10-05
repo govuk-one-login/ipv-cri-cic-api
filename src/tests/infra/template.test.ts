@@ -243,7 +243,7 @@ describe("Infra", () => {
     ${"build"}       | ${30}
     ${"staging"}     | ${30}
     ${"integration"} | ${30}
-    ${"production"}  | ${30}
+    ${"production"}  | ${365}
   `(
 			"Log group retention period for $environment has correct value in mappings",
 			({ environment, retention }) => {

@@ -89,7 +89,7 @@ Mappings:
       apiTracingEnabled: false
     production:
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables #pragma: allowlist secret
-      logretentionindays: 30
+      logretentionindays: 365
       apiTracingEnabled: false
 
   PlatformConfiguration:
