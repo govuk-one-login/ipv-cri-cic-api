@@ -92,18 +92,6 @@ Mappings:
       logretentionindays: 365
       apiTracingEnabled: false
 
-  PlatformConfiguration:
-    dev:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-    build:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-    staging:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-    integration:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-    production:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
-
   StaticVariables:
       urls:
         CICSupportManual: "https://govukverify.atlassian.net/wiki/spaces/Kiwi/pages/4371939527/6.3+CIC+CRI+Support+Documentation"
@@ -884,15 +872,6 @@ Resources:
           logretentionindays,
         ]
 
-  ClaimedIdentityFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref ClaimedIdentityFunctionLogGroup
-
   ClaimedIdentityFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1031,15 +1010,6 @@ Resources:
           !Ref Environment,
           logretentionindays,
         ]
-
-  UserInfoFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref UserInfoFunctionLogGroup
 
   UserInfoFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1183,15 +1153,6 @@ Resources:
           logretentionindays,
         ]
 
-  SessionFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref SessionFunctionLogGroup
-
   SessionFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1309,15 +1270,6 @@ Resources:
           !Ref Environment,
           logretentionindays,
         ]
-
-  TokenFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref TokenFunctionLogGroup
 
   TokenFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1438,15 +1390,6 @@ Resources:
           !Ref Environment,
           logretentionindays,
         ]
-
-  AuthorizationFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref AuthorizationFunctionLogGroup
 
   AuthorizationFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1781,15 +1724,6 @@ Resources:
           logretentionindays,
         ]
 
-  SessionConfigFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref SessionConfigFunctionLogGroup
-
   SessionConfigFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1900,14 +1834,6 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/CIC-Abort-${AWS::StackName}"
       RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
-
-  AbortLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref AbortLogGroup
 
   AbortPermission:
     Type: AWS::Lambda::Permission
