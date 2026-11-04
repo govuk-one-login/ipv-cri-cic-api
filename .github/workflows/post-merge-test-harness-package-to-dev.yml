@@ -24,7 +24,7 @@ jobs:
         working-directory: test-harness
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v3
