@@ -19,7 +19,7 @@
     "@typescript-eslint/eslint-plugin": "8.65.0",
     "@typescript-eslint/parser": "8.65.0",
     "@vitest/coverage-v8": "5.0.5",
-    "aws-cdk-lib": "2.266.0",
+    "aws-cdk-lib": "2.276.0",
     "aws-sdk-client-mock": "4.1.0",
     "eslint": "10.8.0",
     "eslint-plugin-tsdoc": "0.2.17",
